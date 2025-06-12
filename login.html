@@ -262,40 +262,57 @@
             hideMessages();
 
             try {
-                // Prova prima con URLSearchParams (più compatibile)
-                const params = new URLSearchParams();
-                params.append('action', 'login');
-                params.append('username', username);
-                params.append('password', password);
-
                 console.log('=== DEBUG FRONTEND ===');
                 console.log('Invio dati al server:', username);
                 console.log('URL Script:', SCRIPT_URL);
-                console.log('Parametri:', params.toString());
 
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: params.toString()
-                });
-
-                console.log('Risposta ricevuta - Status:', response.status);
-                console.log('Risposta ricevuta - OK:', response.ok);
+                // METODO 1: Prova prima POST
+                let response, result;
                 
-                const responseText = await response.text();
-                console.log('Risposta raw:', responseText);
-                
-                let result;
                 try {
+                    const params = new URLSearchParams();
+                    params.append('action', 'login');
+                    params.append('username', username);
+                    params.append('password', password);
+
+                    console.log('Tentativo POST con parametri:', params.toString());
+
+                    response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: params.toString()
+                    });
+
+                    console.log('Risposta POST - Status:', response.status);
+                    const responseText = await response.text();
+                    console.log('Risposta POST raw:', responseText);
                     result = JSON.parse(responseText);
-                } catch (e) {
-                    console.error('Errore parsing JSON:', e);
-                    throw new Error('Risposta non valida dal server: ' + responseText);
+                    
+                    // Se la risposta dice di usare POST, prova GET
+                    if (!result.success && result.message.includes('POST')) {
+                        throw new Error('Prova GET');
+                    }
+                    
+                } catch (postError) {
+                    console.log('POST fallito, provo GET:', postError.message);
+                    
+                    // METODO 2: Fallback con GET
+                    const getUrl = `${SCRIPT_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+                    console.log('Tentativo GET:', getUrl);
+                    
+                    response = await fetch(getUrl, {
+                        method: 'GET'
+                    });
+                    
+                    console.log('Risposta GET - Status:', response.status);
+                    const responseText = await response.text();
+                    console.log('Risposta GET raw:', responseText);
+                    result = JSON.parse(responseText);
                 }
                 
-                console.log('Risultato parsato:', result);
+                console.log('Risultato finale:', result);
 
                 if (result.success) {
                     showSuccess('Login effettuato con successo!');
