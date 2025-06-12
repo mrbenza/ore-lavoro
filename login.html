@@ -235,7 +235,7 @@
 
     <script>
         // Configurazione Google Apps Script
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykM3f5rBlyDTPquVjakUxHHVDx_eERVDVNQQWtz3rD0kNjXT0xZqCegDmZvX45nNGf/exec'; // Sostituisci con l'URL del tuo Apps Script
+        const SCRIPT_URL = 'TUO_SCRIPT_URL_QUI'; // Sostituisci con l'URL del tuo Apps Script
         
         // Riferimenti agli elementi DOM
         const loginForm = document.getElementById('loginForm');
@@ -262,18 +262,40 @@
             hideMessages();
 
             try {
-                // Chiamata al Google Apps Script
-                const formData = new FormData();
-                formData.append('action', 'login');
-                formData.append('username', username);
-                formData.append('password', password);
+                // Prova prima con URLSearchParams (più compatibile)
+                const params = new URLSearchParams();
+                params.append('action', 'login');
+                params.append('username', username);
+                params.append('password', password);
+
+                console.log('=== DEBUG FRONTEND ===');
+                console.log('Invio dati al server:', username);
+                console.log('URL Script:', SCRIPT_URL);
+                console.log('Parametri:', params.toString());
 
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: params.toString()
                 });
 
-                const result = await response.json();
+                console.log('Risposta ricevuta - Status:', response.status);
+                console.log('Risposta ricevuta - OK:', response.ok);
+                
+                const responseText = await response.text();
+                console.log('Risposta raw:', responseText);
+                
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Errore parsing JSON:', e);
+                    throw new Error('Risposta non valida dal server: ' + responseText);
+                }
+                
+                console.log('Risultato parsato:', result);
 
                 if (result.success) {
                     showSuccess('Login effettuato con successo!');
