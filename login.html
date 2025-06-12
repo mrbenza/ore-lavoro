@@ -263,12 +263,14 @@
 
             try {
                 // Chiamata al Google Apps Script
+                const formData = new FormData();
+                formData.append('action', 'login');
+                formData.append('username', username);
+                formData.append('password', password);
+
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+                    body: formData
                 });
 
                 const result = await response.json();
