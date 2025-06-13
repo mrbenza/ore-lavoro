@@ -341,8 +341,10 @@
                     sessionStorage.setItem('currentUser', JSON.stringify(user.data));
                     sessionStorage.setItem('sessionToken', user.sessionToken);
                     
+                    // FIX: Redirect diretto alla dashboard
                     setTimeout(() => {
-                        alert('Login completato! Sistema pronto per la dashboard.');
+                        console.log('🚀 Reindirizzamento alla dashboard...');
+                        window.location.href = './dashboard.html';
                     }, 2000);
                 } else {
                     showError(user.message || 'Credenziali non valide');
@@ -370,10 +372,15 @@
 
         // Auto-setup al caricamento
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Sistema Login avviato - v' + CONFIG.VERSION);
+            console.log('🚀 Sistema Login avviato - v2.1 (Fixed Redirect)');
             
             // Se già loggato, vai alla dashboard
-            if (PageGuard.redirectIfLoggedIn()) {
+            const currentUser = sessionStorage.getItem('currentUser');
+            const sessionToken = sessionStorage.getItem('sessionToken');
+            
+            if (currentUser && sessionToken) {
+                console.log('🔄 Utente già loggato, redirect alla dashboard...');
+                window.location.href = './dashboard.html';
                 return;
             }
             
@@ -381,7 +388,7 @@
             console.log('Connessione:', connected ? 'OK' : 'FALLITA');
             
             if (!connected) {
-                Utils.showNotification('Impossibile connettersi. Verifica che il Google Apps Script sia deployato correttamente con accesso "Anyone".', 'error');
+                showError('Impossibile connettersi. Verifica che il Google Apps Script sia deployato correttamente.');
             }
         });
     </script>
