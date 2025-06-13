@@ -396,6 +396,7 @@
     <!-- Notifiche -->
     <div id="notification" class="notification"></div>
 
+    <script src="config.js"></script>
     <script>
         // Configurazione
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzae9P_AKSpm_kz95fA-0Dcn8v3MiucrwgtVkIMMNMJIH0rMUkcwwj0-H6UxWIdCvKG/exec';
@@ -404,23 +405,23 @@
         let sessionToken = null;
         let cantieri = [];
 
-        // Inizializzazione
+        // Inizializzazione con protezione accesso
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Dashboard avviata');
+            console.log('🚀 Dashboard avviata - v' + CONFIG.VERSION);
             
-            // Verifica login
-            currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
-            sessionToken = sessionStorage.getItem('sessionToken');
-            
-            if (!currentUser || !sessionToken) {
-                showNotification('Sessione scaduta. Reindirizzamento al login...', 'error');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
+            // Verifica accesso
+            if (!PageGuard.requireLogin()) {
                 return;
             }
             
+            // Setup auto-logout
+            Utils.setupAutoLogout();
+            
             // Carica dati utente
+            const session = Utils.getSession();
+            currentUser = session.user;
+            sessionToken = session.token;
+            
             loadUserData();
             
             // Imposta data odierna
@@ -609,38 +610,17 @@
         }
 
         async function callGoogleAppsScript(params) {
-            const url = new URL(APPS_SCRIPT_URL);
-            Object.keys(params).forEach(key => {
-                url.searchParams.append(key, String(params[key]));
-            });
-            
-            const response = await fetch(url.toString(), { method: 'GET' });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const text = await response.text();
-            const cleanText = text.replace(/^\)\]\}',?\s*/, '');
-            return JSON.parse(cleanText);
+            return await Utils.callAPI(params);
         }
 
         function showNotification(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification ${type}`;
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 4000);
+            Utils.showNotification(message, type);
         }
 
         function logout() {
             if (confirm('Sei sicuro di voler uscire?')) {
-                sessionStorage.removeItem('currentUser');
-                sessionStorage.removeItem('sessionToken');
-                window.location.href = 'index.html';
+                Utils.clearSession();
+                Utils.redirectToLogin();
             }
         }
     </script>
