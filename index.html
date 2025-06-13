@@ -211,10 +211,11 @@
         </div>
 
         <div class="demo-credentials">
-            <h3>Credenziali di Test</h3>
-            <p><strong>UserID:</strong> mario.rossi</p>
-            <p><strong>Password:</strong> nuovapassword123</p>
-            <p style="margin-top: 10px; font-style: italic;">Oppure usa le credenziali di altri utenti dal foglio</p>
+            <h3>🚀 Configurazione Deploy</h3>
+            <p><strong>1.</strong> Configura l'URL del Google Apps Script sopra</p>
+            <p><strong>2.</strong> Fai il deploy del script come web app</p>
+            <p><strong>3.</strong> Sostituisci YOUR_SCRIPT_ID con l'ID reale</p>
+            <p style="margin-top: 10px;"><strong>Credenziali test:</strong> mario.rossi / nuovapassword123</p>
         </div>
 
         <div id="errorMessage" class="error-message"></div>
@@ -243,11 +244,12 @@
 
     <script>
         // Configurazione Google Apps Script
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx5rQH7wsfwMKvRUbCsMVQEjMp8IqI6pHebWSUgW-X3DuKHWx2R_80v8Qk6kmDDko8j/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzae9P_AKSpm_kz95fA-0Dcn8v3MiucrwgtVkIMMNMJIH0rMUkcwwj0-H6UxWIdCvKG/exec';
         
-        // IMPORTANTE: Sostituisci YOUR_SCRIPT_ID con l'ID del tuo Google Apps Script
-        // Lo trovi nell'URL quando apri il tuo script: 
-        // https://script.google.com/d/{SCRIPT_ID}/edit
+        // IMPORTANTE: 
+        // 1. Sostituisci YOUR_SCRIPT_ID con l'ID del tuo Google Apps Script
+        // 2. Per trovare l'ID: vai nel tuo script → Deploy → Manage deployments → copia l'URL
+        // 3. L'URL sarà simile a: https://script.google.com/macros/s/AKfycbx.../exec
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
