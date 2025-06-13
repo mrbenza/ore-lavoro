@@ -1,0 +1,38 @@
+{
+  "name": "work-hours-system",
+  "version": "1.0.0",
+  "description": "Sistema completo per la gestione delle ore di lavoro dei dipendenti",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 3000 -o",
+    "dev": "npx live-server --port=3000 --open=/",
+    "build": "echo 'Static site - no build required'",
+    "deploy": "echo 'Deploy automatico via GitHub Actions'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TUO-USERNAME/work-hours-system.git"
+  },
+  "keywords": [
+    "work-hours",
+    "employee-management",
+    "google-sheets",
+    "google-apps-script",
+    "timesheet",
+    "payroll",
+    "hr-system"
+  ],
+  "author": "Il Tuo Nome",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TUO-USERNAME/work-hours-system/issues"
+  },
+  "homepage": "https://TUO-USERNAME.github.io/work-hours-system/",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
