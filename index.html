@@ -200,6 +200,23 @@
         .demo-credentials strong {
             color: #333;
         }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-online { background-color: #28a745; }
+        .status-offline { background-color: #dc3545; }
+        .status-loading { background-color: #ffc107; animation: pulse 1s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body>
@@ -211,10 +228,10 @@
         </div>
 
         <div class="demo-credentials">
-            <h3>🚀 Sistema con Proxy Vercel</h3>
-            <p><strong>Stato:</strong> <span id="connectionStatus">Verificando...</span></p>
-            <p><strong>Metodo:</strong> <span id="connectionMethod">Proxy Server</span></p>
-            <p style="margin-top: 10px;"><strong>Test:</strong> mario.rossi / nuovapassword123</p>
+            <h3>🚀 Stato Sistema</h3>
+            <p><strong>Connessione:</strong> <span class="status-indicator status-loading"></span><span id="connectionStatus">Verificando...</span></p>
+            <p><strong>Endpoint:</strong> <span id="connectionMethod">Auto-rileva</span></p>
+            <p style="margin-top: 10px;"><strong>Test Login:</strong> mario.rossi / nuovapassword123</p>
         </div>
 
         <div id="errorMessage" class="error-message"></div>
@@ -237,27 +254,62 @@
         </form>
 
         <div class="footer">
-            <p>&copy; 2025 Sistema Gestione Ore - Sicuro e Affidabile</p>
+            <p>&copy; 2025 Sistema Gestione Ore - Deploy v2.0</p>
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
-        // CONFIGURAZIONE FORZATA - Hardcoded per debug
-        const USE_PROXY = true;
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzae9P_AKSpm_kz95fA-0Dcn8v3MiucrwgtVkIMMNMJIH0rMUkcwwj0-H6UxWIdCvKG/exec';
-        
-        // URL FORZATO per il tuo dominio specifico
-        const PROXY_URL = 'https://orelavoro.vercel.app/api/proxy';
-        
-        // URL effettivo da usare
-        const API_URL = USE_PROXY ? PROXY_URL : APPS_SCRIPT_URL;
-        
-        // Debug immediato
-        console.log('🚨 DEBUG FORZATO:');
-        console.log('PROXY_URL:', PROXY_URL);
-        console.log('API_URL finale:', API_URL);
-        console.log('Timestamp:', new Date().toISOString());
+        // Test di connessione
+        async function testConnection() {
+            const statusElement = document.getElementById('connectionStatus');
+            const methodElement = document.getElementById('connectionMethod');
+            const statusIndicator = document.querySelector('.status-indicator');
+            
+            statusElement.textContent = 'Testando connessione...';
+            statusIndicator.className = 'status-indicator status-loading';
+            
+            try {
+                const result = await Utils.callAPI({ action: 'ping' });
+                
+                if (result && result.success) {
+                    statusElement.textContent = '✅ Connesso';
+                    methodElement.textContent = 'Google Apps Script GET';
+                    statusIndicator.className = 'status-indicator status-online';
+                    return true;
+                } else {
+                    throw new Error('Invalid response: ' + JSON.stringify(result));
+                }
+            } catch (error) {
+                console.error('❌ Connection test failed:', error);
+                statusElement.textContent = '❌ Errore: ' + error.message;
+                methodElement.textContent = 'Verifica deployment Google Apps Script';
+                statusIndicator.className = 'status-indicator status-offline';
+                return false;
+            }
+        }
 
+        // Autenticazione
+        async function authenticateUser(userId, password) {
+            console.log('🔐 Authenticating user:', userId);
+            
+            try {
+                const result = await Utils.callAPI({
+                    action: 'authenticate',
+                    userId: userId,
+                    password: password
+                });
+                
+                console.log('🔐 Authentication result:', result);
+                return result;
+                
+            } catch (error) {
+                console.error('🔐 Authentication error:', error);
+                throw new Error('Errore di autenticazione: ' + error.message);
+            }
+        }
+
+        // Event listeners
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -271,7 +323,6 @@
             errorMessage.style.display = 'none';
             successMessage.style.display = 'none';
 
-            // Validazione base
             if (!userId || !password) {
                 showError('Per favore inserisci UserID e Password');
                 return;
@@ -282,96 +333,28 @@
             loginBtn.innerHTML = '<span class="loading"></span>Accesso in corso...';
 
             try {
-                // Autenticazione con Google Apps Script
-                const user = await authenticateWithAppsScript(userId, password);
+                const user = await authenticateUser(userId, password);
                 
                 if (user && user.success) {
                     showSuccess(`Benvenuto ${user.data.name}! (${user.data.role})`);
                     
-                    // Salva dati utente e token di sessione
                     sessionStorage.setItem('currentUser', JSON.stringify(user.data));
                     sessionStorage.setItem('sessionToken', user.sessionToken);
                     
-                    // Reindirizza alla dashboard dopo 2 secondi
                     setTimeout(() => {
-                        // Qui andrebbe il redirect alla dashboard
-                        alert('Login completato! Da qui andresti alla dashboard principale.');
-                        // window.location.href = 'dashboard.html';
+                        alert('Login completato! Sistema pronto per la dashboard.');
                     }, 2000);
                 } else {
-                    showError(user.message || 'UserID o Password non corretti');
+                    showError(user.message || 'Credenziali non valide');
                 }
             } catch (error) {
-                showError('Errore durante l\'autenticazione. Riprova.');
-                console.error('Authentication error:', error);
+                showError('Errore durante l\'autenticazione: ' + error.message);
+                console.error('Login error:', error);
             } finally {
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = 'Accedi';
             }
         });
-
-        // Autenticazione con Google Apps Script tramite Proxy
-        async function authenticateWithAppsScript(userId, password) {
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'authenticate',
-                        userId: userId,
-                        password: password
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-                return result;
-                
-            } catch (error) {
-                console.error('Errore autenticazione:', error);
-                
-                // Se il proxy non funziona, mostra errore specifico
-                if (USE_PROXY) {
-                    throw new Error('Proxy server non raggiungibile. Controlla la configurazione Vercel.');
-                } else {
-                    throw new Error('Google Apps Script non raggiungibile. Problema CORS.');
-                }
-            }
-        }
-
-        // Funzione per altre operazioni (da usare dopo il login)
-        async function callAppsScript(action, data = {}) {
-            const sessionToken = sessionStorage.getItem('sessionToken');
-            
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: action,
-                        sessionToken: sessionToken,
-                        ...data
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                return await response.json();
-                
-            } catch (error) {
-                console.error('Errore chiamata API:', error);
-                throw error;
-            }
-        }
 
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
@@ -385,43 +368,22 @@
             successDiv.style.display = 'block';
         }
 
-        // Test di connessione all'avvio
-        async function testConnection() {
-            const statusElement = document.getElementById('connectionStatus');
-            const methodElement = document.getElementById('connectionMethod');
+        // Auto-setup al caricamento
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Sistema Login avviato - v' + CONFIG.VERSION);
             
-            try {
-                statusElement.textContent = 'Testando connessione...';
-                statusElement.style.color = '#f39c12';
-                
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'ping'
-                    })
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    statusElement.textContent = '✅ Connesso';
-                    statusElement.style.color = '#27ae60';
-                    methodElement.textContent = USE_PROXY ? 'Proxy Vercel' : 'Diretto Google Apps Script';
-                } else {
-                    throw new Error(`Status: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Test connessione fallito:', error);
-                statusElement.textContent = '❌ Errore connessione';
-                statusElement.style.color = '#e74c3c';
-                methodElement.textContent = 'Nessuno - Verifica configurazione';
+            // Se già loggato, vai alla dashboard
+            if (PageGuard.redirectIfLoggedIn()) {
+                return;
             }
-        }
-
-        // Avvia test di connessione quando la pagina è caricata
-        document.addEventListener('DOMContentLoaded', testConnection);
+            
+            const connected = await testConnection();
+            console.log('Connessione:', connected ? 'OK' : 'FALLITA');
+            
+            if (!connected) {
+                Utils.showNotification('Impossibile connettersi. Verifica che il Google Apps Script sia deployato correttamente con accesso "Anyone".', 'error');
+            }
+        });
     </script>
 </body>
 </html>
