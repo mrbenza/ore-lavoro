@@ -242,21 +242,21 @@
     </div>
 
     <script>
-        // Configurazione dinamica - rileva automaticamente il dominio
+        // CONFIGURAZIONE FORZATA - Hardcoded per debug
         const USE_PROXY = true;
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzae9P_AKSpm_kz95fA-0Dcn8v3MiucrwgtVkIMMNMJIH0rMUkcwwj0-H6UxWIdCvKG/exec';
         
-        // Auto-rileva il dominio corrente per il proxy
-        const CURRENT_DOMAIN = window.location.origin;
-        const PROXY_URL = `${CURRENT_DOMAIN}/api/proxy`;
+        // URL FORZATO per il tuo dominio specifico
+        const PROXY_URL = 'https://orelavoro.vercel.app/api/proxy';
         
         // URL effettivo da usare
         const API_URL = USE_PROXY ? PROXY_URL : APPS_SCRIPT_URL;
         
-        console.log('🔧 Configurazione dinamica:');
-        console.log('Dominio corrente:', CURRENT_DOMAIN);
-        console.log('Proxy URL:', PROXY_URL);
-        console.log('Modalità:', USE_PROXY ? 'Proxy' : 'Diretto');
+        // Debug immediato
+        console.log('🚨 DEBUG FORZATO:');
+        console.log('PROXY_URL:', PROXY_URL);
+        console.log('API_URL finale:', API_URL);
+        console.log('Timestamp:', new Date().toISOString());
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
