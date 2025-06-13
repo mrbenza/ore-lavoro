@@ -462,7 +462,7 @@
                     cantieri.forEach(cantiere => {
                         const option = document.createElement('option');
                         option.value = cantiere.id;
-                        option.textContent = `${cantiere.nome} - ${cantiere.indirizzo}`;
+                        option.textContent = cantiere.nome; // Mostra solo il NOME
                         cantiereSelect.appendChild(option);
                     });
                     
