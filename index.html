@@ -246,10 +246,8 @@
         // Configurazione Google Apps Script
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzae9P_AKSpm_kz95fA-0Dcn8v3MiucrwgtVkIMMNMJIH0rMUkcwwj0-H6UxWIdCvKG/exec';
         
-        // IMPORTANTE: 
-        // 1. Sostituisci YOUR_SCRIPT_ID con l'ID del tuo Google Apps Script
-        // 2. Per trovare l'ID: vai nel tuo script → Deploy → Manage deployments → copia l'URL
-        // 3. L'URL sarà simile a: https://script.google.com/macros/s/AKfycbx.../exec
+        // CONFIGURAZIONE CORS - Google Apps Script gestisce automaticamente CORS
+        // Ma dobbiamo usare il metodo corretto per evitare preflight requests
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -306,26 +304,63 @@
         // Autenticazione con Google Apps Script
         async function authenticateWithAppsScript(userId, password) {
             try {
+                // Usa FormData per evitare preflight CORS
+                const formData = new FormData();
+                formData.append('data', JSON.stringify({
+                    action: 'authenticate',
+                    userId: userId,
+                    password: password
+                }));
+
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'authenticate',
-                        userId: userId,
-                        password: password
-                    })
+                    body: formData
                 });
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const result = await response.json();
-                return result;
+                const result = await response.text();
+                
+                // Parse manuale per gestire possibili caratteri extra
+                try {
+                    return JSON.parse(result);
+                } catch (e) {
+                    // Se il JSON non è valido, prova a pulirlo
+                    const cleanResult = result.replace(/^\)\]\}',?\s*/, '');
+                    return JSON.parse(cleanResult);
+                }
             } catch (error) {
                 console.error('Errore Apps Script:', error);
+                
+                // Fallback: prova con il metodo alternativo
+                return await authenticateWithAppsScriptAlternative(userId, password);
+            }
+        }
+
+        // Metodo alternativo usando URL parameters
+        async function authenticateWithAppsScriptAlternative(userId, password) {
+            try {
+                const url = new URL(APPS_SCRIPT_URL);
+                url.searchParams.append('action', 'authenticate');
+                url.searchParams.append('userId', userId);
+                url.searchParams.append('password', password);
+
+                const response = await fetch(url.toString(), {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.text();
+                return JSON.parse(result.replace(/^\)\]\}',?\s*/, ''));
+                
+            } catch (error) {
+                console.error('Errore metodo alternativo:', error);
                 throw error;
             }
         }
@@ -335,26 +370,51 @@
             const sessionToken = sessionStorage.getItem('sessionToken');
             
             try {
+                // Metodo 1: FormData
+                const formData = new FormData();
+                formData.append('data', JSON.stringify({
+                    action: action,
+                    sessionToken: sessionToken,
+                    ...data
+                }));
+
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: action,
-                        sessionToken: sessionToken,
-                        ...data
-                    })
+                    body: formData
                 });
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                return await response.json();
+                const result = await response.text();
+                return JSON.parse(result.replace(/^\)\]\}',?\s*/, ''));
+                
             } catch (error) {
                 console.error('Errore chiamata Apps Script:', error);
-                throw error;
+                
+                // Fallback: GET method
+                try {
+                    const url = new URL(APPS_SCRIPT_URL);
+                    url.searchParams.append('action', action);
+                    url.searchParams.append('sessionToken', sessionToken);
+                    
+                    Object.keys(data).forEach(key => {
+                        url.searchParams.append(key, data[key]);
+                    });
+
+                    const response = await fetch(url.toString(), {
+                        method: 'GET',
+                        mode: 'cors'
+                    });
+
+                    const result = await response.text();
+                    return JSON.parse(result.replace(/^\)\]\}',?\s*/, ''));
+                    
+                } catch (fallbackError) {
+                    console.error('Errore fallback:', fallbackError);
+                    throw fallbackError;
+                }
             }
         }
 
