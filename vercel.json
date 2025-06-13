@@ -1,6 +1,9 @@
 {
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "installCommand": "",
   "functions": {
-    "api/proxy.js": {
+    "api/*.js": {
       "maxDuration": 30
     }
   },
@@ -23,10 +26,10 @@
       ]
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/",
-      "destination": "/index.html"
+      "src": "/",
+      "dest": "/index.html"
     }
   ]
 }
