@@ -242,13 +242,21 @@
     </div>
 
     <script>
-        // Configurazione con Proxy Vercel per risolvere CORS
-        const USE_PROXY = true; // Cambia a false per usare direttamente Google Apps Script
-        const PROXY_URL = 'https://work-hours-system.vercel.app/api/proxy'; // Il tuo dominio Vercel
+        // Configurazione dinamica - rileva automaticamente il dominio
+        const USE_PROXY = true;
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzae9P_AKSpm_kz95fA-0Dcn8v3MiucrwgtVkIMMNMJIH0rMUkcwwj0-H6UxWIdCvKG/exec';
+        
+        // Auto-rileva il dominio corrente per il proxy
+        const CURRENT_DOMAIN = window.location.origin;
+        const PROXY_URL = `${CURRENT_DOMAIN}/api/proxy`;
         
         // URL effettivo da usare
         const API_URL = USE_PROXY ? PROXY_URL : APPS_SCRIPT_URL;
+        
+        console.log('🔧 Configurazione dinamica:');
+        console.log('Dominio corrente:', CURRENT_DOMAIN);
+        console.log('Proxy URL:', PROXY_URL);
+        console.log('Modalità:', USE_PROXY ? 'Proxy' : 'Diretto');
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
