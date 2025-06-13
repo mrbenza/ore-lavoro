@@ -211,11 +211,10 @@
         </div>
 
         <div class="demo-credentials">
-            <h3>🚀 Configurazione Deploy</h3>
-            <p><strong>1.</strong> Configura l'URL del Google Apps Script sopra</p>
-            <p><strong>2.</strong> Fai il deploy del script come web app</p>
-            <p><strong>3.</strong> Sostituisci YOUR_SCRIPT_ID con l'ID reale</p>
-            <p style="margin-top: 10px;"><strong>Credenziali test:</strong> mario.rossi / nuovapassword123</p>
+            <h3>🚀 Sistema con Proxy Vercel</h3>
+            <p><strong>Stato:</strong> <span id="connectionStatus">Verificando...</span></p>
+            <p><strong>Metodo:</strong> <span id="connectionMethod">Proxy Server</span></p>
+            <p style="margin-top: 10px;"><strong>Test:</strong> mario.rossi / nuovapassword123</p>
         </div>
 
         <div id="errorMessage" class="error-message"></div>
@@ -243,11 +242,13 @@
     </div>
 
     <script>
-        // Configurazione Google Apps Script
+        // Configurazione con Proxy Vercel per risolvere CORS
+        const USE_PROXY = true; // Cambia a false per usare direttamente Google Apps Script
+        const PROXY_URL = 'https://work-hours-system.vercel.app/api/proxy'; // Il tuo dominio Vercel
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzae9P_AKSpm_kz95fA-0Dcn8v3MiucrwgtVkIMMNMJIH0rMUkcwwj0-H6UxWIdCvKG/exec';
         
-        // CONFIGURAZIONE CORS - Google Apps Script gestisce automaticamente CORS
-        // Ma dobbiamo usare il metodo corretto per evitare preflight requests
+        // URL effettivo da usare
+        const API_URL = USE_PROXY ? PROXY_URL : APPS_SCRIPT_URL;
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -301,67 +302,37 @@
             }
         });
 
-        // Autenticazione con Google Apps Script
+        // Autenticazione con Google Apps Script tramite Proxy
         async function authenticateWithAppsScript(userId, password) {
             try {
-                // Usa FormData per evitare preflight CORS
-                const formData = new FormData();
-                formData.append('data', JSON.stringify({
-                    action: 'authenticate',
-                    userId: userId,
-                    password: password
-                }));
-
-                const response = await fetch(APPS_SCRIPT_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'authenticate',
+                        userId: userId,
+                        password: password
+                    })
                 });
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const result = await response.text();
-                
-                // Parse manuale per gestire possibili caratteri extra
-                try {
-                    return JSON.parse(result);
-                } catch (e) {
-                    // Se il JSON non è valido, prova a pulirlo
-                    const cleanResult = result.replace(/^\)\]\}',?\s*/, '');
-                    return JSON.parse(cleanResult);
-                }
-            } catch (error) {
-                console.error('Errore Apps Script:', error);
-                
-                // Fallback: prova con il metodo alternativo
-                return await authenticateWithAppsScriptAlternative(userId, password);
-            }
-        }
-
-        // Metodo alternativo usando URL parameters
-        async function authenticateWithAppsScriptAlternative(userId, password) {
-            try {
-                const url = new URL(APPS_SCRIPT_URL);
-                url.searchParams.append('action', 'authenticate');
-                url.searchParams.append('userId', userId);
-                url.searchParams.append('password', password);
-
-                const response = await fetch(url.toString(), {
-                    method: 'GET',
-                    mode: 'cors'
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.text();
-                return JSON.parse(result.replace(/^\)\]\}',?\s*/, ''));
+                const result = await response.json();
+                return result;
                 
             } catch (error) {
-                console.error('Errore metodo alternativo:', error);
-                throw error;
+                console.error('Errore autenticazione:', error);
+                
+                // Se il proxy non funziona, mostra errore specifico
+                if (USE_PROXY) {
+                    throw new Error('Proxy server non raggiungibile. Controlla la configurazione Vercel.');
+                } else {
+                    throw new Error('Google Apps Script non raggiungibile. Problema CORS.');
+                }
             }
         }
 
@@ -370,51 +341,27 @@
             const sessionToken = sessionStorage.getItem('sessionToken');
             
             try {
-                // Metodo 1: FormData
-                const formData = new FormData();
-                formData.append('data', JSON.stringify({
-                    action: action,
-                    sessionToken: sessionToken,
-                    ...data
-                }));
-
-                const response = await fetch(APPS_SCRIPT_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        sessionToken: sessionToken,
+                        ...data
+                    })
                 });
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const result = await response.text();
-                return JSON.parse(result.replace(/^\)\]\}',?\s*/, ''));
+                return await response.json();
                 
             } catch (error) {
-                console.error('Errore chiamata Apps Script:', error);
-                
-                // Fallback: GET method
-                try {
-                    const url = new URL(APPS_SCRIPT_URL);
-                    url.searchParams.append('action', action);
-                    url.searchParams.append('sessionToken', sessionToken);
-                    
-                    Object.keys(data).forEach(key => {
-                        url.searchParams.append(key, data[key]);
-                    });
-
-                    const response = await fetch(url.toString(), {
-                        method: 'GET',
-                        mode: 'cors'
-                    });
-
-                    const result = await response.text();
-                    return JSON.parse(result.replace(/^\)\]\}',?\s*/, ''));
-                    
-                } catch (fallbackError) {
-                    console.error('Errore fallback:', fallbackError);
-                    throw fallbackError;
-                }
+                console.error('Errore chiamata API:', error);
+                throw error;
             }
         }
 
@@ -430,15 +377,43 @@
             successDiv.style.display = 'block';
         }
 
-        // Test di connessione (opzionale)
+        // Test di connessione all'avvio
         async function testConnection() {
+            const statusElement = document.getElementById('connectionStatus');
+            const methodElement = document.getElementById('connectionMethod');
+            
             try {
-                const result = await callAppsScript('ping');
-                console.log('Connessione OK:', result);
+                statusElement.textContent = 'Testando connessione...';
+                statusElement.style.color = '#f39c12';
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'ping'
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    statusElement.textContent = '✅ Connesso';
+                    statusElement.style.color = '#27ae60';
+                    methodElement.textContent = USE_PROXY ? 'Proxy Vercel' : 'Diretto Google Apps Script';
+                } else {
+                    throw new Error(`Status: ${response.status}`);
+                }
             } catch (error) {
-                console.error('Errore connessione:', error);
+                console.error('Test connessione fallito:', error);
+                statusElement.textContent = '❌ Errore connessione';
+                statusElement.style.color = '#e74c3c';
+                methodElement.textContent = 'Nessuno - Verifica configurazione';
             }
         }
+
+        // Avvia test di connessione quando la pagina è caricata
+        document.addEventListener('DOMContentLoaded', testConnection);
     </script>
 </body>
 </html>
