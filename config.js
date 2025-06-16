@@ -1,7 +1,7 @@
 // Configurazione Sistema Gestione Ore
 const CONFIG = {
     // Google Apps Script URL - NUOVO DEPLOYMENT
-    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyPLvqW_TjWPNE9MSpEtQTpm_UDni9yqbrMXgVWOhN5-gudG0ElOlwYeXT2rcaXWyQy/exec',
+    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxHZtWt5CSafFEez3KfHeFNaiX9P9NGaJoUvIrWahyFajhcctmGMRriOlCkaZhsFq9w/exec',
     
     // Versioning
     VERSION: {
