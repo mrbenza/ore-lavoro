@@ -626,26 +626,6 @@
                 Utils.redirectToLogin();
             }
         }
-        
-        function updateVersionInfo() {
-            const versionElement = document.getElementById('versionInfo');
-            const frontendVersion = CONFIG.VERSION.frontend;
-            const backendVersion = window.BACKEND_VERSION ? window.BACKEND_VERSION.version : 'Unknown';
-            
-            let versionText = `Frontend v${frontendVersion}`;
-            
-            if (backendVersion !== 'Unknown') {
-                versionText += ` | Backend v${backendVersion}`;
-                
-                if (frontendVersion !== backendVersion) {
-                    versionText += ' ⚠️';
-                    console.warn('Versioni non allineate!');
-                }
-            }
-            
-            versionElement.textContent = versionText;
-            versionElement.title = `Build: ${CONFIG.VERSION.buildDate}`;
-        }
     </script>
 </body>
 </html>
