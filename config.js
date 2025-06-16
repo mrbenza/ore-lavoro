@@ -1,13 +1,13 @@
 // Configurazione Sistema Gestione Ore
 const CONFIG = {
     // Google Apps Script URL - NUOVO DEPLOYMENT
-    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzqNffU3AhcsBIQMh8951ZYZ_Vef9LCY3QyXDkkPM2qylEqZqNPkBKm2vnB39vHFVpe/exec',
+    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwKi3_g4f1ykqg0wXdgGyqhGJcJi42rvPgTUnbsJHDd23Gg90PGxJ-9ZEtoGrTrYKnt/exec',
     
     // Versioning
     VERSION: {
-        frontend: '2.1.0',
+        frontend: '2.1.1',
         buildDate: '2025-01-15',
-        description: 'Dashboard con versioning e debug migliorato'
+        description: 'Fix API Call per oggetti complessi'
     },
     
     // Pagine del sistema
@@ -34,21 +34,34 @@ const CONFIG = {
     
     // Debug
     DEBUG: true,
-    VERSION: '1.0.0'
+    VERSION: '1.0.1'
 };
 
 // Funzioni di utilità comuni
 const Utils = {
-    // Gestione chiamate API
+    // ✅ FIX: Gestione chiamate API migliorata per oggetti complessi
     async callAPI(params) {
         if (CONFIG.DEBUG) {
             console.log('🔄 API Call:', params);
         }
         
         const url = new URL(CONFIG.APPS_SCRIPT_URL);
+        
+        // ✅ FIX: Gestione speciale per oggetti complessi
         Object.keys(params).forEach(key => {
-            url.searchParams.append(key, String(params[key]));
+            const value = params[key];
+            
+            // Se è un oggetto (come workData), serializzalo in JSON
+            if (typeof value === 'object' && value !== null) {
+                console.log(`🔧 Serializzando oggetto ${key}:`, value);
+                url.searchParams.append(key, JSON.stringify(value));
+            } else {
+                // Per valori semplici, converti a stringa normalmente
+                url.searchParams.append(key, String(value));
+            }
         });
+        
+        console.log('🌐 URL finale:', url.toString());
         
         const response = await fetch(url.toString(), { method: 'GET' });
         
@@ -189,7 +202,7 @@ const PageGuard = {
 
 // Log di sistema
 if (CONFIG.DEBUG) {
-    console.log('🚀 Sistema Gestione Ore inizializzato');
+    console.log('🚀 Sistema Gestione Ore inizializzato v2.1.1');
     console.log('📋 Configurazione:', CONFIG);
     console.log('🔐 Sessione attiva:', Utils.isLoggedIn());
 }
