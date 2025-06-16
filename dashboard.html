@@ -19,7 +19,7 @@
         }
 
         .dashboard-container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
         }
 
@@ -52,34 +52,33 @@
         }
 
         .user-stats {
-            display: flex;
-            gap: 30px;
-            flex-wrap: wrap;
-        }
-
-        .stat-item {
             text-align: center;
         }
 
+        .stat-item {
+            display: inline-block;
+        }
+
         .stat-number {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             color: #667eea;
             display: block;
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 14px;
             color: #888;
             text-transform: uppercase;
             letter-spacing: 1px;
+            margin-top: 5px;
         }
 
         .logout-btn {
             background: linear-gradient(135deg, #ff6b6b, #ee5a52);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 25px;
             cursor: pointer;
             font-weight: 600;
@@ -95,7 +94,7 @@
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 0 0 20px 20px;
-            padding: 30px;
+            padding: 40px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-top: none;
@@ -103,7 +102,7 @@
 
         .work-entry-form {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
             margin-bottom: 30px;
         }
@@ -141,9 +140,9 @@
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 12px 16px;
+            padding: 15px 20px;
             border: 2px solid #e1e5e9;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 16px;
             transition: all 0.3s ease;
             background: rgba(255, 255, 255, 0.9);
@@ -163,18 +162,18 @@
             resize: vertical;
         }
 
-        .calendar-container {
-            position: relative;
-        }
-
-        .calendar-input {
-            cursor: pointer;
-        }
-
         .hours-input {
             text-align: center;
-            font-size: 18px;
+            font-size: 24px !important;
             font-weight: 600;
+            color: #667eea;
+        }
+
+        .hours-section {
+            grid-column: span 2;
+            text-align: center;
+            background: rgba(102, 126, 234, 0.08) !important;
+            border: 2px solid rgba(102, 126, 234, 0.2) !important;
         }
 
         .save-section {
@@ -189,7 +188,7 @@
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            padding: 15px 40px;
+            padding: 18px 50px;
             border-radius: 25px;
             font-size: 18px;
             font-weight: 600;
@@ -262,33 +261,30 @@
             display: none;
         }
 
+        .decimal-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            text-align: center;
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
                 text-align: center;
             }
 
-            .user-stats {
-                justify-content: center;
-            }
-
             .work-entry-form {
                 grid-template-columns: 1fr;
+            }
+
+            .hours-section {
+                grid-column: span 1;
             }
         }
 
         .icon {
             font-size: 20px;
-        }
-
-        .debug-info {
-            background: rgba(255, 193, 7, 0.1);
-            border: 1px solid rgba(255, 193, 7, 0.3);
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 20px;
-            font-size: 12px;
-            color: #856404;
         }
     </style>
 </head>
@@ -305,15 +301,7 @@
                 <div class="user-stats">
                     <div class="stat-item">
                         <span class="stat-number" id="monthlyHours">0</span>
-                        <span class="stat-label">Ore Mese</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number" id="monthlyEarnings">€0</span>
-                        <span class="stat-label">Guadagno</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number" id="hourlyRate">€0</span>
-                        <span class="stat-label">Tariffa/Ora</span>
+                        <span class="stat-label">Ore Questo Mese</span>
                     </div>
                 </div>
 
@@ -325,21 +313,16 @@
 
         <!-- Contenuto principale -->
         <div class="main-content">
-            <!-- Debug Info -->
-            <div class="debug-info" id="debugInfo" style="display: none;">
-                <strong>🐛 Debug Info:</strong> <span id="debugContent"></span>
-            </div>
-
             <form id="workEntryForm" class="work-entry-form">
                 <!-- Sezione Data -->
                 <div class="form-section">
                     <div class="section-title">
                         <span class="icon">📅</span>
-                        Data Lavoro
+                        Data
                     </div>
                     <div class="form-group">
                         <label for="workDate">Seleziona Data</label>
-                        <input type="date" id="workDate" name="workDate" class="calendar-input" required>
+                        <input type="date" id="workDate" name="workDate" required>
                         <div class="validation-message">Seleziona una data valida</div>
                     </div>
                 </div>
@@ -359,38 +342,26 @@
                     </div>
                 </div>
 
-                <!-- Sezione Lavori -->
-                <div class="form-section">
-                    <div class="section-title">
-                        <span class="icon">🔨</span>
-                        Attività
-                    </div>
-                    <div class="form-group">
-                        <label for="lavori">Lavori Eseguiti</label>
-                        <textarea id="lavori" name="lavori" placeholder="Descrivi i lavori eseguiti oggi..." required></textarea>
-                        <div class="validation-message">Descrivi i lavori eseguiti</div>
-                    </div>
-                </div>
-
-                <!-- Sezione Ore -->
-                <div class="form-section">
+                <!-- Sezione Ore (più prominente) -->
+                <div class="form-section hours-section">
                     <div class="section-title">
                         <span class="icon">⏰</span>
                         Ore Lavorate
                     </div>
                     <div class="form-group">
-                        <label for="ore">Ore (es. 8.5)</label>
-                        <input type="number" id="ore" name="ore" class="hours-input" 
-                               min="0" max="24" step="0.1" placeholder="8.0" required>
+                        <label for="ore">Inserisci le ore</label>
+                        <input type="text" id="ore" name="ore" class="hours-input" 
+                               placeholder="8.5" required autocomplete="off">
+                        <div class="decimal-hint">Usa il punto per i decimali (es: 8.5)</div>
                         <div class="validation-message">Inserisci ore valide (0-24)</div>
                     </div>
                 </div>
 
-                <!-- Sezione Note -->
+                <!-- Sezione Note (opzionale) -->
                 <div class="form-section">
                     <div class="section-title">
                         <span class="icon">📝</span>
-                        Note Aggiuntive
+                        Note
                     </div>
                     <div class="form-group">
                         <label for="note">Note (opzionale)</label>
@@ -402,7 +373,7 @@
             <!-- Sezione Salvataggio -->
             <div class="save-section">
                 <button type="submit" class="save-btn" id="saveBtn" form="workEntryForm">
-                    💾 Salva Dati
+                    💾 Salva Ore
                 </button>
             </div>
         </div>
@@ -413,45 +384,13 @@
 
     <script src="config.js"></script>
     <script>
-        // Configurazione
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzae9P_AKSpm_kz95fA-0Dcn8v3MiucrwgtVkIMMNMJIH0rMUkcwwj0-H6UxWIdCvKG/exec';
-        
         let currentUser = null;
         let sessionToken = null;
         let cantieri = [];
 
-        // ✅ FIX: Funzione updateVersionInfo mancante
-        function updateVersionInfo() {
-            console.log('📋 Sistema Dashboard v2.1 - Bugfix Applied');
-            
-            // Aggiorna info versione nel footer se esiste
-            const versionElement = document.querySelector('.footer p');
-            if (versionElement) {
-                versionElement.textContent = '© 2025 Sistema Gestione Ore - v2.1 (Bugfix)';
-            }
-            
-            // Debug info
-            updateDebugInfo('Sistema caricato correttamente');
-        }
-
-        function updateDebugInfo(message) {
-            const debugInfo = document.getElementById('debugInfo');
-            const debugContent = document.getElementById('debugContent');
-            
-            if (debugInfo && debugContent) {
-                debugContent.textContent = message;
-                debugInfo.style.display = 'block';
-                
-                // Nascondi dopo 5 secondi
-                setTimeout(() => {
-                    debugInfo.style.display = 'none';
-                }, 5000);
-            }
-        }
-
-        // Inizializzazione con protezione accesso
+        // Inizializzazione
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Dashboard avviata - v2.1 (Bugfix)');
+            console.log('🚀 Dashboard Snellita avviata');
             
             // Verifica accesso
             if (!PageGuard.requireLogin()) {
@@ -476,9 +415,6 @@
             
             // Setup form
             setupForm();
-            
-            // ✅ FIX: Aggiorna info versioni (ora implementata)
-            updateVersionInfo();
         });
 
         function loadUserData() {
@@ -486,9 +422,7 @@
             
             document.getElementById('userName').textContent = currentUser.name;
             document.getElementById('userRole').textContent = currentUser.role;
-            document.getElementById('monthlyHours').textContent = currentUser.oreMese || 0;
-            document.getElementById('monthlyEarnings').textContent = '€' + (currentUser.guadagnoMese || 0);
-            document.getElementById('hourlyRate').textContent = '€' + (currentUser.stipendioOrario || 0);
+            document.getElementById('monthlyHours').textContent = Utils.formatHours(currentUser.oreMese || 0);
         }
 
         async function loadCantieri() {
@@ -528,147 +462,121 @@
 
         function setupForm() {
             const form = document.getElementById('workEntryForm');
+            const oreInput = document.getElementById('ore');
+            
+            // ✅ FIX: Gestione decimali con virgola/punto
+            oreInput.addEventListener('input', function(e) {
+                let value = e.target.value;
+                
+                // Sostituisci automaticamente virgola con punto
+                if (value.includes(',')) {
+                    value = value.replace(',', '.');
+                    e.target.value = value;
+                }
+                
+                // Validazione in tempo reale
+                clearValidation(e.target);
+            });
+            
+            oreInput.addEventListener('blur', function(e) {
+                validateHoursField(e.target);
+            });
             
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 await saveWorkEntry();
             });
 
-            // Validazione in tempo reale
-            const requiredFields = ['workDate', 'cantiere', 'lavori', 'ore'];
-            requiredFields.forEach(fieldId => {
+            // Validazione altri campi
+            ['workDate', 'cantiere'].forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 field.addEventListener('blur', () => validateField(field));
-                field.addEventListener('input', () => clearValidation(field));
+                field.addEventListener('change', () => clearValidation(field));
             });
+        }
+
+        function validateHoursField(field) {
+            let value = field.value.trim();
+            
+            // Sostituisci virgola con punto se presente
+            if (value.includes(',')) {
+                value = value.replace(',', '.');
+                field.value = value;
+            }
+            
+            const hours = parseFloat(value);
+            const isValid = !isNaN(hours) && hours >= 0 && hours <= 24 && value !== '';
+            
+            if (!isValid) {
+                field.classList.add('form-validation');
+                field.nextElementSibling.nextElementSibling.style.display = 'block';
+                return false;
+            } else {
+                clearValidation(field);
+                return true;
+            }
         }
 
         function validateField(field) {
             const value = field.value.trim();
-            let isValid = true;
-            
-            if (field.hasAttribute('required') && !value) {
-                isValid = false;
-            }
-            
-            if (field.id === 'ore') {
-                const hours = parseFloat(value);
-                if (isNaN(hours) || hours < 0 || hours > 24) {
-                    isValid = false;
-                }
-            }
+            const isValid = field.hasAttribute('required') ? value !== '' : true;
             
             if (!isValid) {
                 field.classList.add('form-validation');
-                field.nextElementSibling.style.display = 'block';
+                const validationMsg = field.parentElement.querySelector('.validation-message');
+                if (validationMsg) validationMsg.style.display = 'block';
+                return false;
             } else {
                 clearValidation(field);
+                return true;
             }
-            
-            return isValid;
         }
 
         function clearValidation(field) {
             field.classList.remove('form-validation');
-            field.nextElementSibling.style.display = 'none';
+            const validationMsgs = field.parentElement.querySelectorAll('.validation-message');
+            validationMsgs.forEach(msg => msg.style.display = 'none');
         }
 
         async function saveWorkEntry() {
             const saveBtn = document.getElementById('saveBtn');
             const form = document.getElementById('workEntryForm');
             
-            // 🔍 DEBUG MIGLIORATO: Analisi completa dei valori
-            console.log('=== 🔍 DEBUG COMPLETO FORM ===');
-            
-            // Metodo 1: FormData
+            // Validazione
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
-            console.log('📋 FormData completo:', data);
             
-            // Metodo 2: Lettura diretta elementi
-            const oreElement = document.getElementById('ore');
-            const cantiereElement = document.getElementById('cantiere');
-            const lavoriElement = document.getElementById('lavori');
-            const dataElement = document.getElementById('workDate');
-            const noteElement = document.getElementById('note');
+            // ✅ FIX: Gestione decimali sicura
+            let oreValue = data.ore.trim();
+            if (oreValue.includes(',')) {
+                oreValue = oreValue.replace(',', '.');
+            }
             
-            console.log('🔍 Valori diretti elementi:');
-            console.log('- ore.value:', oreElement.value, '(tipo:', typeof oreElement.value, ')');
-            console.log('- ore.value === "":', oreElement.value === '');
-            console.log('- ore.value.length:', oreElement.value.length);
-            console.log('- cantiere.value:', cantiereElement.value);
-            console.log('- lavori.value:', lavoriElement.value);
-            console.log('- data.value:', dataElement.value);
-            console.log('- note.value:', noteElement.value);
+            const oreParsed = parseFloat(oreValue);
             
-            // 🔍 VERIFICA: Ore è un numero valido?
-            const oreRaw = oreElement.value;
-            console.log('🔍 Analisi oreRaw:', {
-                value: oreRaw,
-                type: typeof oreRaw,
-                length: oreRaw.length,
-                isEmpty: oreRaw === '',
-                trimmed: oreRaw.trim()
+            console.log('🔢 Debug ore:', {
+                original: data.ore,
+                cleaned: oreValue,
+                parsed: oreParsed,
+                isValid: !isNaN(oreParsed) && oreParsed >= 0 && oreParsed <= 24
             });
             
-            const oreFloat = parseFloat(oreRaw);
-            const oreIsValid = oreRaw !== '' && !isNaN(oreFloat) && oreFloat >= 0 && oreFloat <= 24;
-            
-            console.log('🔢 Analisi ore:');
-            console.log('- Valore raw:', `"${oreRaw}"`);
-            console.log('- parseFloat():', oreFloat);
-            console.log('- isNaN():', isNaN(oreFloat));
-            console.log('- >= 0:', oreFloat >= 0);
-            console.log('- <= 24:', oreFloat <= 24);
-            console.log('- oreRaw !== "":', oreRaw !== '');
-            console.log('- Risultato oreIsValid:', oreIsValid);
-            
-            // 🔍 COSTRUZIONE DATI SICURA - Fix della logica
-            const workDataToSend = {
-                data: dataElement.value,
-                cantiereId: cantiereElement.value,
-                lavori: lavoriElement.value,
-                ore: oreIsValid ? oreFloat : oreRaw,  // 🔧 FIX: Invia il valore raw se non è valido, così vediamo cosa c'è
-                note: noteElement.value || ''
-            };
-            
-            console.log('📦 WorkData da inviare:', workDataToSend);
-            
-            updateDebugInfo(`DEBUG: ore=${oreRaw} → ${oreFloat} (valido: ${oreIsValid})`);
-            
-            // Validazione migliorata - più permissiva per il debug
+            // Validazione campi
             let isValid = true;
-            let errorMessages = [];
+            ['workDate', 'cantiere'].forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!validateField(field)) {
+                    isValid = false;
+                }
+            });
             
-            if (!workDataToSend.data) {
-                errorMessages.push('Data mancante');
+            const oreField = document.getElementById('ore');
+            if (!validateHoursField(oreField)) {
                 isValid = false;
-            }
-            if (!workDataToSend.cantiereId) {
-                errorMessages.push('Cantiere mancante');
-                isValid = false;
-            }
-            if (!workDataToSend.lavori || workDataToSend.lavori.trim() === '') {
-                errorMessages.push('Descrizione lavori mancante');
-                isValid = false;
-            }
-            
-            // 🔧 FIX: Validazione ore più permissiva - permettiamo di inviare anche valori "problematici" per debug
-            console.log('🔍 Validazione ore - workDataToSend.ore:', workDataToSend.ore, typeof workDataToSend.ore);
-            
-            if (oreRaw === '' || oreRaw === null || oreRaw === undefined) {
-                errorMessages.push(`Ore vuote: "${oreRaw}"`);
-                isValid = false;
-            } else if (!oreIsValid) {
-                // Non blocchiamo più qui - lasciamo che il backend gestisca l'errore con più dettagli
-                console.log('⚠️ Ore potenzialmente non valide, ma continuiamo per debug:', workDataToSend.ore);
             }
             
             if (!isValid) {
-                const errorMsg = 'Errori rilevati: ' + errorMessages.join(', ');
-                console.error('❌ Validazione fallita:', errorMsg);
-                showNotification(errorMsg, 'error');
-                updateDebugInfo('ERRORE: ' + errorMsg);
+                showNotification('Per favore completa tutti i campi obbligatori', 'error');
                 return;
             }
             
@@ -677,25 +585,27 @@
             saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
             
             try {
-                console.log('💾 Invio al backend...');
-                console.log('SessionToken:', sessionToken);
-                console.log('WorkData finale:', workDataToSend);
+                console.log('💾 Salvando ore lavorate...');
                 
                 const result = await callGoogleAppsScript({
                     action: 'saveWorkEntry',
                     sessionToken: sessionToken,
-                    workData: workDataToSend
+                    workData: {
+                        data: data.workDate,
+                        cantiereId: data.cantiere,
+                        lavori: 'Lavoro registrato via dashboard', // Campo fisso
+                        ore: oreParsed, // Valore numerico pulito
+                        note: data.note || ''
+                    }
                 });
                 
-                console.log('📨 Risposta backend:', result);
-                
                 if (result.success) {
-                    showNotification('✅ Dati salvati con successo!', 'success');
-                    updateDebugInfo(`SUCCESSO! Salvate ${workDataToSend.ore} ore per ${currentUser.name}`);
+                    showNotification(`✅ ${oreParsed} ore salvate con successo!`, 'success');
                     
-                    // Reset form
+                    // Reset form mantenendo la data
+                    const currentDate = data.workDate;
                     form.reset();
-                    document.getElementById('workDate').value = new Date().toISOString().split('T')[0];
+                    document.getElementById('workDate').value = currentDate;
                     
                     // Aggiorna statistiche utente
                     setTimeout(() => {
@@ -709,10 +619,9 @@
             } catch (error) {
                 console.error('❌ Errore salvataggio:', error);
                 showNotification('Errore nel salvataggio: ' + error.message, 'error');
-                updateDebugInfo('ERRORE: ' + error.message);
             } finally {
                 saveBtn.disabled = false;
-                saveBtn.innerHTML = '💾 Salva Dati';
+                saveBtn.innerHTML = '💾 Salva Ore';
             }
         }
 
@@ -724,8 +633,7 @@
                 });
                 
                 if (result.success && result.data) {
-                    document.getElementById('monthlyHours').textContent = result.data.oreMese || 0;
-                    document.getElementById('monthlyEarnings').textContent = '€' + (result.data.guadagnoMese || 0);
+                    document.getElementById('monthlyHours').textContent = Utils.formatHours(result.data.oreMese || 0);
                 }
             } catch (error) {
                 console.error('Errore aggiornamento stats:', error);
