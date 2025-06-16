@@ -603,21 +603,32 @@
             
             // 🔍 VERIFICA: Ore è un numero valido?
             const oreRaw = oreElement.value;
+            console.log('🔍 Analisi oreRaw:', {
+                value: oreRaw,
+                type: typeof oreRaw,
+                length: oreRaw.length,
+                isEmpty: oreRaw === '',
+                trimmed: oreRaw.trim()
+            });
+            
             const oreFloat = parseFloat(oreRaw);
-            const oreIsValid = !isNaN(oreFloat) && oreFloat >= 0 && oreFloat <= 24;
+            const oreIsValid = oreRaw !== '' && !isNaN(oreFloat) && oreFloat >= 0 && oreFloat <= 24;
             
             console.log('🔢 Analisi ore:');
-            console.log('- Valore raw:', oreRaw);
+            console.log('- Valore raw:', `"${oreRaw}"`);
             console.log('- parseFloat():', oreFloat);
             console.log('- isNaN():', isNaN(oreFloat));
-            console.log('- Valido (0-24):', oreIsValid);
+            console.log('- >= 0:', oreFloat >= 0);
+            console.log('- <= 24:', oreFloat <= 24);
+            console.log('- oreRaw !== "":', oreRaw !== '');
+            console.log('- Risultato oreIsValid:', oreIsValid);
             
-            // 🔍 COSTRUZIONE DATI SICURA
+            // 🔍 COSTRUZIONE DATI SICURA - Fix della logica
             const workDataToSend = {
                 data: dataElement.value,
                 cantiereId: cantiereElement.value,
                 lavori: lavoriElement.value,
-                ore: oreIsValid ? oreFloat : null,  // 🔍 Solo se valido
+                ore: oreIsValid ? oreFloat : oreRaw,  // 🔧 FIX: Invia il valore raw se non è valido, così vediamo cosa c'è
                 note: noteElement.value || ''
             };
             
@@ -625,7 +636,7 @@
             
             updateDebugInfo(`DEBUG: ore=${oreRaw} → ${oreFloat} (valido: ${oreIsValid})`);
             
-            // Validazione migliorata
+            // Validazione migliorata - più permissiva per il debug
             let isValid = true;
             let errorMessages = [];
             
@@ -641,9 +652,16 @@
                 errorMessages.push('Descrizione lavori mancante');
                 isValid = false;
             }
-            if (!oreIsValid) {
-                errorMessages.push(`Ore non valide: "${oreRaw}"`);
+            
+            // 🔧 FIX: Validazione ore più permissiva - permettiamo di inviare anche valori "problematici" per debug
+            console.log('🔍 Validazione ore - workDataToSend.ore:', workDataToSend.ore, typeof workDataToSend.ore);
+            
+            if (oreRaw === '' || oreRaw === null || oreRaw === undefined) {
+                errorMessages.push(`Ore vuote: "${oreRaw}"`);
                 isValid = false;
+            } else if (!oreIsValid) {
+                // Non blocchiamo più qui - lasciamo che il backend gestisca l'errore con più dettagli
+                console.log('⚠️ Ore potenzialmente non valide, ma continuiamo per debug:', workDataToSend.ore);
             }
             
             if (!isValid) {
