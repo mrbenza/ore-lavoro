@@ -577,53 +577,80 @@
             const saveBtn = document.getElementById('saveBtn');
             const form = document.getElementById('workEntryForm');
             
-            // ✅ FIX: Raccolta dati migliorata
-            console.log('🔍 Debug: Raccogliendo dati dal form...');
+            // 🔍 DEBUG MIGLIORATO: Analisi completa dei valori
+            console.log('=== 🔍 DEBUG COMPLETO FORM ===');
             
-            // Metodo 1: FormData (originale)
+            // Metodo 1: FormData
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
+            console.log('📋 FormData completo:', data);
             
-            console.log('📋 FormData estratto:', data);
-            
-            // ✅ FIX: Verifica esplicita del valore ore
+            // Metodo 2: Lettura diretta elementi
             const oreElement = document.getElementById('ore');
-            const oreValue = oreElement.value;
+            const cantiereElement = document.getElementById('cantiere');
+            const lavoriElement = document.getElementById('lavori');
+            const dataElement = document.getElementById('workDate');
+            const noteElement = document.getElementById('note');
             
-            console.log('🔍 Debug ore:');
-            console.log('- Elemento ore:', oreElement);
-            console.log('- Valore diretto:', oreValue);
-            console.log('- Valore da FormData:', data.ore);
-            console.log('- Tipo valore:', typeof oreValue);
+            console.log('🔍 Valori diretti elementi:');
+            console.log('- ore.value:', oreElement.value, '(tipo:', typeof oreElement.value, ')');
+            console.log('- ore.value === "":', oreElement.value === '');
+            console.log('- ore.value.length:', oreElement.value.length);
+            console.log('- cantiere.value:', cantiereElement.value);
+            console.log('- lavori.value:', lavoriElement.value);
+            console.log('- data.value:', dataElement.value);
+            console.log('- note.value:', noteElement.value);
             
-            // ✅ FIX: Override del valore ore se mancante
-            if (!data.ore && oreValue) {
-                data.ore = oreValue;
-                console.log('✅ Fix applicato: ore = ' + oreValue);
-            }
+            // 🔍 VERIFICA: Ore è un numero valido?
+            const oreRaw = oreElement.value;
+            const oreFloat = parseFloat(oreRaw);
+            const oreIsValid = !isNaN(oreFloat) && oreFloat >= 0 && oreFloat <= 24;
             
-            updateDebugInfo(`Ore da salvare: ${data.ore} (tipo: ${typeof data.ore})`);
+            console.log('🔢 Analisi ore:');
+            console.log('- Valore raw:', oreRaw);
+            console.log('- parseFloat():', oreFloat);
+            console.log('- isNaN():', isNaN(oreFloat));
+            console.log('- Valido (0-24):', oreIsValid);
             
-            // Validazione potenziata
+            // 🔍 COSTRUZIONE DATI SICURA
+            const workDataToSend = {
+                data: dataElement.value,
+                cantiereId: cantiereElement.value,
+                lavori: lavoriElement.value,
+                ore: oreIsValid ? oreFloat : null,  // 🔍 Solo se valido
+                note: noteElement.value || ''
+            };
+            
+            console.log('📦 WorkData da inviare:', workDataToSend);
+            
+            updateDebugInfo(`DEBUG: ore=${oreRaw} → ${oreFloat} (valido: ${oreIsValid})`);
+            
+            // Validazione migliorata
             let isValid = true;
-            const requiredFields = ['workDate', 'cantiere', 'lavori', 'ore'];
+            let errorMessages = [];
             
-            requiredFields.forEach(fieldId => {
-                const field = document.getElementById(fieldId);
-                if (!validateField(field)) {
-                    isValid = false;
-                }
-            });
-            
-            // ✅ FIX: Validazione specifica per ore
-            if (!data.ore || isNaN(parseFloat(data.ore))) {
-                console.error('❌ Valore ore non valido:', data.ore);
-                showNotification('Errore: inserisci un valore valido per le ore', 'error');
-                return;
+            if (!workDataToSend.data) {
+                errorMessages.push('Data mancante');
+                isValid = false;
+            }
+            if (!workDataToSend.cantiereId) {
+                errorMessages.push('Cantiere mancante');
+                isValid = false;
+            }
+            if (!workDataToSend.lavori || workDataToSend.lavori.trim() === '') {
+                errorMessages.push('Descrizione lavori mancante');
+                isValid = false;
+            }
+            if (!oreIsValid) {
+                errorMessages.push(`Ore non valide: "${oreRaw}"`);
+                isValid = false;
             }
             
             if (!isValid) {
-                showNotification('Per favore completa tutti i campi obbligatori', 'error');
+                const errorMsg = 'Errori rilevati: ' + errorMessages.join(', ');
+                console.error('❌ Validazione fallita:', errorMsg);
+                showNotification(errorMsg, 'error');
+                updateDebugInfo('ERRORE: ' + errorMsg);
                 return;
             }
             
@@ -632,26 +659,21 @@
             saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
             
             try {
-                console.log('💾 Salvando dati lavoro...', data);
-                
-                // ✅ FIX: Conversione esplicita delle ore a numero
-                const oreNumeriche = parseFloat(data.ore);
+                console.log('💾 Invio al backend...');
+                console.log('SessionToken:', sessionToken);
+                console.log('WorkData finale:', workDataToSend);
                 
                 const result = await callGoogleAppsScript({
                     action: 'saveWorkEntry',
                     sessionToken: sessionToken,
-                    workData: {
-                        data: data.workDate,
-                        cantiereId: data.cantiere,
-                        lavori: data.lavori,
-                        ore: oreNumeriche,  // ✅ FIX: Valore numerico garantito
-                        note: data.note || ''
-                    }
+                    workData: workDataToSend
                 });
+                
+                console.log('📨 Risposta backend:', result);
                 
                 if (result.success) {
                     showNotification('✅ Dati salvati con successo!', 'success');
-                    updateDebugInfo(`Successo! Salvate ${oreNumeriche} ore per ${currentUser.name}`);
+                    updateDebugInfo(`SUCCESSO! Salvate ${workDataToSend.ore} ore per ${currentUser.name}`);
                     
                     // Reset form
                     form.reset();
@@ -669,7 +691,7 @@
             } catch (error) {
                 console.error('❌ Errore salvataggio:', error);
                 showNotification('Errore nel salvataggio: ' + error.message, 'error');
-                updateDebugInfo('Errore: ' + error.message);
+                updateDebugInfo('ERRORE: ' + error.message);
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = '💾 Salva Dati';
