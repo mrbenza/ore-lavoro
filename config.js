@@ -1,7 +1,14 @@
 // Configurazione Sistema Gestione Ore
 const CONFIG = {
-    // Google Apps Script URL - AGGIORNA QUESTO DOPO OGNI DEPLOYMENT
+    // Google Apps Script URL - NUOVO DEPLOYMENT
     APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyPLvqW_TjWPNE9MSpEtQTpm_UDni9yqbrMXgVWOhN5-gudG0ElOlwYeXT2rcaXWyQy/exec',
+    
+    // Versioning
+    VERSION: {
+        frontend: '2.1.0',
+        buildDate: '2025-01-15',
+        description: 'Dashboard con versioning e debug migliorato'
+    },
     
     // Pagine del sistema
     PAGES: {
@@ -136,7 +143,7 @@ const Utils = {
         return value && value.trim().length > 0;
     },
     
-    // Auto-logout per sicurezza
+    // Setup auto-logout per sicurezza
     setupAutoLogout() {
         let timeout;
         
@@ -155,6 +162,31 @@ const Utils = {
         });
         
         resetTimeout(); // Avvia il timer
+    },
+    
+    // Verifica versione backend
+    async checkBackendVersion() {
+        try {
+            const result = await this.callAPI({ action: 'getVersion' });
+            if (result.success && result.version) {
+                const backendVersion = result.version.version;
+                const frontendVersion = CONFIG.VERSION.frontend;
+                
+                console.log(`🔧 Backend v${backendVersion} | Frontend v${frontendVersion}`);
+                
+                if (backendVersion !== frontendVersion) {
+                    console.warn('⚠️ Versioni diverse! Backend:', backendVersion, 'Frontend:', frontendVersion);
+                }
+                
+                // Salva info versione per display
+                window.BACKEND_VERSION = result.version;
+                
+                return result.version;
+            }
+        } catch (error) {
+            console.error('❌ Errore verifica versione backend:', error);
+        }
+        return null;
     }
 };
 
