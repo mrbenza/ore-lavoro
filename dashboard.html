@@ -280,6 +280,16 @@
         .icon {
             font-size: 20px;
         }
+
+        .debug-info {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #856404;
+        }
     </style>
 </head>
 <body>
@@ -315,6 +325,11 @@
 
         <!-- Contenuto principale -->
         <div class="main-content">
+            <!-- Debug Info -->
+            <div class="debug-info" id="debugInfo" style="display: none;">
+                <strong>🐛 Debug Info:</strong> <span id="debugContent"></span>
+            </div>
+
             <form id="workEntryForm" class="work-entry-form">
                 <!-- Sezione Data -->
                 <div class="form-section">
@@ -405,9 +420,38 @@
         let sessionToken = null;
         let cantieri = [];
 
+        // ✅ FIX: Funzione updateVersionInfo mancante
+        function updateVersionInfo() {
+            console.log('📋 Sistema Dashboard v2.1 - Bugfix Applied');
+            
+            // Aggiorna info versione nel footer se esiste
+            const versionElement = document.querySelector('.footer p');
+            if (versionElement) {
+                versionElement.textContent = '© 2025 Sistema Gestione Ore - v2.1 (Bugfix)';
+            }
+            
+            // Debug info
+            updateDebugInfo('Sistema caricato correttamente');
+        }
+
+        function updateDebugInfo(message) {
+            const debugInfo = document.getElementById('debugInfo');
+            const debugContent = document.getElementById('debugContent');
+            
+            if (debugInfo && debugContent) {
+                debugContent.textContent = message;
+                debugInfo.style.display = 'block';
+                
+                // Nascondi dopo 5 secondi
+                setTimeout(() => {
+                    debugInfo.style.display = 'none';
+                }, 5000);
+            }
+        }
+
         // Inizializzazione con protezione accesso
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Dashboard avviata - v' + CONFIG.VERSION);
+            console.log('🚀 Dashboard avviata - v2.1 (Bugfix)');
             
             // Verifica accesso
             if (!PageGuard.requireLogin()) {
@@ -433,7 +477,7 @@
             // Setup form
             setupForm();
             
-            // Aggiorna info versioni
+            // ✅ FIX: Aggiorna info versioni (ora implementata)
             updateVersionInfo();
         });
 
@@ -465,7 +509,7 @@
                     cantieri.forEach(cantiere => {
                         const option = document.createElement('option');
                         option.value = cantiere.id;
-                        option.textContent = cantiere.nome; // Mostra solo il NOME
+                        option.textContent = cantiere.nome;
                         cantiereSelect.appendChild(option);
                     });
                     
@@ -533,10 +577,34 @@
             const saveBtn = document.getElementById('saveBtn');
             const form = document.getElementById('workEntryForm');
             
-            // Validazione
+            // ✅ FIX: Raccolta dati migliorata
+            console.log('🔍 Debug: Raccogliendo dati dal form...');
+            
+            // Metodo 1: FormData (originale)
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
             
+            console.log('📋 FormData estratto:', data);
+            
+            // ✅ FIX: Verifica esplicita del valore ore
+            const oreElement = document.getElementById('ore');
+            const oreValue = oreElement.value;
+            
+            console.log('🔍 Debug ore:');
+            console.log('- Elemento ore:', oreElement);
+            console.log('- Valore diretto:', oreValue);
+            console.log('- Valore da FormData:', data.ore);
+            console.log('- Tipo valore:', typeof oreValue);
+            
+            // ✅ FIX: Override del valore ore se mancante
+            if (!data.ore && oreValue) {
+                data.ore = oreValue;
+                console.log('✅ Fix applicato: ore = ' + oreValue);
+            }
+            
+            updateDebugInfo(`Ore da salvare: ${data.ore} (tipo: ${typeof data.ore})`);
+            
+            // Validazione potenziata
             let isValid = true;
             const requiredFields = ['workDate', 'cantiere', 'lavori', 'ore'];
             
@@ -546,6 +614,13 @@
                     isValid = false;
                 }
             });
+            
+            // ✅ FIX: Validazione specifica per ore
+            if (!data.ore || isNaN(parseFloat(data.ore))) {
+                console.error('❌ Valore ore non valido:', data.ore);
+                showNotification('Errore: inserisci un valore valido per le ore', 'error');
+                return;
+            }
             
             if (!isValid) {
                 showNotification('Per favore completa tutti i campi obbligatori', 'error');
@@ -559,6 +634,9 @@
             try {
                 console.log('💾 Salvando dati lavoro...', data);
                 
+                // ✅ FIX: Conversione esplicita delle ore a numero
+                const oreNumeriche = parseFloat(data.ore);
+                
                 const result = await callGoogleAppsScript({
                     action: 'saveWorkEntry',
                     sessionToken: sessionToken,
@@ -566,13 +644,14 @@
                         data: data.workDate,
                         cantiereId: data.cantiere,
                         lavori: data.lavori,
-                        ore: data.ore,
-                        note: data.note
+                        ore: oreNumeriche,  // ✅ FIX: Valore numerico garantito
+                        note: data.note || ''
                     }
                 });
                 
                 if (result.success) {
                     showNotification('✅ Dati salvati con successo!', 'success');
+                    updateDebugInfo(`Successo! Salvate ${oreNumeriche} ore per ${currentUser.name}`);
                     
                     // Reset form
                     form.reset();
@@ -590,6 +669,7 @@
             } catch (error) {
                 console.error('❌ Errore salvataggio:', error);
                 showNotification('Errore nel salvataggio: ' + error.message, 'error');
+                updateDebugInfo('Errore: ' + error.message);
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = '💾 Salva Dati';
