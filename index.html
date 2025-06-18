@@ -5,7 +5,489 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sistema Gestione Ore</title>
     <style>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema Gestione Ore</title>
+    <style>
         * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 28px;
+            color: white;
+            font-weight: bold;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc3545;
+            display: none;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .success-message {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #888;
+            font-size: 14px;
+        }
+
+        .system-status {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .system-status h3 {
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 12px;
+        }
+
+        .status-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .status-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-online { background-color: #28a745; }
+        .status-offline { background-color: #dc3545; }
+        .status-loading { background-color: #ffc107; animation: pulse 1s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .version-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .build-info {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(102, 126, 234, 0.2);
+            font-size: 11px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="version-badge" id="versionBadge">Caricamento...</div>
+    
+    <div class="login-container">
+        <div class="logo-section">
+            <div class="logo">⏰</div>
+            <h1>Accesso Sistema</h1>
+            <p class="subtitle">Gestione Ore di Lavoro</p>
+        </div>
+
+        <div class="system-status">
+            <h3>🚀 Stato Sistema</h3>
+            <div class="status-row">
+                <span class="status-label">Connessione:</span>
+                <span class="status-value">
+                    <span class="status-indicator status-loading" id="connectionIndicator"></span>
+                    <span id="connectionStatus">Verificando...</span>
+                </span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Endpoint:</span>
+                <span class="status-value" id="endpointVersion">Rilevamento...</span>
+            </div>
+            <div class="build-info">
+                <div class="status-row">
+                    <span class="status-label">Build:</span>
+                    <span class="status-value" id="buildInfo">--</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="userId">Username</label>
+                <input type="text" id="userId" name="userId" required placeholder="Inserisci il tuo username">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Inserisci la tua password">
+            </div>
+
+            <button type="submit" class="login-btn" id="loginBtn">
+                Accedi
+            </button>
+        </form>
+
+        <div class="footer">
+            <p>&copy; 2025 Sistema Gestione Ore</p>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // Test di connessione con lettura versione
+        async function testConnection() {
+            const statusElement = document.getElementById('connectionStatus');
+            const indicatorElement = document.getElementById('connectionIndicator');
+            const endpointElement = document.getElementById('endpointVersion');
+            const buildElement = document.getElementById('buildInfo');
+            const versionBadge = document.getElementById('versionBadge');
+            
+            statusElement.textContent = 'Verificando...';
+            indicatorElement.className = 'status-indicator status-loading';
+            
+            try {
+                // Prima prova a ottenere info sistema
+                let systemInfo = null;
+                try {
+                    const infoResult = await Utils.callAPI({ action: 'getSystemInfo' });
+                    if (infoResult && infoResult.success) {
+                        systemInfo = infoResult.data;
+                    }
+                } catch (e) {
+                    console.log('getSystemInfo non disponibile, uso ping');
+                }
+                
+                // Ping di base
+                const result = await Utils.callAPI({ action: 'ping' });
+                
+                if (result && result.success) {
+                    statusElement.textContent = '✅ Connesso';
+                    indicatorElement.className = 'status-indicator status-online';
+                    
+                    // Mostra versione endpoint
+                    const version = systemInfo?.version || result.version || 'N/A';
+                    endpointElement.textContent = `v${version}`;
+                    
+                    // Mostra build info
+                    const build = systemInfo?.build || result.build || 'N/A';
+                    buildElement.textContent = build;
+                    
+                    // Aggiorna badge versione
+                    versionBadge.textContent = `v${version}`;
+                    
+                    console.log('✅ Sistema connesso:', {
+                        version: version,
+                        build: build,
+                        systemInfo: systemInfo
+                    });
+                    
+                    return true;
+                } else {
+                    throw new Error('Risposta non valida dal server');
+                }
+            } catch (error) {
+                console.error('❌ Test connessione fallito:', error);
+                statusElement.textContent = '❌ Errore';
+                indicatorElement.className = 'status-indicator status-offline';
+                endpointElement.textContent = 'Non disponibile';
+                buildElement.textContent = 'Errore';
+                versionBadge.textContent = 'Offline';
+                return false;
+            }
+        }
+
+        // Autenticazione
+        async function authenticateUser(userId, password) {
+            console.log('🔐 Autenticazione utente:', userId);
+            
+            try {
+                const result = await Utils.callAPI({
+                    action: 'authenticate',
+                    userId: userId,
+                    password: password
+                });
+                
+                console.log('🔐 Risultato autenticazione:', result);
+                return result;
+                
+            } catch (error) {
+                console.error('🔐 Errore autenticazione:', error);
+                throw new Error('Errore di autenticazione: ' + error.message);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('userId').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const loginBtn = document.getElementById('loginBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+
+            // Reset messaggi
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+
+            if (!userId || !password) {
+                showError('Per favore inserisci Username e Password');
+                return;
+            }
+
+            // Mostra loading
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="loading"></span>Accesso in corso...';
+
+            try {
+                const user = await authenticateUser(userId, password);
+                
+                if (user && user.success) {
+                    // Messaggio di benvenuto SENZA telefono
+                    const welcomeMsg = `Benvenuto ${user.data.name}!`;
+                    showSuccess(welcomeMsg);
+                    
+                    // Log per debug (mostra tutti i dati ricevuti)
+                    console.log('👤 Dati utente ricevuti:', user.data);
+                    console.log('📧 Email:', user.data.email);
+                    console.log('📱 Telefono:', user.data.telefono);
+                    console.log('⏰ Ore mese:', user.data.oreMese);
+                    console.log('⏰ Ore mese precedente:', user.data.oreMesePrecedente);
+                    console.log('🔧 Versione sistema:', user.systemInfo?.version);
+                    
+                    sessionStorage.setItem('currentUser', JSON.stringify(user.data));
+                    sessionStorage.setItem('sessionToken', user.sessionToken);
+                    
+                    // Redirect alla dashboard
+                    setTimeout(() => {
+                        console.log('🚀 Reindirizzamento alla dashboard...');
+                        window.location.href = './dashboard.html';
+                    }, 2000);
+                } else {
+                    showError(user.message || 'Credenziali non valide');
+                }
+            } catch (error) {
+                showError('Errore durante l\'autenticazione: ' + error.message);
+                console.error('Login error:', error);
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'Accedi';
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+        }
+
+        // Auto-setup al caricamento
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Sistema Login Finale avviato - Versione dinamica');
+            
+            // Se già loggato, vai alla dashboard
+            const currentUser = sessionStorage.getItem('currentUser');
+            const sessionToken = sessionStorage.getItem('sessionToken');
+            
+            if (currentUser && sessionToken) {
+                console.log('🔄 Utente già loggato, redirect alla dashboard...');
+                window.location.href = './dashboard.html';
+                return;
+            }
+            
+            const connected = await testConnection();
+            console.log('Connessione:', connected ? 'OK' : 'FALLITA');
+            
+            if (!connected) {
+                showError('Impossibile connettersi. Verifica che il Google Apps Script sia deployato correttamente.');
+            }
+        });
+    </script>
+</body>
+</html>        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
