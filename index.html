@@ -217,20 +217,35 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+
+        .version-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
+    <div class="version-badge">v3.0</div>
+    
     <div class="login-container">
         <div class="logo-section">
             <div class="logo">⏰</div>
             <h1>Accesso Sistema</h1>
-            <p class="subtitle">Gestione Ore di Lavoro</p>
+            <p class="subtitle">Gestione Ore di Lavoro V3.0</p>
         </div>
 
         <div class="demo-credentials">
             <h3>🚀 Stato Sistema</h3>
             <p><strong>Connessione:</strong> <span class="status-indicator status-loading"></span><span id="connectionStatus">Verificando...</span></p>
             <p><strong>Endpoint:</strong> <span id="connectionMethod">Auto-rileva</span></p>
+            <p><strong>Versione:</strong> V3.0 - Calcoli automatici Excel</p>
             <p style="margin-top: 10px;"><strong>Test Login:</strong> mario.rossi / nuovapassword123</p>
         </div>
 
@@ -239,8 +254,8 @@
 
         <form id="loginForm">
             <div class="form-group">
-                <label for="userId">UserID</label>
-                <input type="text" id="userId" name="userId" required placeholder="Inserisci il tuo UserID">
+                <label for="userId">Username</label>
+                <input type="text" id="userId" name="userId" required placeholder="Inserisci il tuo username">
             </div>
 
             <div class="form-group">
@@ -254,13 +269,13 @@
         </form>
 
         <div class="footer">
-            <p>&copy; 2025 Sistema Gestione Ore - Deploy v2.0</p>
+            <p>&copy; 2025 Sistema Gestione Ore - V3.0 Automatico</p>
         </div>
     </div>
 
     <script src="config.js"></script>
     <script>
-        // Test di connessione
+        // Test di connessione V3.0
         async function testConnection() {
             const statusElement = document.getElementById('connectionStatus');
             const methodElement = document.getElementById('connectionMethod');
@@ -273,8 +288,8 @@
                 const result = await Utils.callAPI({ action: 'ping' });
                 
                 if (result && result.success) {
-                    statusElement.textContent = '✅ Connesso';
-                    methodElement.textContent = 'Google Apps Script GET';
+                    statusElement.textContent = '✅ Connesso V3.0';
+                    methodElement.textContent = result.version || 'Google Apps Script V3.0';
                     statusIndicator.className = 'status-indicator status-online';
                     return true;
                 } else {
@@ -289,9 +304,9 @@
             }
         }
 
-        // Autenticazione
+        // Autenticazione V3.0
         async function authenticateUser(userId, password) {
-            console.log('🔐 Authenticating user:', userId);
+            console.log('🔐 Authenticating user V3.0:', userId);
             
             try {
                 const result = await Utils.callAPI({
@@ -300,7 +315,7 @@
                     password: password
                 });
                 
-                console.log('🔐 Authentication result:', result);
+                console.log('🔐 Authentication result V3.0:', result);
                 return result;
                 
             } catch (error) {
@@ -324,7 +339,7 @@
             successMessage.style.display = 'none';
 
             if (!userId || !password) {
-                showError('Per favore inserisci UserID e Password');
+                showError('Per favore inserisci Username e Password');
                 return;
             }
 
@@ -336,14 +351,23 @@
                 const user = await authenticateUser(userId, password);
                 
                 if (user && user.success) {
-                    showSuccess(`Benvenuto ${user.data.name}! (${user.data.role})`);
+                    // ✅ AGGIORNATO: Messaggio senza telefono, con email
+                    const welcomeMsg = `Benvenuto ${user.data.name}!`;
+                    showSuccess(welcomeMsg);
+                    
+                    // Log per debug (mostra tutti i dati ricevuti)
+                    console.log('👤 Dati utente V3.0 ricevuti:', user.data);
+                    console.log('📧 Email:', user.data.email);
+                    console.log('📱 Telefono:', user.data.telefono);
+                    console.log('⏰ Ore mese:', user.data.oreMese);
+                    console.log('⏰ Ore mese precedente:', user.data.oreMesePrecedente);
                     
                     sessionStorage.setItem('currentUser', JSON.stringify(user.data));
                     sessionStorage.setItem('sessionToken', user.sessionToken);
                     
-                    // FIX: Redirect diretto alla dashboard
+                    // Redirect alla dashboard
                     setTimeout(() => {
-                        console.log('🚀 Reindirizzamento alla dashboard...');
+                        console.log('🚀 Reindirizzamento alla dashboard V3.0...');
                         window.location.href = './dashboard.html';
                     }, 2000);
                 } else {
@@ -370,9 +394,9 @@
             successDiv.style.display = 'block';
         }
 
-        // Auto-setup al caricamento
+        // Auto-setup al caricamento V3.0
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Sistema Login avviato - v2.1 (Fixed Redirect)');
+            console.log('🚀 Sistema Login V3.0 avviato - Calcoli automatici Excel');
             
             // Se già loggato, vai alla dashboard
             const currentUser = sessionStorage.getItem('currentUser');
@@ -385,10 +409,10 @@
             }
             
             const connected = await testConnection();
-            console.log('Connessione:', connected ? 'OK' : 'FALLITA');
+            console.log('Connessione V3.0:', connected ? 'OK' : 'FALLITA');
             
             if (!connected) {
-                showError('Impossibile connettersi. Verifica che il Google Apps Script sia deployato correttamente.');
+                showError('Impossibile connettersi. Verifica che il Google Apps Script V3.0 sia deployato correttamente.');
             }
         });
     </script>
