@@ -19,7 +19,7 @@
         }
 
         .dashboard-container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
         }
 
@@ -46,17 +46,22 @@
             margin-bottom: 5px;
         }
 
-        .user-info .role {
+        .user-info .details {
             color: #666;
             font-size: 16px;
+            margin: 5px 0;
         }
 
         .user-stats {
+            display: flex;
+            gap: 30px;
             text-align: center;
         }
 
         .stat-item {
-            display: inline-block;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .stat-number {
@@ -67,11 +72,12 @@
         }
 
         .stat-label {
-            font-size: 14px;
+            font-size: 12px;
             color: #888;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-top: 5px;
+            text-align: center;
         }
 
         .logout-btn {
@@ -268,10 +274,62 @@
             text-align: center;
         }
 
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .quick-stats {
+            text-align: center;
+        }
+
+        .quick-stats .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+
+        .quick-stats .stat-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        .auto-calculated {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+
+        .auto-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
                 text-align: center;
+            }
+
+            .user-stats {
+                flex-direction: column;
+                gap: 15px;
             }
 
             .work-entry-form {
@@ -281,27 +339,50 @@
             .hours-section {
                 grid-column: span 1;
             }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .icon {
             font-size: 20px;
         }
+
+        .version-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Header con info utente -->
+        <!-- Header con info utente aggiornato -->
         <div class="header">
             <div class="header-content">
                 <div class="user-info">
                     <h1>👋 Benvenuto, <span id="userName">Caricamento...</span></h1>
-                    <div class="role" id="userRole">Caricamento...</div>
+                    <div class="details" id="userEmail">📧 Caricamento email...</div>
+                    <div class="details" id="userPhone">📱 Caricamento telefono...</div>
                 </div>
                 
                 <div class="user-stats">
                     <div class="stat-item">
                         <span class="stat-number" id="monthlyHours">0</span>
-                        <span class="stat-label">Ore Questo Mese</span>
+                        <span class="stat-label">Ore Mese Corrente</span>
+                        <span class="auto-badge">Auto</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="previousMonthHours">0</span>
+                        <span class="stat-label">Ore Mese Precedente</span>
+                        <span class="auto-badge">Auto</span>
                     </div>
                 </div>
 
@@ -313,6 +394,26 @@
 
         <!-- Contenuto principale -->
         <div class="main-content">
+            <!-- Statistiche rapide aggiornate -->
+            <div class="stats-grid auto-calculated">
+                <div class="quick-stats">
+                    <span class="stat-number" id="totalYearHours">0</span>
+                    <span class="stat-label">Anno Corrente</span>
+                </div>
+                <div class="quick-stats">
+                    <span class="stat-number" id="avgHoursPerDay">0</span>
+                    <span class="stat-label">Media/Giorno</span>
+                </div>
+                <div class="quick-stats">
+                    <span class="stat-number" id="workingDays">0</span>
+                    <span class="stat-label">Giorni Lavorati</span>
+                </div>
+                <div class="quick-stats">
+                    <span class="stat-number" id="lastUpdate">--</span>
+                    <span class="stat-label">Ultimo Aggiorn.</span>
+                </div>
+            </div>
+
             <form id="workEntryForm" class="work-entry-form">
                 <!-- Sezione Data -->
                 <div class="form-section">
@@ -375,6 +476,9 @@
                 <button type="submit" class="save-btn" id="saveBtn" form="workEntryForm">
                     💾 Salva Ore
                 </button>
+                <div style="margin-top: 15px; font-size: 14px; color: #666;">
+                    <span class="icon">🔄</span> I totali si aggiornano automaticamente
+                </div>
             </div>
         </div>
     </div>
@@ -382,15 +486,18 @@
     <!-- Notifiche -->
     <div id="notification" class="notification"></div>
 
+    <!-- Badge versione -->
+    <div class="version-badge">v3.0 - Auto Calc</div>
+
     <script src="config.js"></script>
     <script>
         let currentUser = null;
         let sessionToken = null;
         let cantieri = [];
 
-        // Inizializzazione
+        // Inizializzazione V3.0
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Dashboard Snellita avviata');
+            console.log('🚀 Dashboard V3.0 avviata - Calcoli automatici Excel');
             
             // Verifica accesso
             if (!PageGuard.requireLogin()) {
@@ -415,19 +522,53 @@
             
             // Setup form
             setupForm();
+            
+            // Aggiorna statistiche dal server
+            await refreshUserStats();
         });
 
         function loadUserData() {
             if (!currentUser) return;
             
+            console.log('📊 Caricando dati utente V3.0:', currentUser);
+            
+            // Dati base
             document.getElementById('userName').textContent = currentUser.name;
-            document.getElementById('userRole').textContent = currentUser.role;
+            document.getElementById('userEmail').textContent = `📧 ${currentUser.email || 'Email non disponibile'}`;
+            document.getElementById('userPhone').textContent = `📱 ${currentUser.telefono || 'Telefono non disponibile'}`;
+            
+            // Ore mese corrente e precedente (dalle formule Excel)
             document.getElementById('monthlyHours').textContent = Utils.formatHours(currentUser.oreMese || 0);
+            document.getElementById('previousMonthHours').textContent = Utils.formatHours(currentUser.oreMesePrecedente || 0);
+            
+            // Ore anno se disponibili
+            if (currentUser.oreAnno !== undefined) {
+                document.getElementById('totalYearHours').textContent = Utils.formatHours(currentUser.oreAnno || 0);
+            }
+            
+            // Calcoli derivati
+            updateDerivedStats();
+        }
+
+        function updateDerivedStats() {
+            const oreMese = parseFloat(currentUser.oreMese || 0);
+            const oreAnno = parseFloat(currentUser.oreAnno || 0);
+            
+            // Media ore per giorno (assumendo giorni lavorati nel mese)
+            const giorniLavoratiMese = Math.ceil(oreMese / 8); // Stima basata su 8 ore/giorno
+            const mediaGiorno = giorniLavoratiMese > 0 ? (oreMese / giorniLavoratiMese) : 0;
+            
+            document.getElementById('avgHoursPerDay').textContent = Utils.formatHours(mediaGiorno);
+            document.getElementById('workingDays').textContent = giorniLavoratiMese;
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('it-IT', { 
+                day: '2-digit', 
+                month: '2-digit' 
+            });
         }
 
         async function loadCantieri() {
             try {
-                console.log('📋 Caricando cantieri...');
+                console.log('📋 Caricando cantieri V3.0...');
                 
                 const result = await callGoogleAppsScript({
                     action: 'getCantieri',
@@ -443,7 +584,7 @@
                     cantieri.forEach(cantiere => {
                         const option = document.createElement('option');
                         option.value = cantiere.id;
-                        option.textContent = cantiere.nome;
+                        option.textContent = `${cantiere.nome} - ${cantiere.indirizzo}`;
                         cantiereSelect.appendChild(option);
                     });
                     
@@ -464,7 +605,7 @@
             const form = document.getElementById('workEntryForm');
             const oreInput = document.getElementById('ore');
             
-            // ✅ FIX: Gestione decimali con virgola/punto
+            // Gestione decimali con virgola/punto
             oreInput.addEventListener('input', function(e) {
                 let value = e.target.value;
                 
@@ -546,7 +687,7 @@
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
             
-            // ✅ FIX: Gestione decimali sicura
+            // Gestione decimali sicura
             let oreValue = data.ore.trim();
             if (oreValue.includes(',')) {
                 oreValue = oreValue.replace(',', '.');
@@ -554,7 +695,7 @@
             
             const oreParsed = parseFloat(oreValue);
             
-            console.log('🔢 Debug ore:', {
+            console.log('🔢 Debug ore V3.0:', {
                 original: data.ore,
                 cleaned: oreValue,
                 parsed: oreParsed,
@@ -585,7 +726,7 @@
             saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
             
             try {
-                console.log('💾 Salvando ore lavorate...');
+                console.log('💾 Salvando ore lavorate V3.0...');
                 
                 const result = await callGoogleAppsScript({
                     action: 'saveWorkEntry',
@@ -593,24 +734,24 @@
                     workData: {
                         data: data.workDate,
                         cantiereId: data.cantiere,
-                        lavori: 'Lavoro registrato via dashboard', // Campo fisso
-                        ore: oreParsed, // Valore numerico pulito
+                        lavori: 'Lavoro registrato via dashboard V3.0',
+                        ore: oreParsed,
                         note: data.note || ''
                     }
                 });
                 
                 if (result.success) {
-                    showNotification(`✅ ${oreParsed} ore salvate con successo!`, 'success');
+                    showNotification(`✅ ${oreParsed} ore salvate! Totali aggiornati automaticamente.`, 'success');
                     
                     // Reset form mantenendo la data
                     const currentDate = data.workDate;
                     form.reset();
                     document.getElementById('workDate').value = currentDate;
                     
-                    // Aggiorna statistiche utente
+                    // Aggiorna statistiche dal server (ore calcolate da Excel)
                     setTimeout(() => {
                         refreshUserStats();
-                    }, 1000);
+                    }, 1500);
                     
                 } else {
                     throw new Error(result.message || 'Errore nel salvataggio');
@@ -627,16 +768,34 @@
 
         async function refreshUserStats() {
             try {
+                console.log('🔄 Aggiornando statistiche V3.0...');
+                
                 const result = await callGoogleAppsScript({
                     action: 'getUserInfo',
                     sessionToken: sessionToken
                 });
                 
                 if (result.success && result.data) {
+                    // Aggiorna currentUser con i nuovi dati
+                    currentUser = { ...currentUser, ...result.data };
+                    
+                    // Aggiorna le statistiche nella UI
                     document.getElementById('monthlyHours').textContent = Utils.formatHours(result.data.oreMese || 0);
+                    document.getElementById('previousMonthHours').textContent = Utils.formatHours(result.data.oreMesePrecedente || 0);
+                    
+                    if (result.data.oreAnno !== undefined) {
+                        document.getElementById('totalYearHours').textContent = Utils.formatHours(result.data.oreAnno || 0);
+                    }
+                    
+                    // Aggiorna statistiche derivate
+                    updateDerivedStats();
+                    
+                    console.log('✅ Statistiche aggiornate:', result.data);
+                } else {
+                    console.log('⚠️ Impossibile aggiornare statistiche:', result.message);
                 }
             } catch (error) {
-                console.error('Errore aggiornamento stats:', error);
+                console.error('❌ Errore aggiornamento stats:', error);
             }
         }
 
