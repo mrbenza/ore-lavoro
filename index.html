@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema Gestione Ore</title>
+    <title>Login - Sistema Gestione Ore V3.4</title>
     <style>
         * {
             margin: 0;
@@ -62,6 +62,80 @@
             color: #666;
             font-size: 16px;
             margin-bottom: 30px;
+        }
+
+        .system-status {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .system-status h3 {
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 12px;
+        }
+
+        .status-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .status-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-online { background-color: #28a745; }
+        .status-offline { background-color: #dc3545; }
+        .status-loading { 
+            background-color: #ffc107; 
+            animation: pulse 1s infinite; 
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .version-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .build-info {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(102, 126, 234, 0.2);
+            font-size: 11px;
+            color: #888;
         }
 
         .form-group {
@@ -145,6 +219,16 @@
             display: none;
         }
 
+        .security-message {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
         .loading {
             display: inline-block;
             width: 20px;
@@ -175,75 +259,47 @@
             font-size: 14px;
         }
 
-        .system-status {
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .system-status h3 {
-            color: #667eea;
-            font-size: 14px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .status-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 8px 0;
-            font-size: 12px;
-        }
-
-        .status-label {
-            color: #666;
-            font-weight: 500;
-        }
-
-        .status-value {
-            color: #333;
-            font-weight: 600;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-
-        .status-online { background-color: #28a745; }
-        .status-offline { background-color: #dc3545; }
-        .status-loading { background-color: #ffc107; animation: pulse 1s infinite; }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .version-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(102, 126, 234, 0.9);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .build-info {
+        .footer .hash-info {
             margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(102, 126, 234, 0.2);
-            font-size: 11px;
-            color: #888;
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* Notifiche V3.4 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: all 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            color: #212529;
+        }
+
+        .notification.security {
+            background: linear-gradient(135deg, #667eea, #764ba2);
         }
     </style>
 </head>
@@ -252,9 +308,9 @@
     
     <div class="login-container">
         <div class="logo-section">
-            <div class="logo">⏰</div>
-            <h1>Accesso Sistema</h1>
-            <p class="subtitle">Gestione Ore di Lavoro</p>
+            <div class="logo">🔐</div>
+            <h1>Accesso Sistema V3.4</h1>
+            <p class="subtitle">Gestione Ore di Lavoro - Hash Password</p>
         </div>
 
         <div class="system-status">
@@ -270,6 +326,10 @@
                 <span class="status-label">Endpoint:</span>
                 <span class="status-value" id="endpointVersion">Rilevamento...</span>
             </div>
+            <div class="status-row">
+                <span class="status-label">Sicurezza:</span>
+                <span class="status-value" id="securityStatus">🔐 Hash Password</span>
+            </div>
             <div class="build-info">
                 <div class="status-row">
                     <span class="status-label">Build:</span>
@@ -280,16 +340,17 @@
 
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
+        <div id="securityMessage" class="security-message"></div>
 
         <form id="loginForm">
             <div class="form-group">
                 <label for="userId">Username</label>
-                <input type="text" id="userId" name="userId" required placeholder="Inserisci il tuo username">
+                <input type="text" id="userId" name="userId" required placeholder="Inserisci il tuo username" autocomplete="username">
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="Inserisci la tua password">
+                <input type="password" id="password" name="password" required placeholder="Inserisci la tua password" autocomplete="current-password">
             </div>
 
             <button type="submit" class="login-btn" id="loginBtn">
@@ -298,13 +359,14 @@
         </form>
 
         <div class="footer">
-            <p>&copy; 2025 Sistema Gestione Ore</p>
+            <p>&copy; 2025 Sistema Gestione Ore V3.4</p>
+            <div class="hash-info">🔐 Password protette con hash SHA-256</div>
         </div>
     </div>
 
     <script src="config.js"></script>
     <script>
-        // Test di connessione con lettura versione
+        // Test di connessione con sistema V3.4
         async function testConnection() {
             const statusElement = document.getElementById('connectionStatus');
             const indicatorElement = document.getElementById('connectionIndicator');
@@ -316,40 +378,30 @@
             indicatorElement.className = 'status-indicator status-loading';
             
             try {
-                // Prima prova a ottenere info sistema
-                let systemInfo = null;
-                try {
-                    const infoResult = await Utils.callAPI({ action: 'getSystemInfo' });
-                    if (infoResult && infoResult.success) {
-                        systemInfo = infoResult.data;
-                    }
-                } catch (e) {
-                    console.log('getSystemInfo non disponibile, uso ping');
-                }
-                
-                // Ping di base
+                // Test connessione con backend V3.4
                 const result = await Utils.callAPI({ action: 'ping' });
                 
                 if (result && result.success) {
                     statusElement.textContent = '✅ Connesso';
                     indicatorElement.className = 'status-indicator status-online';
                     
-                    // Mostra versione endpoint
-                    const version = systemInfo?.version || result.version || 'N/A';
+                    const version = result.version || 'N/A';
+                    const build = result.build || 'N/A';
+                    
                     endpointElement.textContent = `v${version}`;
-                    
-                    // Mostra build info
-                    const build = systemInfo?.build || result.build || 'N/A';
                     buildElement.textContent = build;
-                    
-                    // Aggiorna badge versione
                     versionBadge.textContent = `v${version}`;
                     
-                    console.log('✅ Sistema connesso:', {
+                    console.log('✅ Sistema V3.4 connesso:', {
                         version: version,
                         build: build,
-                        systemInfo: systemInfo
+                        features: result.features || []
                     });
+                    
+                    // Mostra features se disponibili
+                    if (result.features && result.features.includes('Hash Password SHA-256')) {
+                        document.getElementById('securityStatus').innerHTML = '🔐 Hash SHA-256 ✅';
+                    }
                     
                     return true;
                 } else {
@@ -362,13 +414,14 @@
                 endpointElement.textContent = 'Non disponibile';
                 buildElement.textContent = 'Errore';
                 versionBadge.textContent = 'Offline';
+                document.getElementById('securityStatus').innerHTML = '❌ Non disponibile';
                 return false;
             }
         }
 
-        // Autenticazione
+        // Autenticazione V3.4 con supporto hash
         async function authenticateUser(userId, password) {
-            console.log('🔐 Autenticazione utente:', userId);
+            console.log('🔐 Autenticazione utente V3.4:', userId);
             
             try {
                 const result = await Utils.callAPI({
@@ -377,7 +430,7 @@
                     password: password
                 });
                 
-                console.log('🔐 Risultato autenticazione:', result);
+                console.log('🔐 Risultato autenticazione V3.4:', result);
                 return result;
                 
             } catch (error) {
@@ -386,7 +439,7 @@
             }
         }
 
-        // Event listeners
+        // Event listeners V3.4
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -395,13 +448,21 @@
             const loginBtn = document.getElementById('loginBtn');
             const errorMessage = document.getElementById('errorMessage');
             const successMessage = document.getElementById('successMessage');
+            const securityMessage = document.getElementById('securityMessage');
 
             // Reset messaggi
             errorMessage.style.display = 'none';
             successMessage.style.display = 'none';
+            securityMessage.style.display = 'none';
 
             if (!userId || !password) {
                 showError('Per favore inserisci Username e Password');
+                return;
+            }
+
+            // Validazione password
+            if (!Utils.validatePassword(password)) {
+                showError(`Password deve essere almeno ${CONFIG.VALIDATION.MIN_PASSWORD_LENGTH} caratteri`);
                 return;
             }
 
@@ -413,32 +474,36 @@
                 const user = await authenticateUser(userId, password);
                 
                 if (user && user.success) {
-                    // Messaggio di benvenuto SENZA telefono
+                    // Messaggio di benvenuto
                     const welcomeMsg = `Benvenuto ${user.data.name}!`;
                     showSuccess(welcomeMsg);
                     
-                    // Log per debug (mostra tutti i dati ricevuti)
-                    console.log('👤 Dati utente ricevuti:', user.data);
-                    console.log('📧 Email:', user.data.email);
-                    console.log('📱 Telefono:', user.data.telefono);
-                    console.log('⏰ Ore mese:', user.data.oreMese);
-                    console.log('⏰ Ore mese precedente:', user.data.oreMesePrecedente);
-                    console.log('🔧 Versione sistema:', user.systemInfo?.version);
+                    // Log informazioni V3.4
+                    console.log('👤 Dati utente ricevuti V3.4:', user.data);
+                    console.log('🔐 Metodo autenticazione:', user.systemInfo?.authMethod);
+                    console.log('🔐 Hash support:', user.systemInfo?.hashSupport);
+                    console.log('📊 Versione backend:', user.systemInfo?.version);
                     
-                    sessionStorage.setItem('currentUser', JSON.stringify(user.data));
-                    sessionStorage.setItem('sessionToken', user.sessionToken);
+                    // Mostra info sicurezza
+                    if (user.systemInfo?.authMethod) {
+                        showSecurityInfo(user.systemInfo.authMethod);
+                        Utils.showSecurityStatus(user.systemInfo.authMethod, user.systemInfo.hashSupport);
+                    }
+                    
+                    // Salva sessione
+                    Utils.setSession(user.data, user.sessionToken);
                     
                     // Redirect alla dashboard
                     setTimeout(() => {
                         console.log('🚀 Reindirizzamento alla dashboard...');
-                        window.location.href = './dashboard.html';
-                    }, 2000);
+                        Utils.redirectToDashboard();
+                    }, 3000);
                 } else {
                     showError(user.message || 'Credenziali non valide');
                 }
             } catch (error) {
                 showError('Errore durante l\'autenticazione: ' + error.message);
-                console.error('Login error:', error);
+                console.error('Login error V3.4:', error);
             } finally {
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = 'Accedi';
@@ -457,25 +522,42 @@
             successDiv.style.display = 'block';
         }
 
-        // Auto-setup al caricamento
+        function showSecurityInfo(authMethod) {
+            const securityDiv = document.getElementById('securityMessage');
+            let message = '';
+            
+            switch(authMethod) {
+                case 'hash':
+                    message = '🔐 Login sicuro con hash password SHA-256';
+                    break;
+                case 'plain_migrated':
+                    message = '🔄 Password migrata automaticamente in hash sicuro!';
+                    break;
+                case 'plain_fallback':
+                    message = '⚠️ Login in modalità compatibilità';
+                    break;
+                default:
+                    message = '🔐 Autenticazione completata';
+            }
+            
+            securityDiv.textContent = message;
+            securityDiv.style.display = 'block';
+        }
+
+        // Auto-setup al caricamento V3.4
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Sistema Login Finale avviato - Versione dinamica');
+            console.log('🚀 Sistema Login V3.4 avviato - Hash Password Support');
             
             // Se già loggato, vai alla dashboard
-            const currentUser = sessionStorage.getItem('currentUser');
-            const sessionToken = sessionStorage.getItem('sessionToken');
-            
-            if (currentUser && sessionToken) {
-                console.log('🔄 Utente già loggato, redirect alla dashboard...');
-                window.location.href = './dashboard.html';
+            if (PageGuard.redirectIfLoggedIn()) {
                 return;
             }
             
             const connected = await testConnection();
-            console.log('Connessione:', connected ? 'OK' : 'FALLITA');
+            console.log('Connessione V3.4:', connected ? 'OK' : 'FALLITA');
             
             if (!connected) {
-                showError('Impossibile connettersi. Verifica che il Google Apps Script sia deployato correttamente.');
+                showError('Impossibile connettersi. Verifica che il Google Apps Script V3.4 sia deployato correttamente.');
             }
         });
     </script>
