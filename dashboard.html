@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Gestione Ore Lavoro</title>
+    <title>Dashboard - Gestione Ore Lavoro V3.4</title>
     <style>
         * {
             margin: 0;
@@ -50,6 +50,23 @@
             color: #666;
             font-size: 16px;
             margin: 5px 0;
+        }
+
+        .user-info .security-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+            text-transform: uppercase;
+        }
+
+        .user-info .security-badge.warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            color: #212529;
         }
 
         .user-stats {
@@ -226,6 +243,7 @@
             z-index: 1000;
             transform: translateX(400px);
             transition: all 0.3s ease;
+            max-width: 350px;
         }
 
         .notification.show {
@@ -238,6 +256,15 @@
 
         .notification.error {
             background: linear-gradient(135deg, #dc3545, #fd7e14);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            color: #212529;
+        }
+
+        .notification.security {
+            background: linear-gradient(135deg, #667eea, #764ba2);
         }
 
         .loading {
@@ -355,20 +382,58 @@
             right: 20px;
             background: rgba(102, 126, 234, 0.9);
             color: white;
-            padding: 5px 10px;
+            padding: 8px 12px;
             border-radius: 15px;
             font-size: 12px;
             font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .version-badge:hover {
+            background: rgba(102, 126, 234, 1);
+            transform: translateY(-2px);
+        }
+
+        .security-status {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .security-status.warning {
+            background: rgba(255, 193, 7, 0.1);
+            border-color: rgba(255, 193, 7, 0.2);
+        }
+
+        .security-status h4 {
+            color: #28a745;
+            margin-bottom: 5px;
+        }
+
+        .security-status.warning h4 {
+            color: #ffc107;
+        }
+
+        .security-status p {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
         }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Header con info utente aggiornato -->
+        <!-- Header con info utente aggiornato V3.4 -->
         <div class="header">
             <div class="header-content">
                 <div class="user-info">
-                    <h1>👋 Benvenuto, <span id="userName">Caricamento...</span></h1>
+                    <h1>👋 Benvenuto, <span id="userName">Caricamento...</span>
+                        <span id="securityBadge" class="security-badge" style="display: none;"></span>
+                    </h1>
                     <div class="details" id="userEmail">📧 Caricamento email...</div>
                     <div class="details" id="userPhone">📱 Caricamento telefono...</div>
                 </div>
@@ -394,6 +459,12 @@
 
         <!-- Contenuto principale -->
         <div class="main-content">
+            <!-- Status sicurezza V3.4 -->
+            <div id="securityStatus" class="security-status" style="display: none;">
+                <h4 id="securityTitle">🔐 Sistema Sicuro</h4>
+                <p id="securityDescription">Autenticazione con hash password SHA-256</p>
+            </div>
+
             <!-- Statistiche rapide aggiornate -->
             <div class="stats-grid auto-calculated">
                 <div class="quick-stats">
@@ -486,8 +557,10 @@
     <!-- Notifiche -->
     <div id="notification" class="notification"></div>
 
-    <!-- Badge versione -->
-    <div class="version-badge">v3.0 - Auto Calc</div>
+    <!-- Badge versione V3.4 -->
+    <div class="version-badge" id="versionBadge" title="Dashboard V3.4 con Hash Password Support">
+        v3.4 - Hash Security 🔐
+    </div>
 
     <script src="config.js"></script>
     <script>
@@ -495,9 +568,9 @@
         let sessionToken = null;
         let cantieri = [];
 
-        // Inizializzazione V3.0
+        // Inizializzazione V3.4 con Hash Support
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Dashboard V3.0 avviata - Calcoli automatici Excel');
+            console.log('🚀 Dashboard V3.4 avviata - Hash Password Support');
             
             // Verifica accesso
             if (!PageGuard.requireLogin()) {
@@ -513,6 +586,7 @@
             sessionToken = session.token;
             
             loadUserData();
+            showSecurityInfo();
             
             // Imposta data odierna
             document.getElementById('workDate').value = new Date().toISOString().split('T')[0];
@@ -530,7 +604,7 @@
         function loadUserData() {
             if (!currentUser) return;
             
-            console.log('📊 Caricando dati utente V3.0:', currentUser);
+            console.log('📊 Caricando dati utente V3.4:', currentUser);
             
             // Dati base
             document.getElementById('userName').textContent = currentUser.name;
@@ -548,6 +622,58 @@
             
             // Calcoli derivati
             updateDerivedStats();
+        }
+
+        function showSecurityInfo() {
+            const session = Utils.getSession();
+            if (session.user && session.user.authMethod && CONFIG.UI.SHOW_AUTH_METHOD) {
+                const authMethod = session.user.authMethod;
+                const securityBadge = document.getElementById('securityBadge');
+                const securityStatus = document.getElementById('securityStatus');
+                const securityTitle = document.getElementById('securityTitle');
+                const securityDescription = document.getElementById('securityDescription');
+                
+                console.log(`🔐 Dashboard V3.4 - Metodo auth: ${authMethod.toUpperCase()}`);
+                
+                // Mostra badge sicurezza
+                securityBadge.style.display = 'inline-block';
+                securityStatus.style.display = 'block';
+                
+                switch(authMethod) {
+                    case 'hash':
+                        securityBadge.textContent = '🔐 Sicuro';
+                        securityBadge.className = 'security-badge';
+                        securityTitle.textContent = '🔐 Sistema Sicuro';
+                        securityDescription.textContent = 'Autenticazione con hash password SHA-256';
+                        break;
+                        
+                    case 'plain_migrated':
+                        securityBadge.textContent = '🔄 Migrato';
+                        securityBadge.className = 'security-badge';
+                        securityTitle.textContent = '🔄 Password Migrata';
+                        securityDescription.textContent = 'Password automaticamente migrata in hash SHA-256';
+                        Utils.showNotification('Password migrata automaticamente in hash sicuro!', 'security', 8000);
+                        break;
+                        
+                    case 'plain_fallback':
+                        securityBadge.textContent = '⚠️ Compatibilità';
+                        securityBadge.className = 'security-badge warning';
+                        securityStatus.className = 'security-status warning';
+                        securityTitle.textContent = '⚠️ Modalità Compatibilità';
+                        securityDescription.textContent = 'Login con password non hashata. Contatta amministratore per migrazione.';
+                        break;
+                        
+                    default:
+                        securityBadge.style.display = 'none';
+                        securityStatus.style.display = 'none';
+                }
+                
+                // Aggiorna tooltip version badge
+                const versionBadge = document.getElementById('versionBadge');
+                if (versionBadge) {
+                    versionBadge.title = `Dashboard V3.4 - Metodo auth: ${authMethod}`;
+                }
+            }
         }
 
         function updateDerivedStats() {
@@ -568,7 +694,7 @@
 
         async function loadCantieri() {
             try {
-                console.log('📋 Caricando cantieri V3.0...');
+                console.log('📋 Caricando cantieri V3.4...');
                 
                 const result = await callGoogleAppsScript({
                     action: 'getCantieri',
@@ -597,7 +723,7 @@
                 console.error('❌ Errore caricamento cantieri:', error);
                 const cantiereSelect = document.getElementById('cantiere');
                 cantiereSelect.innerHTML = '<option value="">❌ Errore caricamento cantieri</option>';
-                showNotification('Errore nel caricamento cantieri', 'error');
+                Utils.showNotification('Errore nel caricamento cantieri', 'error');
             }
         }
 
@@ -695,7 +821,7 @@
             
             const oreParsed = parseFloat(oreValue);
             
-            console.log('🔢 Debug ore V3.0:', {
+            console.log('🔢 Debug ore V3.4:', {
                 original: data.ore,
                 cleaned: oreValue,
                 parsed: oreParsed,
@@ -717,7 +843,7 @@
             }
             
             if (!isValid) {
-                showNotification('Per favore completa tutti i campi obbligatori', 'error');
+                Utils.showNotification('Per favore completa tutti i campi obbligatori', 'error');
                 return;
             }
             
@@ -726,7 +852,7 @@
             saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
             
             try {
-                console.log('💾 Salvando ore lavorate V3.0...');
+                console.log('💾 Salvando ore lavorate V3.4...');
                 
                 const result = await callGoogleAppsScript({
                     action: 'saveWorkEntry',
@@ -734,14 +860,14 @@
                     workData: {
                         data: data.workDate,
                         cantiereId: data.cantiere,
-                        lavori: 'Lavoro registrato via dashboard V3.0',
+                        lavori: 'Lavoro registrato via dashboard V3.4',
                         ore: oreParsed,
                         note: data.note || ''
                     }
                 });
                 
                 if (result.success) {
-                    showNotification(`✅ ${oreParsed} ore salvate! Totali aggiornati automaticamente.`, 'success');
+                    Utils.showNotification(`✅ ${oreParsed} ore salvate! Totali aggiornati automaticamente.`, 'success');
                     
                     // Reset form mantenendo la data
                     const currentDate = data.workDate;
@@ -759,7 +885,7 @@
                 
             } catch (error) {
                 console.error('❌ Errore salvataggio:', error);
-                showNotification('Errore nel salvataggio: ' + error.message, 'error');
+                Utils.showNotification('Errore nel salvataggio: ' + error.message, 'error');
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = '💾 Salva Ore';
@@ -768,7 +894,7 @@
 
         async function refreshUserStats() {
             try {
-                console.log('🔄 Aggiornando statistiche V3.0...');
+                console.log('🔄 Aggiornando statistiche V3.4...');
                 
                 const result = await callGoogleAppsScript({
                     action: 'getUserInfo',
@@ -790,7 +916,7 @@
                     // Aggiorna statistiche derivate
                     updateDerivedStats();
                     
-                    console.log('✅ Statistiche aggiornate:', result.data);
+                    console.log('✅ Statistiche aggiornate V3.4:', result.data);
                 } else {
                     console.log('⚠️ Impossibile aggiornare statistiche:', result.message);
                 }
@@ -803,16 +929,40 @@
             return await Utils.callAPI(params);
         }
 
-        function showNotification(message, type = 'success') {
-            Utils.showNotification(message, type);
-        }
-
         function logout() {
             if (confirm('Sei sicuro di voler uscire?')) {
                 Utils.clearSession();
-                Utils.redirectToLogin();
+                Utils.showNotification('Logout effettuato con successo', 'success');
+                setTimeout(() => {
+                    Utils.redirectToLogin();
+                }, 1500);
             }
         }
+
+        // Gestione click version badge per debug info
+        document.getElementById('versionBadge').addEventListener('click', function() {
+            const session = Utils.getSession();
+            let debugInfo = `Dashboard V3.4 Debug Info:\n\n`;
+            debugInfo += `Frontend: ${CONFIG.VERSION.frontend}\n`;
+            debugInfo += `Build: ${CONFIG.VERSION.buildDate}\n`;
+            debugInfo += `Hash Support: ${CONFIG.SECURITY.HASH_ENABLED}\n`;
+            
+            if (session.user && session.user.authMethod) {
+                debugInfo += `Auth Method: ${session.user.authMethod}\n`;
+            }
+            
+            debugInfo += `User: ${session.user ? session.user.name : 'Non loggato'}\n`;
+            debugInfo += `Session Token: ${session.token ? 'Presente' : 'Assente'}`;
+            
+            alert(debugInfo);
+        });
+
+        // Auto-refresh stats ogni 5 minuti
+        setInterval(() => {
+            if (Utils.isLoggedIn()) {
+                refreshUserStats();
+            }
+        }, 5 * 60 * 1000);
     </script>
 </body>
 </html>
