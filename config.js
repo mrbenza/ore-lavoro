@@ -1,7 +1,7 @@
 // Configurazione Sistema Gestione Ore V3.4 - Hash Password Support
 const CONFIG = {
     // Google Apps Script URL - AGGIORNA CON IL TUO URL
-    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzXSwnwt_MghEINZHV2lLWyBbNDxNfeoiDdF4K_bGJ2vSAClTzS-fzX8hyFZ8_4G881/exec',
+    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwNrWjR5ea8PneS53otkSCuOdCd5bxFlbatdmJoc6V4c0_PoTjUaNpNNT0R0cIFJq0a/exec',
     
     // Versioning
     VERSION: {
