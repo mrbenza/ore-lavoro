@@ -1,27 +1,28 @@
-// Configurazione Sistema Gestione Ore
+// Configurazione Sistema Gestione Ore V3.4 - Hash Password Support
 const CONFIG = {
-    // Google Apps Script URL - NUOVO DEPLOYMENT
+    // Google Apps Script URL - AGGIORNA CON IL TUO URL
     APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzXSwnwt_MghEINZHV2lLWyBbNDxNfeoiDdF4K_bGJ2vSAClTzS-fzX8hyFZ8_4G881/exec',
     
     // Versioning
     VERSION: {
-        frontend: '2.1.1',
-        buildDate: '2025-01-15',
-        description: 'Fix API Call per oggetti complessi'
+        frontend: '3.4.0',
+        buildDate: '2025-06-19',
+        description: 'Frontend compatibile con hash password sicuri'
     },
     
     // Pagine del sistema
     PAGES: {
         LOGIN: 'index.html',
         DASHBOARD: 'dashboard.html',
-        ADMIN: 'admin.html' // Per future implementazioni
+        ADMIN: 'admin.html'
     },
     
     // Impostazioni UI
     UI: {
         NOTIFICATION_DURATION: 4000,
         LOADING_MIN_TIME: 1000,
-        AUTO_LOGOUT_TIME: 30 * 60 * 1000 // 30 minuti
+        AUTO_LOGOUT_TIME: 30 * 60 * 1000, // 30 minuti
+        SHOW_AUTH_METHOD: true // Mostra metodo autenticazione (hash/plain)
     },
     
     // Validazione
@@ -29,39 +30,44 @@ const CONFIG = {
         MAX_HOURS_PER_DAY: 24,
         MIN_HOURS: 0,
         MAX_WORK_DESCRIPTION: 500,
-        MAX_NOTES: 200
+        MAX_NOTES: 200,
+        MIN_PASSWORD_LENGTH: 4 // Password minima 4 caratteri
     },
     
-    // Debug
+    // Debug e sicurezza
     DEBUG: true,
-    VERSION: '1.0.1'
+    SECURITY: {
+        HASH_ENABLED: true,
+        AUTO_MIGRATION: true,
+        SESSION_TIMEOUT: true
+    }
 };
 
-// Funzioni di utilità comuni
+// Funzioni di utilità comuni V3.4
 const Utils = {
-    // ✅ FIX: Gestione chiamate API migliorata per oggetti complessi
+    // ✅ Gestione chiamate API ottimizzata per V3.4
     async callAPI(params) {
         if (CONFIG.DEBUG) {
-            console.log('🔄 API Call:', params);
+            console.log('🔄 API Call V3.4:', params);
         }
         
         const url = new URL(CONFIG.APPS_SCRIPT_URL);
         
-        // ✅ FIX: Gestione speciale per oggetti complessi
+        // Gestione parametri con serializzazione JSON per oggetti complessi
         Object.keys(params).forEach(key => {
             const value = params[key];
             
-            // Se è un oggetto (come workData), serializzalo in JSON
             if (typeof value === 'object' && value !== null) {
                 console.log(`🔧 Serializzando oggetto ${key}:`, value);
                 url.searchParams.append(key, JSON.stringify(value));
             } else {
-                // Per valori semplici, converti a stringa normalmente
                 url.searchParams.append(key, String(value));
             }
         });
         
-        console.log('🌐 URL finale:', url.toString());
+        if (CONFIG.DEBUG) {
+            console.log('🌐 URL finale:', url.toString());
+        }
         
         const response = await fetch(url.toString(), { method: 'GET' });
         
@@ -74,13 +80,20 @@ const Utils = {
         const result = JSON.parse(cleanText);
         
         if (CONFIG.DEBUG) {
-            console.log('📥 API Response:', result);
+            console.log('📥 API Response V3.4:', result);
+            
+            // Log informazioni sicurezza se disponibili
+            if (result.systemInfo) {
+                console.log('🔐 Auth Method:', result.systemInfo.authMethod);
+                console.log('🔐 Hash Support:', result.systemInfo.hashSupport);
+                console.log('📊 Backend Version:', result.systemInfo.version);
+            }
         }
         
         return result;
     },
     
-    // Gestione sessione
+    // Gestione sessione V3.4
     getSession() {
         return {
             user: JSON.parse(sessionStorage.getItem('currentUser') || 'null'),
@@ -91,11 +104,18 @@ const Utils = {
     setSession(user, token) {
         sessionStorage.setItem('currentUser', JSON.stringify(user));
         sessionStorage.setItem('sessionToken', token);
+        
+        if (CONFIG.DEBUG && user.authMethod) {
+            console.log('🔐 Sessione salvata con metodo auth:', user.authMethod);
+        }
     },
     
     clearSession() {
         sessionStorage.removeItem('currentUser');
         sessionStorage.removeItem('sessionToken');
+        if (CONFIG.DEBUG) {
+            console.log('🗑️ Sessione cancellata');
+        }
     },
     
     isLoggedIn() {
@@ -112,25 +132,36 @@ const Utils = {
         window.location.href = CONFIG.PAGES.DASHBOARD;
     },
     
-    // Notifiche
-    showNotification(message, type = 'success') {
+    // Notifiche V3.4 migliorate
+    showNotification(message, type = 'success', duration = null) {
         let notification = document.getElementById('notification');
         
         if (!notification) {
-            // Crea elemento notifica se non esiste
             notification = document.createElement('div');
             notification.id = 'notification';
             notification.className = 'notification';
             document.body.appendChild(notification);
         }
         
-        notification.textContent = message;
+        // Icone per tipo di notifica
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️',
+            security: '🔐'
+        };
+        
+        const icon = icons[type] || icons.info;
+        notification.innerHTML = `${icon} ${message}`;
         notification.className = `notification ${type}`;
         notification.classList.add('show');
         
+        const notificationDuration = duration || CONFIG.UI.NOTIFICATION_DURATION;
+        
         setTimeout(() => {
             notification.classList.remove('show');
-        }, CONFIG.UI.NOTIFICATION_DURATION);
+        }, notificationDuration);
     },
     
     // Formatters
@@ -146,7 +177,7 @@ const Utils = {
         return new Date(date).toLocaleDateString('it-IT');
     },
     
-    // Validatori
+    // Validatori V3.4
     validateHours(hours) {
         const h = parseFloat(hours);
         return !isNaN(h) && h >= CONFIG.VALIDATION.MIN_HOURS && h <= CONFIG.VALIDATION.MAX_HOURS_PER_DAY;
@@ -156,31 +187,51 @@ const Utils = {
         return value && value.trim().length > 0;
     },
     
-    // Auto-logout per sicurezza
+    validatePassword(password) {
+        return password && password.length >= CONFIG.VALIDATION.MIN_PASSWORD_LENGTH;
+    },
+    
+    // Auto-logout per sicurezza V3.4
     setupAutoLogout() {
+        if (!CONFIG.SECURITY.SESSION_TIMEOUT) return;
+        
         let timeout;
         
         const resetTimeout = () => {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 this.clearSession();
-                this.showNotification('Sessione scaduta per inattività', 'error');
+                this.showNotification('Sessione scaduta per inattività', 'warning');
                 setTimeout(() => this.redirectToLogin(), 2000);
             }, CONFIG.UI.AUTO_LOGOUT_TIME);
         };
         
-        // Reset timeout su attività utente
         ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
             document.addEventListener(event, resetTimeout, true);
         });
         
-        resetTimeout(); // Avvia il timer
+        resetTimeout();
+    },
+    
+    // ✅ Nuova funzione: mostra informazioni sicurezza
+    showSecurityStatus(authMethod, hashSupport) {
+        if (!CONFIG.UI.SHOW_AUTH_METHOD || !CONFIG.DEBUG) return;
+        
+        const securityLevel = authMethod === 'hash' ? 'SICURO' : 'COMPATIBILITÀ';
+        const securityIcon = authMethod === 'hash' ? '🔐' : '⚠️';
+        
+        console.log(`${securityIcon} Sicurezza: ${securityLevel} (Metodo: ${authMethod})`);
+        
+        if (authMethod === 'plain_migrated') {
+            this.showNotification('Password migrata automaticamente in hash sicuro!', 'security', 6000);
+        } else if (authMethod === 'plain_fallback') {
+            this.showNotification('Login in modalità compatibilità. Contatta admin per migrazione.', 'warning', 6000);
+        }
     }
 };
 
-// Protezione accesso pagine
+// Protezione accesso pagine V3.4
 const PageGuard = {
-    // Da chiamare nelle pagine che richiedono login
     requireLogin() {
         if (!Utils.isLoggedIn()) {
             Utils.showNotification('Accesso richiesto', 'error');
@@ -190,7 +241,6 @@ const PageGuard = {
         return true;
     },
     
-    // Da chiamare nella pagina di login se già loggato
     redirectIfLoggedIn() {
         if (Utils.isLoggedIn()) {
             Utils.redirectToDashboard();
@@ -200,10 +250,11 @@ const PageGuard = {
     }
 };
 
-// Log di sistema
+// Log di sistema V3.4
 if (CONFIG.DEBUG) {
-    console.log('🚀 Sistema Gestione Ore inizializzato v2.1.1');
+    console.log('🚀 Sistema Gestione Ore inizializzato V3.4');
     console.log('📋 Configurazione:', CONFIG);
+    console.log('🔐 Hash Support:', CONFIG.SECURITY.HASH_ENABLED);
     console.log('🔐 Sessione attiva:', Utils.isLoggedIn());
 }
 
