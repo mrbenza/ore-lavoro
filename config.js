@@ -1,7 +1,7 @@
 // Configurazione Sistema Gestione Ore V3.4 - PRODUCTION MODE
 const CONFIG = {
     // Google Apps Script URL - AGGIORNA CON IL TUO URL
-    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzburJ3Y1cFSGis5r6u9GKy9kAIjI5TDpq1lp6rEQw/dev',
+    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbz7aJja9wujgsoRKE7q1UTJo9hyooOmbR9uPqiKpbErZJ2wi_SB8GCYxvKop17qZNU/exec',
     
     // 🔧 MODALITÀ PRODUZIONE
     PRODUCTION_MODE: true,  // 🚀 CAMBIA A TRUE PER PRODUZIONE
