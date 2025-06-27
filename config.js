@@ -1,16 +1,16 @@
-// Configurazione Sistema Gestione Ore V3.4 - PRODUCTION MODE
+// Configurazione Sistema Gestione Ore V3.4 - PRODUCTION MODE - FIXED
 const CONFIG = {
-    // Google Apps Script URL - AGGIORNA CON IL TUO URL
+    // 🔧 PROXY VERCEL - URL RELATIVO (CORS gestito)
     APPS_SCRIPT_URL: '/api/proxy',
     
     // 🔧 MODALITÀ PRODUZIONE
-    PRODUCTION_MODE: true,  // 🚀 CAMBIA A TRUE PER PRODUZIONE
+    PRODUCTION_MODE: true,
     
     // Versioning
     VERSION: {
-        frontend: '3.4.0',
-        buildDate: '2025-06-19',
-        description: 'Frontend production-ready con logging ottimizzato'
+        frontend: '3.4.1',
+        buildDate: '2025-06-27',
+        description: 'Frontend con proxy Vercel e CORS fix'
     },
     
     // Pagine del sistema
@@ -39,21 +39,21 @@ const CONFIG = {
     },
     
     // Debug e sicurezza - OTTIMIZZATO PER PRODUZIONE
-    DEBUG: false,              // 🔧 FALSE IN PRODUZIONE
+    DEBUG: false,
     SECURITY: {
         HASH_ENABLED: true,
         AUTO_MIGRATION: true,
         SESSION_TIMEOUT: true,
-        LOG_AUTH_ATTEMPTS: false  // 🔧 PRIVACY IN PRODUZIONE
+        LOG_AUTH_ATTEMPTS: false
     },
     
-    // 🆕 CONFIGURAZIONE LOGGING FRONTEND
+    // CONFIGURAZIONE LOGGING FRONTEND
     LOGGING: {
-        CONSOLE_LOGS: false,      // 🔧 DISABILITA CONSOLE.LOG IN PRODUZIONE
-        ERROR_LOGS: true,         // Mantieni log errori per troubleshooting
-        AUTH_LOGS: false,         // 🔧 DISABILITA LOG AUTH PER PRIVACY
-        API_LOGS: false,          // 🔧 DISABILITA LOG API CALLS
-        PERFORMANCE_LOGS: false   // 🔧 DISABILITA LOG PERFORMANCE
+        CONSOLE_LOGS: false,
+        ERROR_LOGS: true,
+        AUTH_LOGS: false,
+        API_LOGS: false,
+        PERFORMANCE_LOGS: false
     }
 };
 
@@ -95,7 +95,6 @@ const ProductionLogger = {
         }
     },
     
-    // Solo per debug interno - mai in produzione
     debug: function(...args) {
         if (CONFIG.DEBUG && !CONFIG.PRODUCTION_MODE) {
             console.log('[DEBUG]', ...args);
@@ -103,30 +102,50 @@ const ProductionLogger = {
     }
 };
 
-// Funzioni di utilità comuni V3.4 - PRODUCTION OPTIMIZED
+// Funzioni di utilità comuni V3.4 - PRODUCTION OPTIMIZED con FIX URL
 const Utils = {
-    // ✅ Gestione chiamate API ottimizzata per produzione
+    // ✅ FIXED: Gestione chiamate API con URL relativi
     async callAPI(params) {
         ProductionLogger.api('API Call:', params.action);
         
-        const url = new URL(CONFIG.APPS_SCRIPT_URL);
-        
-        // Gestione parametri con serializzazione JSON per oggetti complessi
-        Object.keys(params).forEach(key => {
-            const value = params[key];
-            
-            if (typeof value === 'object' && value !== null) {
-                ProductionLogger.debug(`Serializzando oggetto ${key}:`, value);
-                url.searchParams.append(key, JSON.stringify(value));
-            } else {
-                url.searchParams.append(key, String(value));
-            }
-        });
-        
-        ProductionLogger.debug('URL finale:', url.toString());
-        
         try {
-            const response = await fetch(url.toString(), { method: 'GET' });
+            // 🔧 FIX: Gestione URL relativo vs assoluto
+            let fetchUrl;
+            
+            if (CONFIG.APPS_SCRIPT_URL.startsWith('http')) {
+                // URL assoluto - usa il costruttore URL normale
+                const url = new URL(CONFIG.APPS_SCRIPT_URL);
+                Object.keys(params).forEach(key => {
+                    const value = params[key];
+                    if (typeof value === 'object' && value !== null) {
+                        url.searchParams.append(key, JSON.stringify(value));
+                    } else {
+                        url.searchParams.append(key, String(value));
+                    }
+                });
+                fetchUrl = url.toString();
+            } else {
+                // URL relativo - costruisci manualmente
+                const searchParams = new URLSearchParams();
+                Object.keys(params).forEach(key => {
+                    const value = params[key];
+                    if (typeof value === 'object' && value !== null) {
+                        searchParams.append(key, JSON.stringify(value));
+                    } else {
+                        searchParams.append(key, String(value));
+                    }
+                });
+                fetchUrl = `${CONFIG.APPS_SCRIPT_URL}?${searchParams.toString()}`;
+            }
+            
+            ProductionLogger.debug('Fetch URL:', fetchUrl);
+            
+            const response = await fetch(fetchUrl, { 
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
             
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -164,7 +183,6 @@ const Utils = {
     setSession(user, token) {
         sessionStorage.setItem('currentUser', JSON.stringify(user));
         sessionStorage.setItem('sessionToken', token);
-        
         ProductionLogger.auth('Sessione salvata per utente:', user.name);
     },
     
@@ -199,7 +217,6 @@ const Utils = {
             document.body.appendChild(notification);
         }
         
-        // Icone per tipo di notifica
         const icons = {
             success: '✅',
             error: '❌',
@@ -219,7 +236,6 @@ const Utils = {
             notification.classList.remove('show');
         }, notificationDuration);
         
-        // Log solo errori in produzione
         if (type === 'error') {
             ProductionLogger.error('Notification:', message);
         }
@@ -275,9 +291,8 @@ const Utils = {
         ProductionLogger.log('Auto-logout configurato per', CONFIG.UI.AUTO_LOGOUT_TIME / 60000, 'minuti');
     },
     
-    // ✅ Funzione sicurezza ottimizzata per produzione
+    // Funzione sicurezza ottimizzata per produzione
     showSecurityStatus(authMethod, hashSupport) {
-        // In produzione mostra solo notifiche essenziali
         if (CONFIG.PRODUCTION_MODE) {
             if (authMethod === 'plain_migrated') {
                 this.showNotification('Password aggiornata con successo', 'success', 3000);
@@ -285,7 +300,6 @@ const Utils = {
             return;
         }
         
-        // Modalità sviluppo - mostra info dettagliate
         if (!CONFIG.UI.SHOW_AUTH_METHOD) return;
         
         const securityLevel = authMethod === 'hash' ? 'SICURO' : 'COMPATIBILITÀ';
@@ -300,7 +314,7 @@ const Utils = {
         }
     },
     
-    // ✅ Performance monitoring (solo in sviluppo)
+    // Performance monitoring (solo in sviluppo)
     measurePerformance(operation, callback) {
         if (!CONFIG.LOGGING.PERFORMANCE_LOGS || CONFIG.PRODUCTION_MODE) {
             return callback();
@@ -314,7 +328,7 @@ const Utils = {
         return result;
     },
     
-    // ✅ Error reporting per produzione
+    // Error reporting per produzione
     reportError(error, context = '') {
         const errorInfo = {
             message: error.message,
@@ -327,13 +341,6 @@ const Utils = {
         };
         
         ProductionLogger.error('Errore applicazione:', errorInfo);
-        
-        // In produzione potresti inviare questo a un servizio di monitoring
-        if (CONFIG.PRODUCTION_MODE) {
-            // Esempio: invio a servizio esterno di monitoring
-            // this.sendToMonitoring(errorInfo);
-        }
-        
         return errorInfo;
     }
 };
@@ -361,18 +368,11 @@ const PageGuard = {
 // ===== INIZIALIZZAZIONE SISTEMA PRODUCTION =====
 function initializeSystem() {
     if (CONFIG.PRODUCTION_MODE) {
-        // Produzione: Log minimo
-        ProductionLogger.log('Sistema Gestione Ore V3.4 - Modalità Produzione');
-        
-        // Rimuovi informazioni debug dal DOM
+        ProductionLogger.log('Sistema Gestione Ore V3.4.1 - Modalità Produzione con Proxy');
         removeDebugElements();
-        
-        // Setup error handling globale
         setupGlobalErrorHandling();
-        
     } else {
-        // Sviluppo: Log completo
-        ProductionLogger.log('🚀 Sistema Gestione Ore inizializzato V3.4 - Modalità Sviluppo');
+        ProductionLogger.log('🚀 Sistema Gestione Ore inizializzato V3.4.1 - Modalità Sviluppo');
         ProductionLogger.log('📋 Configurazione:', CONFIG);
         ProductionLogger.log('🔐 Hash Support:', CONFIG.SECURITY.HASH_ENABLED);
         ProductionLogger.log('🔐 Sessione attiva:', Utils.isLoggedIn());
@@ -380,7 +380,6 @@ function initializeSystem() {
 }
 
 function removeDebugElements() {
-    // Rimuovi elementi debug dal DOM in produzione
     const debugSelectors = [
         '.version-badge',
         '.debug-info', 
@@ -399,20 +398,17 @@ function removeDebugElements() {
 }
 
 function setupGlobalErrorHandling() {
-    // Cattura errori JavaScript globali
     window.addEventListener('error', (event) => {
         Utils.reportError(event.error, 'Global JavaScript Error');
     });
     
-    // Cattura promise rejections non gestite
     window.addEventListener('unhandledrejection', (event) => {
         Utils.reportError(new Error(event.reason), 'Unhandled Promise Rejection');
     });
 }
 
 // ===== COMPATIBILITÀ API =====
-// Mantieni le funzioni originali per compatibilità
-const Logger = ProductionLogger; // Alias per compatibilità
+const Logger = ProductionLogger;
 
 // Export per uso globale
 window.CONFIG = CONFIG;
