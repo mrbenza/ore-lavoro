@@ -1,4 +1,4 @@
-// Vercel Serverless Function - Proxy per Google Apps Script
+// Vercel Serverless Function - Proxy CORRETTO per Google Apps Script
 // File: api/proxy.js
 
 export default async function handler(req, res) {
@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  // URL del tuo Google Apps Script
+  // 🔧 AGGIORNA CON IL TUO URL GOOGLE APPS SCRIPT
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWenT-EwL6B3YsKcveDnuSC8UMdj-d8AMRNO4xYJ2FtC-ENEP7b9LqVbHRt_CCoQknGw/exec';
 
   try {
@@ -28,23 +28,36 @@ export default async function handler(req, res) {
       return res.status(405).json({ success: false, message: 'Metodo non supportato' });
     }
 
-    console.log('Proxy request:', requestData);
+    console.log('Proxy request ricevuta:', requestData);
 
-    // Prepara i dati per Google Apps Script
-    const formData = new URLSearchParams();
-    formData.append('data', JSON.stringify(requestData));
+    // 🔧 FIX: Costruisci URL con parametri per GET (come si aspetta Apps Script)
+    const url = new URL(APPS_SCRIPT_URL);
+    
+    // Aggiungi tutti i parametri come query string
+    Object.keys(requestData).forEach(key => {
+      const value = requestData[key];
+      
+      if (typeof value === 'object' && value !== null) {
+        // Serializza oggetti come JSON string
+        url.searchParams.append(key, JSON.stringify(value));
+      } else {
+        // Parametri semplici
+        url.searchParams.append(key, String(value));
+      }
+    });
 
-    // Chiama Google Apps Script
-    const response = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
+    console.log('URL finale chiamata:', url.toString());
+
+    // Chiama Google Apps Script con GET (più affidabile)
+    const response = await fetch(url.toString(), {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: formData
+        'User-Agent': 'Vercel-Proxy/1.0',
+      }
     });
 
     if (!response.ok) {
-      throw new Error(`Google Apps Script error: ${response.status}`);
+      throw new Error(`Google Apps Script error: ${response.status} ${response.statusText}`);
     }
 
     // Ottieni la risposta
@@ -54,7 +67,16 @@ export default async function handler(req, res) {
     result = result.replace(/^\)\]\}',?\s*/, '');
 
     // Parse JSON
-    const jsonResult = JSON.parse(result);
+    let jsonResult;
+    try {
+      jsonResult = JSON.parse(result);
+    } catch (parseError) {
+      console.error('Errore parsing JSON:', parseError);
+      console.error('Raw response:', result);
+      throw new Error('Risposta non JSON valida da Google Apps Script');
+    }
+
+    console.log('Proxy response:', jsonResult);
 
     // Ritorna la risposta con headers CORS
     res.status(200).json(jsonResult);
@@ -64,7 +86,8 @@ export default async function handler(req, res) {
     res.status(500).json({
       success: false,
       message: 'Errore del proxy server',
-      error: error.message
+      error: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 }
