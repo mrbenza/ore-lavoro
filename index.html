@@ -328,7 +328,7 @@
             </div>
             <div class="status-row">
                 <span class="status-label">Sicurezza:</span>
-                <span class="status-value" id="securityStatus">🔐 Verifico... </span>
+                <span class="status-value" id="securityStatus">Rilevamento...</span>
             </div>
             <div class="build-info">
                 <div class="status-row">
@@ -399,7 +399,7 @@
                     
                     // Mostra features se disponibili
                     if (result.features && result.features.includes('Hash Password SHA-256')) {
-                        document.getElementById('securityStatus').innerHTML = '🔐 OK ✅';
+                        document.getElementById('securityStatus').innerHTML = '🔐 ✅';
                     }
                     
                     return true;
