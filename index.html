@@ -266,7 +266,7 @@
             font-weight: 600;
         }
 
-        /* Notifiche V3.4 */
+        /* Notifiche V3.5 */
         .notification {
             position: fixed;
             top: 20px;
@@ -328,7 +328,7 @@
             </div>
             <div class="status-row">
                 <span class="status-label">Sicurezza:</span>
-                <span class="status-value" id="securityStatus">🔐 Hash Password</span>
+                <span class="status-value" id="securityStatus">🔐 Verifico... </span>
             </div>
             <div class="build-info">
                 <div class="status-row">
@@ -365,7 +365,7 @@
 
     <script src="config.js"></script>
     <script>
-        // Test di connessione con sistema V3.4
+        // Test di connessione con sistema V3.5
         async function testConnection() {
             const statusElement = document.getElementById('connectionStatus');
             const indicatorElement = document.getElementById('connectionIndicator');
@@ -391,7 +391,7 @@
                     buildElement.textContent = build;
                     versionBadge.textContent = `v${version}`;
                     
-                    console.log('✅ Sistema V3.4 connesso:', {
+                    console.log('✅ Sistema V3.5 connesso:', {
                         version: version,
                         build: build,
                         features: result.features || []
@@ -399,7 +399,7 @@
                     
                     // Mostra features se disponibili
                     if (result.features && result.features.includes('Hash Password SHA-256')) {
-                        document.getElementById('securityStatus').innerHTML = '🔐 Hash SHA-256 ✅';
+                        document.getElementById('securityStatus').innerHTML = '🔐 OK ✅';
                     }
                     
                     return true;
@@ -420,7 +420,7 @@
 
         // Autenticazione V3.4 con supporto hash
         async function authenticateUser(userId, password) {
-            console.log('🔐 Autenticazione utente V3.4:', userId);
+            console.log('🔐 Autenticazione utente V3.5:', userId);
             
             try {
                 const result = await Utils.callAPI({
