@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Gestione Ore Lavoro V3.4</title>
+    <title>Dashboard - Gestione Ore Lavoro V3.5</title>
     <style>
         * {
             margin: 0;
@@ -50,23 +50,6 @@
             color: #666;
             font-size: 16px;
             margin: 5px 0;
-        }
-
-        .user-info .security-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-left: 10px;
-            text-transform: uppercase;
-        }
-
-        .user-info .security-badge.warning {
-            background: linear-gradient(135deg, #ffc107, #fd7e14);
-            color: #212529;
         }
 
         .user-stats {
@@ -301,41 +284,6 @@
             text-align: center;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: 15px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-        }
-
-        .quick-stats {
-            text-align: center;
-        }
-
-        .quick-stats .stat-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #667eea;
-            display: block;
-        }
-
-        .quick-stats .stat-label {
-            font-size: 11px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 5px;
-        }
-
-        .auto-calculated {
-            background: rgba(40, 167, 69, 0.1);
-            border: 1px solid rgba(40, 167, 69, 0.2);
-        }
-
         .auto-badge {
             display: inline-block;
             background: #28a745;
@@ -366,10 +314,6 @@
             .hours-section {
                 grid-column: span 1;
             }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
         }
 
         .icon {
@@ -394,46 +338,15 @@
             background: rgba(102, 126, 234, 1);
             transform: translateY(-2px);
         }
-
-        .security-status {
-            background: rgba(40, 167, 69, 0.1);
-            border: 1px solid rgba(40, 167, 69, 0.2);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .security-status.warning {
-            background: rgba(255, 193, 7, 0.1);
-            border-color: rgba(255, 193, 7, 0.2);
-        }
-
-        .security-status h4 {
-            color: #28a745;
-            margin-bottom: 5px;
-        }
-
-        .security-status.warning h4 {
-            color: #ffc107;
-        }
-
-        .security-status p {
-            font-size: 14px;
-            color: #666;
-            margin: 0;
-        }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Header con info utente aggiornato V3.4 -->
+        <!-- Header pulito con solo info essenziali -->
         <div class="header">
             <div class="header-content">
                 <div class="user-info">
-                    <h1>👋 Benvenuto, <span id="userName">Caricamento...</span>
-                        <span id="securityBadge" class="security-badge" style="display: none;"></span>
-                    </h1>
+                    <h1>👋 Benvenuto, <span id="userName">Caricamento...</span></h1>
                     <div class="details" id="userEmail">📧 Caricamento email...</div>
                     <div class="details" id="userPhone">📱 Caricamento telefono...</div>
                 </div>
@@ -457,34 +370,8 @@
             </div>
         </div>
 
-        <!-- Contenuto principale -->
+        <!-- Contenuto principale semplificato -->
         <div class="main-content">
-            <!-- Status sicurezza V3.4 -->
-            <div id="securityStatus" class="security-status" style="display: none;">
-                <h4 id="securityTitle">🔐 Sistema Sicuro</h4>
-                <p id="securityDescription">Autenticazione con hash password SHA-256</p>
-            </div>
-
-            <!-- Statistiche rapide aggiornate -->
-            <div class="stats-grid auto-calculated">
-                <div class="quick-stats">
-                    <span class="stat-number" id="totalYearHours">0</span>
-                    <span class="stat-label">Anno Corrente</span>
-                </div>
-                <div class="quick-stats">
-                    <span class="stat-number" id="avgHoursPerDay">0</span>
-                    <span class="stat-label">Media/Giorno</span>
-                </div>
-                <div class="quick-stats">
-                    <span class="stat-number" id="workingDays">0</span>
-                    <span class="stat-label">Giorni Lavorati</span>
-                </div>
-                <div class="quick-stats">
-                    <span class="stat-number" id="lastUpdate">--</span>
-                    <span class="stat-label">Ultimo Aggiorn.</span>
-                </div>
-            </div>
-
             <form id="workEntryForm" class="work-entry-form">
                 <!-- Sezione Data -->
                 <div class="form-section">
@@ -557,9 +444,9 @@
     <!-- Notifiche -->
     <div id="notification" class="notification"></div>
 
-    <!-- Badge versione V3.4 -->
-    <div class="version-badge" id="versionBadge" title="Dashboard V3.4 con Hash Password Support">
-        v3.4 - Hash Security 🔐
+    <!-- Badge versione V3.5 -->
+    <div class="version-badge" id="versionBadge" title="Dashboard V3.5 - Layout Semplificato">
+        v3.5 - Clean UI 🚀
     </div>
 
     <script src="config.js"></script>
@@ -568,9 +455,9 @@
         let sessionToken = null;
         let cantieri = [];
 
-        // Inizializzazione V3.4 con Hash Support
+        // Inizializzazione V3.5 - Layout Semplificato
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Dashboard V3.4 avviata - Hash Password Support');
+            console.log('🚀 Dashboard V3.5 avviata - Layout Semplificato');
             
             // Verifica accesso
             if (!PageGuard.requireLogin()) {
@@ -586,7 +473,6 @@
             sessionToken = session.token;
             
             loadUserData();
-            showSecurityInfo();
             
             // Imposta data odierna
             document.getElementById('workDate').value = new Date().toISOString().split('T')[0];
@@ -604,7 +490,7 @@
         function loadUserData() {
             if (!currentUser) return;
             
-            console.log('📊 Caricando dati utente V3.4:', currentUser);
+            console.log('📊 Caricando dati utente V3.5:', currentUser);
             
             // Dati base
             document.getElementById('userName').textContent = currentUser.name;
@@ -614,87 +500,11 @@
             // Ore mese corrente e precedente (dalle formule Excel)
             document.getElementById('monthlyHours').textContent = Utils.formatHours(currentUser.oreMese || 0);
             document.getElementById('previousMonthHours').textContent = Utils.formatHours(currentUser.oreMesePrecedente || 0);
-            
-            // Ore anno se disponibili
-            if (currentUser.oreAnno !== undefined) {
-                document.getElementById('totalYearHours').textContent = Utils.formatHours(currentUser.oreAnno || 0);
-            }
-            
-            // Calcoli derivati
-            updateDerivedStats();
-        }
-
-        function showSecurityInfo() {
-            const session = Utils.getSession();
-            if (session.user && session.user.authMethod && CONFIG.UI.SHOW_AUTH_METHOD) {
-                const authMethod = session.user.authMethod;
-                const securityBadge = document.getElementById('securityBadge');
-                const securityStatus = document.getElementById('securityStatus');
-                const securityTitle = document.getElementById('securityTitle');
-                const securityDescription = document.getElementById('securityDescription');
-                
-                console.log(`🔐 Dashboard V3.4 - Metodo auth: ${authMethod.toUpperCase()}`);
-                
-                // Mostra badge sicurezza
-                securityBadge.style.display = 'inline-block';
-                securityStatus.style.display = 'block';
-                
-                switch(authMethod) {
-                    case 'hash':
-                        securityBadge.textContent = '🔐 Sicuro';
-                        securityBadge.className = 'security-badge';
-                        securityTitle.textContent = '🔐 Sistema Sicuro';
-                        securityDescription.textContent = 'Autenticazione con hash password SHA-256';
-                        break;
-                        
-                    case 'plain_migrated':
-                        securityBadge.textContent = '🔄 Migrato';
-                        securityBadge.className = 'security-badge';
-                        securityTitle.textContent = '🔄 Password Migrata';
-                        securityDescription.textContent = 'Password automaticamente migrata in hash SHA-256';
-                        Utils.showNotification('Password migrata automaticamente in hash sicuro!', 'security', 8000);
-                        break;
-                        
-                    case 'plain_fallback':
-                        securityBadge.textContent = '⚠️ Compatibilità';
-                        securityBadge.className = 'security-badge warning';
-                        securityStatus.className = 'security-status warning';
-                        securityTitle.textContent = '⚠️ Modalità Compatibilità';
-                        securityDescription.textContent = 'Login con password non hashata. Contatta amministratore per migrazione.';
-                        break;
-                        
-                    default:
-                        securityBadge.style.display = 'none';
-                        securityStatus.style.display = 'none';
-                }
-                
-                // Aggiorna tooltip version badge
-                const versionBadge = document.getElementById('versionBadge');
-                if (versionBadge) {
-                    versionBadge.title = `Dashboard V3.4 - Metodo auth: ${authMethod}`;
-                }
-            }
-        }
-
-        function updateDerivedStats() {
-            const oreMese = parseFloat(currentUser.oreMese || 0);
-            const oreAnno = parseFloat(currentUser.oreAnno || 0);
-            
-            // Media ore per giorno (assumendo giorni lavorati nel mese)
-            const giorniLavoratiMese = Math.ceil(oreMese / 8); // Stima basata su 8 ore/giorno
-            const mediaGiorno = giorniLavoratiMese > 0 ? (oreMese / giorniLavoratiMese) : 0;
-            
-            document.getElementById('avgHoursPerDay').textContent = Utils.formatHours(mediaGiorno);
-            document.getElementById('workingDays').textContent = giorniLavoratiMese;
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('it-IT', { 
-                day: '2-digit', 
-                month: '2-digit' 
-            });
         }
 
         async function loadCantieri() {
             try {
-                console.log('📋 Caricando cantieri V3.4...');
+                console.log('📋 Caricando cantieri V3.5...');
                 
                 const result = await callGoogleAppsScript({
                     action: 'getCantieri',
@@ -821,7 +631,7 @@
             
             const oreParsed = parseFloat(oreValue);
             
-            console.log('🔢 Debug ore V3.4:', {
+            console.log('🔢 Debug ore V3.5:', {
                 original: data.ore,
                 cleaned: oreValue,
                 parsed: oreParsed,
@@ -852,7 +662,7 @@
             saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
             
             try {
-                console.log('💾 Salvando ore lavorate V3.4...');
+                console.log('💾 Salvando ore lavorate V3.5...');
                 
                 const result = await callGoogleAppsScript({
                     action: 'saveWorkEntry',
@@ -860,7 +670,7 @@
                     workData: {
                         data: data.workDate,
                         cantiereId: data.cantiere,
-                        lavori: 'Lavoro registrato via dashboard V3.4',
+                        lavori: 'Lavoro registrato via dashboard V3.5',
                         ore: oreParsed,
                         note: data.note || ''
                     }
@@ -894,7 +704,7 @@
 
         async function refreshUserStats() {
             try {
-                console.log('🔄 Aggiornando statistiche V3.4...');
+                console.log('🔄 Aggiornando statistiche V3.5...');
                 
                 const result = await callGoogleAppsScript({
                     action: 'getUserInfo',
@@ -909,14 +719,7 @@
                     document.getElementById('monthlyHours').textContent = Utils.formatHours(result.data.oreMese || 0);
                     document.getElementById('previousMonthHours').textContent = Utils.formatHours(result.data.oreMesePrecedente || 0);
                     
-                    if (result.data.oreAnno !== undefined) {
-                        document.getElementById('totalYearHours').textContent = Utils.formatHours(result.data.oreAnno || 0);
-                    }
-                    
-                    // Aggiorna statistiche derivate
-                    updateDerivedStats();
-                    
-                    console.log('✅ Statistiche aggiornate V3.4:', result.data);
+                    console.log('✅ Statistiche aggiornate V3.5:', result.data);
                 } else {
                     console.log('⚠️ Impossibile aggiornare statistiche:', result.message);
                 }
@@ -942,15 +745,10 @@
         // Gestione click version badge per debug info
         document.getElementById('versionBadge').addEventListener('click', function() {
             const session = Utils.getSession();
-            let debugInfo = `Dashboard V3.4 Debug Info:\n\n`;
-            debugInfo += `Frontend: ${CONFIG.VERSION.frontend}\n`;
-            debugInfo += `Build: ${CONFIG.VERSION.buildDate}\n`;
-            debugInfo += `Hash Support: ${CONFIG.SECURITY.HASH_ENABLED}\n`;
-            
-            if (session.user && session.user.authMethod) {
-                debugInfo += `Auth Method: ${session.user.authMethod}\n`;
-            }
-            
+            let debugInfo = `Dashboard V3.5 Debug Info:\n\n`;
+            debugInfo += `Frontend: 3.5.0\n`;
+            debugInfo += `Build: 2025.07.04\n`;
+            debugInfo += `Layout: Semplificato\n`;
             debugInfo += `User: ${session.user ? session.user.name : 'Non loggato'}\n`;
             debugInfo += `Session Token: ${session.token ? 'Presente' : 'Assente'}`;
             
