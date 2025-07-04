@@ -1,4 +1,4 @@
-// Configurazione Sistema Gestione Ore V3.5 - PRODUCTION MODE - FIXED
+// Configurazione Sistema Gestione Ore V3.5 - PRODUCTION MODE - CORS FIXED
 const CONFIG = {
     // 🔧 PROXY VERCEL - URL RELATIVO (CORS gestito)
     APPS_SCRIPT_URL: '/api/proxy',
@@ -86,7 +86,7 @@ const ProductionLogger = {
     },
     
     api: function(...args) {
-        if (CONFIG.LOGGING.API_LOGS && !CONFIG.PRODUCTION_MODE) {
+        if (CONFIG.LOGGING.API_CALLS && !CONFIG.PRODUCTION_MODE) {
             console.log('[API]', ...args);
         }
     },
@@ -105,13 +105,21 @@ const ProductionLogger = {
     }
 };
 
-// Funzioni di utilità comuni V3.5 - PRODUCTION OPTIMIZED + CLEAN UI
+// Funzioni di utilità comuni V3.5 - PRODUCTION OPTIMIZED + CORS FIXED
 const Utils = {
-    // ✅ Gestione chiamate API ottimizzata per produzione
+    // ✅ Gestione chiamate API FIXED per URL relativi
     async callAPI(params) {
         ProductionLogger.api('API Call:', params.action);
         
-        const url = new URL(CONFIG.APPS_SCRIPT_URL);
+        // 🔧 FIX: Gestione corretta URL relativi
+        let targetUrl;
+        if (CONFIG.APPS_SCRIPT_URL.startsWith('http')) {
+            // URL assoluto (sviluppo)
+            targetUrl = new URL(CONFIG.APPS_SCRIPT_URL);
+        } else {
+            // URL relativo (produzione con proxy)
+            targetUrl = new URL(CONFIG.APPS_SCRIPT_URL, window.location.origin);
+        }
         
         // Gestione parametri con serializzazione JSON per oggetti complessi
         Object.keys(params).forEach(key => {
@@ -119,16 +127,16 @@ const Utils = {
             
             if (typeof value === 'object' && value !== null) {
                 ProductionLogger.debug(`Serializzando oggetto ${key}:`, value);
-                url.searchParams.append(key, JSON.stringify(value));
+                targetUrl.searchParams.append(key, JSON.stringify(value));
             } else {
-                url.searchParams.append(key, String(value));
+                targetUrl.searchParams.append(key, String(value));
             }
         });
         
-        ProductionLogger.debug('URL finale:', url.toString());
+        ProductionLogger.debug('URL finale:', targetUrl.toString());
         
         try {
-            const response = await fetch(url.toString(), { method: 'GET' });
+            const response = await fetch(targetUrl.toString(), { method: 'GET' });
             
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
