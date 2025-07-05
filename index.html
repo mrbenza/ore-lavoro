@@ -493,10 +493,9 @@
                     Utils.setSession(user.data, user.sessionToken);
                     
                     // Redirect alla dashboard
-                    setTimeout(() => {
-                        console.log('🚀 Reindirizzamento alla dashboard...');
-                        Utils.redirectToDashboard();
-                    }, 500);
+                    console.log('🚀 Reindirizzamento alla dashboard...');
+                    Utils.redirectToDashboard();
+                   
                 } else {
                     showError(user.message || 'Credenziali non valide');
                 }
