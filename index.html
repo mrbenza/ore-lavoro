@@ -478,7 +478,7 @@
                     showSuccess(welcomeMsg);
                     
                     // Log informazioni V3.4
-                    console.log('👤 Dati utente ricevuti V3.4:', user.data);
+                    console.log('👤 Dati utente ricevuti V3.5:', user.data);
                     console.log('🔐 Metodo autenticazione:', user.systemInfo?.authMethod);
                     console.log('🔐 Hash support:', user.systemInfo?.hashSupport);
                     console.log('📊 Versione backend:', user.systemInfo?.version);
@@ -544,18 +544,18 @@
 
         // Auto-setup al caricamento V3.4
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Sistema Login V3.4 avviato - Hash Password Support');
+            console.log('🚀 Sistema Login V3.5 avviato - Hash Password Support');
             
             // Se già loggato, vai alla dashboard
             if (PageGuard.redirectIfLoggedIn()) {
                 return;
             }
             
-            const connected = await testConnection();
+            const connected = testConnection();
             console.log('Connessione V3.4:', connected ? 'OK' : 'FALLITA');
             
             if (!connected) {
-                showError('Impossibile connettersi. Verifica che il Google Apps Script V3.4 sia deployato correttamente.');
+                showError('Impossibile connettersi. Verifica che il Google Script sia deployato correttamente.');
             }
         });
     </script>
