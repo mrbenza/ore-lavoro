@@ -395,7 +395,7 @@
                     <div class="form-group">
                         <label for="cantiere">Cantiere di Lavoro</label>
                         <select id="cantiere" name="cantiere" required>
-                            <option value="">🔄 Caricamento cantieri...</option>
+                            <option value="">⚡ Caricamento parallelo...</option>
                         </select>
                         <div class="validation-message">Seleziona un cantiere</div>
                     </div>
@@ -445,8 +445,8 @@
     <div id="notification" class="notification"></div>
 
     <!-- Badge versione V3.5 -->
-    <div class="version-badge" id="versionBadge" title="Dashboard V3.5 - Layout Semplificato">
-        v3.5 - Clean UI 🚀
+    <div class="version-badge" id="versionBadge" title="Dashboard V3.5 - Caricamento Parallelo">
+        v3.5 - Parallel Load ⚡
     </div>
 
     <script src="config.js"></script>
@@ -455,9 +455,9 @@
         let sessionToken = null;
         let cantieri = [];
 
-        // Inizializzazione V3.5 - Layout Semplificato
+        // ⚡ INIZIALIZZAZIONE V3.5 - CARICAMENTO PARALLELO OTTIMIZZATO
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Dashboard V3.5 avviata - Layout Semplificato');
+            console.log('⚡ Dashboard V3.5 avviata - Caricamento Parallelo Ottimizzato');
             
             // Verifica accesso
             if (!PageGuard.requireLogin()) {
@@ -472,25 +472,43 @@
             currentUser = session.user;
             sessionToken = session.token;
             
+            // ⚡ CARICAMENTO IMMEDIATO (dati già disponibili)
             loadUserData();
             
             // Imposta data odierna
             document.getElementById('workDate').value = new Date().toISOString().split('T')[0];
             
-            // Carica cantieri
-            await loadCantieri();
-            
-            // Setup form
+            // Setup form subito (non dipende da API)
             setupForm();
             
-            // Aggiorna statistiche dal server
-            await refreshUserStats();
+            // ✅ CARICAMENTO PARALLELO - Entrambe le chiamate insieme
+            console.log('⚡ Avvio caricamento parallelo...');
+            const startTime = performance.now();
+            
+            try {
+                // ⚡ CHIAMATE API IN PARALLELO - NON SERIALI!
+                await Promise.all([
+                    loadCantieri(),
+                    refreshUserStats()
+                ]);
+                
+                const endTime = performance.now();
+                const loadTime = (endTime - startTime).toFixed(0);
+                console.log(`⚡ Caricamento parallelo completato in ${loadTime}ms`);
+                
+                // Notifica di successo
+                Utils.showNotification(`Dashboard caricata in ${loadTime}ms ⚡`, 'success', 2000);
+                
+            } catch (error) {
+                console.error('❌ Errore nel caricamento parallelo:', error);
+                Utils.showNotification('Errore nel caricamento dati', 'error');
+            }
         });
 
         function loadUserData() {
             if (!currentUser) return;
             
-            console.log('📊 Caricando dati utente V3.5:', currentUser);
+            console.log('📊 Caricando dati utente V3.5 (immediato):', currentUser);
             
             // Dati base
             document.getElementById('userName').textContent = currentUser.name;
@@ -504,14 +522,13 @@
 
         async function loadCantieri() {
             try {
-                console.log('📋 Caricando cantieri V3.5...');
+                console.log('📋 Caricando cantieri V3.5 (parallelo)...');
+                const cantiereSelect = document.getElementById('cantiere');
                 
                 const result = await callGoogleAppsScript({
                     action: 'getCantieri',
                     sessionToken: sessionToken
                 });
-                
-                const cantiereSelect = document.getElementById('cantiere');
                 
                 if (result.success && result.data) {
                     cantieri = result.data;
@@ -524,7 +541,7 @@
                         cantiereSelect.appendChild(option);
                     });
                     
-                    console.log('✅ Cantieri caricati:', cantieri.length);
+                    console.log('✅ Cantieri caricati (parallelo):', cantieri.length);
                 } else {
                     throw new Error(result.message || 'Errore caricamento cantieri');
                 }
@@ -570,6 +587,8 @@
                 field.addEventListener('blur', () => validateField(field));
                 field.addEventListener('change', () => clearValidation(field));
             });
+            
+            console.log('⚡ Form setup completato (immediato)');
         }
 
         function validateHoursField(field) {
@@ -704,7 +723,7 @@
 
         async function refreshUserStats() {
             try {
-                console.log('🔄 Aggiornando statistiche V3.5...');
+                console.log('🔄 Aggiornando statistiche V3.5 (parallelo)...');
                 
                 const result = await callGoogleAppsScript({
                     action: 'getUserInfo',
@@ -719,7 +738,7 @@
                     document.getElementById('monthlyHours').textContent = Utils.formatHours(result.data.oreMese || 0);
                     document.getElementById('previousMonthHours').textContent = Utils.formatHours(result.data.oreMesePrecedente || 0);
                     
-                    console.log('✅ Statistiche aggiornate V3.5:', result.data);
+                    console.log('✅ Statistiche aggiornate V3.5 (parallelo):', result.data);
                 } else {
                     console.log('⚠️ Impossibile aggiornare statistiche:', result.message);
                 }
@@ -748,7 +767,7 @@
             let debugInfo = `Dashboard V3.5 Debug Info:\n\n`;
             debugInfo += `Frontend: 3.5.0\n`;
             debugInfo += `Build: 2025.07.04\n`;
-            debugInfo += `Layout: Semplificato\n`;
+            debugInfo += `Layout: Semplificato + Caricamento Parallelo\n`;
             debugInfo += `User: ${session.user ? session.user.name : 'Non loggato'}\n`;
             debugInfo += `Session Token: ${session.token ? 'Presente' : 'Assente'}`;
             
