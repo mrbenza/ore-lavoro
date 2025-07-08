@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema Gestione Ore V3.4</title>
+    <title>Login - Sistema Gestione Ore V3.5 Fast</title>
     <style>
         * {
             margin: 0;
@@ -64,6 +64,7 @@
             margin-bottom: 30px;
         }
 
+        /* ❌ CSS BOX STATUS COMMENTATO PER PERFORMANCE
         .system-status {
             background: rgba(102, 126, 234, 0.1);
             border: 1px solid rgba(102, 126, 234, 0.2);
@@ -118,6 +119,15 @@
             50% { opacity: 0.5; }
         }
 
+        .build-info {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(102, 126, 234, 0.2);
+            font-size: 11px;
+            color: #888;
+        }
+        FINE CSS BOX STATUS COMMENTATO */
+
         .version-badge {
             position: absolute;
             top: 15px;
@@ -128,14 +138,6 @@
             border-radius: 12px;
             font-size: 11px;
             font-weight: 600;
-        }
-
-        .build-info {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(102, 126, 234, 0.2);
-            font-size: 11px;
-            color: #888;
         }
 
         .form-group {
@@ -301,10 +303,25 @@
         .notification.security {
             background: linear-gradient(135deg, #667eea, #764ba2);
         }
+
+        /* ⚡ FAST LOGIN INDICATOR */
+        .fast-indicator {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: #28a745;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
-    <div class="version-badge" id="versionBadge">Caricamento...</div>
+    <div class="version-badge" id="versionBadge">v3.5 Fast ⚡</div>
+    <div class="fast-indicator">⚡ Fast Mode</div>
     
     <div class="login-container">
         <div class="logo-section">
@@ -313,6 +330,7 @@
             <p class="subtitle">Gestione Ore lavorate</p>
         </div>
 
+        <!-- ❌ BOX STATUS COMMENTATO PER PERFORMANCE
         <div class="system-status">
             <h3>🚀 Stato Sistema</h3>
             <div class="status-row">
@@ -337,6 +355,7 @@
                 </div>
             </div>
         </div>
+        FINE BOX STATUS COMMENTATO -->
 
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
@@ -359,13 +378,14 @@
         </form>
 
         <div class="footer">
-            <p>&copy; 2025 Sistema Gestione Ore V3.5</p>
+            <p>&copy; 2025 Sistema Gestione Ore V3.5 Fast</p>
         </div>
     </div>
 
     <script src="config.js"></script>
     <script>
-        // Test di connessione con sistema V3.5
+        // ❌ FUNZIONI BOX STATUS COMMENTATE PER PERFORMANCE
+        /*
         async function testConnection() {
             const statusElement = document.getElementById('connectionStatus');
             const indicatorElement = document.getElementById('connectionIndicator');
@@ -377,7 +397,6 @@
             indicatorElement.className = 'status-indicator status-loading';
             
             try {
-                // Test connessione con backend V3.4
                 const result = await Utils.callAPI({ action: 'ping' });
                 
                 if (result && result.success) {
@@ -397,7 +416,6 @@
                         features: result.features || []
                     });
                     
-                    // Mostra features se disponibili
                     if (result.features && result.features.includes('Hash Password SHA-256')) {
                         document.getElementById('securityStatus').innerHTML = '🔐 ✅';
                     }
@@ -417,10 +435,12 @@
                 return false;
             }
         }
+        */
+        // FINE FUNZIONI COMMENTATE
 
-        // Autenticazione V3.4 con supporto hash
+        // ⚡ AUTENTICAZIONE VELOCE V3.5
         async function authenticateUser(userId, password) {
-            console.log('🔐 Autenticazione utente V3.5:', userId);
+            console.log('⚡ Autenticazione veloce V3.5:', userId);
             
             try {
                 const result = await Utils.callAPI({
@@ -429,16 +449,16 @@
                     password: password
                 });
                 
-                console.log('🔐 Risultato autenticazione V3.4:', result);
+                console.log('⚡ Risultato autenticazione V3.5:', result.success ? 'SUCCESS' : 'FAILED');
                 return result;
                 
             } catch (error) {
-                console.error('🔐 Errore autenticazione:', error);
+                console.error('❌ Errore autenticazione:', error);
                 throw new Error('Errore di autenticazione: ' + error.message);
             }
         }
 
-        // Event listeners V3.4
+        // ⚡ EVENT LISTENER OTTIMIZZATO
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -465,43 +485,32 @@
                 return;
             }
 
-            // Mostra loading
+            // ⚡ LOADING STATE VELOCE
             loginBtn.disabled = true;
-            loginBtn.innerHTML = '<span class="loading"></span>Accesso in corso...';
+            loginBtn.innerHTML = '<span class="loading"></span>Accesso...';
 
             try {
                 const user = await authenticateUser(userId, password);
                 
                 if (user && user.success) {
-                    // Messaggio di benvenuto
-                    const welcomeMsg = `Benvenuto ${user.data.name}!`;
-                    showSuccess(welcomeMsg);
+                    // ⚡ SUCCESS VELOCE
+                    showSuccess(`Benvenuto ${user.data.name}!`);
                     
-                    // Log informazioni V3.4
-                    console.log('👤 Dati utente ricevuti V3.5:', user.data);
-                    console.log('🔐 Metodo autenticazione:', user.systemInfo?.authMethod);
-                    console.log('🔐 Hash support:', user.systemInfo?.hashSupport);
-                    console.log('📊 Versione backend:', user.systemInfo?.version);
-                    
-                    // Mostra info sicurezza
-                    if (user.systemInfo?.authMethod) {
-                        showSecurityInfo(user.systemInfo.authMethod);
-                        Utils.showSecurityStatus(user.systemInfo.authMethod, user.systemInfo.hashSupport);
-                    }
+                    console.log('⚡ Login successful, dati ricevuti');
                     
                     // Salva sessione
                     Utils.setSession(user.data, user.sessionToken);
                     
-                    // Redirect alla dashboard
-                    console.log('🚀 Reindirizzamento alla dashboard...');
-                    Utils.redirectToDashboard();
+                    // ⚡ REDIRECT IMMEDIATO
+                    console.log('⚡ Redirect immediato alla dashboard...');
+                    window.location.href = CONFIG.PAGES.DASHBOARD;
                    
                 } else {
                     showError(user.message || 'Credenziali non valide');
                 }
             } catch (error) {
                 showError('Errore durante l\'autenticazione: ' + error.message);
-                console.error('Login error V3.4:', error);
+                console.error('❌ Login error:', error);
             } finally {
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = 'Accedi';
@@ -526,7 +535,7 @@
             
             switch(authMethod) {
                 case 'hash':
-                    message = '🔐 Autenticato...';
+                    message = '🔐 Autenticato con hash sicuro';
                     break;
                 case 'plain_migrated':
                     message = '🔄 Password migrata automaticamente in hash sicuro!';
@@ -542,21 +551,32 @@
             securityDiv.style.display = 'block';
         }
 
-        // Auto-setup al caricamento V3.4
+        // ⚡ SETUP VELOCE AL CARICAMENTO
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Sistema Login V3.5 avviato - Hash Password Support');
+            console.log('⚡ Sistema Login V3.5 Fast avviato');
             
-            // Se già loggato, vai alla dashboard
+            // Se già loggato, redirect immediato
             if (PageGuard.redirectIfLoggedIn()) {
                 return;
             }
             
-            // const connected = testConnection();
-            //console.log('Connessione V3.5:', connected ? 'OK' : 'FALLITA');
+            // ✅ CONNECTION TEST DISABILITATO PER PERFORMANCE
+            console.log('⚡ Connection test disabilitato - modalità veloce attiva');
+            console.log('⚡ Form login pronto per l\'uso');
             
-            //if (!connected) {
-            //    showError('Impossibile connettersi. Verifica che il Google Script sia deployato correttamente.');
-            // }
+            // Focus automatico sul campo username
+            document.getElementById('userId').focus();
+        });
+
+        // ⚡ ENTER KEY OPTIMIZATION
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) {
+                    e.preventDefault();
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
+            }
         });
     </script>
 </body>
