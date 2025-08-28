@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema Gestione Ore V3.5 Fast</title>
+    <title>Login - Sistema Gestione Ore V3.5</title>
     <style>
         * {
             margin: 0;
@@ -496,13 +496,13 @@
                     // ⚡ SUCCESS VELOCE
                     showSuccess(`Benvenuto ${user.data.name}!`);
                     
-                    console.log('⚡ Login successful, dati ricevuti');
+                    console.log('⚡ Login successful');
                     
                     // Salva sessione
                     Utils.setSession(user.data, user.sessionToken);
                     
                     // ⚡ REDIRECT IMMEDIATO
-                    console.log('⚡ Redirect immediato alla dashboard...');
+                    console.log('⚡ Redirect alla dashboard...');
                     window.location.href = CONFIG.PAGES.DASHBOARD;
                    
                 } else {
@@ -535,7 +535,7 @@
             
             switch(authMethod) {
                 case 'hash':
-                    message = '🔐 Autenticato con hash sicuro';
+                    message = '🔐 Autenticato!';
                     break;
                 case 'plain_migrated':
                     message = '🔄 Password migrata automaticamente in hash sicuro!';
