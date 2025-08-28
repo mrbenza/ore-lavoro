@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   }
 
   // 🔧 AGGIORNA CON IL TUO URL GOOGLE APPS SCRIPT
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWenT-EwL6B3YsKcveDnuSC8UMdj-d8AMRNO4xYJ2FtC-ENEP7b9LqVbHRt_CCoQknGw/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/a/macros/borellicostruzioni.srl/s/AKfycbzrdwj2f8Qns8gzaXVeSVSPQAxWpQiDJBzZ1_CHutKuq8YOoZ1PnP3vZPYmG8Ww3aLHaA/exec';
 
   try {
     let requestData;
