@@ -395,7 +395,7 @@
                     <div class="form-group">
                         <label for="cantiere">Cantiere di Lavoro</label>
                         <select id="cantiere" name="cantiere" required>
-                            <option value="">⚡ Caricamento parallelo...</option>
+                            <option value="">⚡ Caricamento...</option>
                         </select>
                         <div class="validation-message">Seleziona un cantiere</div>
                     </div>
@@ -445,7 +445,7 @@
     <div id="notification" class="notification"></div>
 
     <!-- Badge versione V3.5 -->
-    <div class="version-badge" id="versionBadge" title="Dashboard V3.5 - Caricamento Veloce">
+    <div class="version-badge" id="versionBadge" title="Dashboard V3.5">
         v3.5 - Parallel Load ⚡
     </div>
 
@@ -455,7 +455,7 @@
         let sessionToken = null;
         let cantieri = [];
 
-        // ⚡ INIZIALIZZAZIONE V3.5 - CARICAMENTO PARALLELO OTTIMIZZATO
+        // ⚡ INIZIALIZZAZIONE V3.5 - CARICAMENTO OTTIMIZZATO
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('⚡ Dashboard V3.5 avviata');
             
@@ -482,7 +482,7 @@
             setupForm();
             
             // ✅ CARICAMENTO PARALLELO - Entrambe le chiamate insieme
-            console.log('⚡ Avvio caricamento parallelo...');
+            console.log('⚡ Avvio caricamento...');
             const startTime = performance.now();
             
             try {
@@ -494,13 +494,13 @@
                 
                 const endTime = performance.now();
                 const loadTime = (endTime - startTime).toFixed(0);
-                console.log(`⚡ Caricamento parallelo completato in ${loadTime}ms`);
+                console.log(`⚡ Caricamento completato in ${loadTime}ms`);
                 
                 // Notifica di successo
                 Utils.showNotification(`Dashboard caricata!⚡`, 'success', 2000);
                 
             } catch (error) {
-                console.error('❌ Errore nel caricamento parallelo:', error);
+                console.error('❌ Errore nel caricamento:', error);
                 Utils.showNotification('Errore nel caricamento dati', 'error');
             }
         });
