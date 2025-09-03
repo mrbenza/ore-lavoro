@@ -1,191 +1,995 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
-  <style>
-    /* Reset & base */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: system-ui, sans-serif;
-      background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
-      color: #333;
-      display: flex; flex-direction: column;
-      height: 100vh; overflow: hidden;
-      font-size: 14px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Dashboard - Gestione Ore V4.0</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --header-gradient: linear-gradient(135deg, #4c63d2 0%, #5a67d8 100%);
+            --content-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --success: #48bb78;
+            --error: #f56565;
+            --warning: #ed8936;
+            --accent: #667eea;
+            --danger: #e53e3e;
+        }
 
-    .glass-card {
-      background: rgba(255,255,255,0.2);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    /* Header */
-    header {
-      padding: 8px;
-      text-align: center;
-    }
-    header h1 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-    .stat-card h3 { font-size: 12px; margin-bottom: 2px; }
-    .stat-card p { font-size: 16px; font-weight: 600; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: var(--content-gradient);
+            min-height: 100vh;
+            padding: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-    /* Main */
-    main { flex: 1; overflow-y: auto; padding: 8px; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
 
-    /* Form */
-    form.grid { display: grid; gap: 8px; }
-    label { font-size: 12px; margin-bottom: 2px; display: block; }
-    .input {
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 12px;
-      padding: 6px;
-      background: rgba(255,255,255,0.15);
-      font-size: 14px;
-      width: 100%;
-    }
-    button.btn {
-      background: #3498db;
-      color: white;
-      padding: 8px;
-      border: none;
-      border-radius: 12px;
-      font-weight: 600;
-      transition: background 0.2s ease;
-    }
-    button.btn:hover { background: #2980b9; }
-    .validation-message {
-      color: #ff6b6b;
-      font-size: 11px;
-      display: none;
-    }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
 
-    /* Bottom nav */
-    .bottom-nav {
-      display: flex;
-      justify-content: space-around;
-      padding: 6px;
-      background: rgba(255,255,255,0.25);
-      backdrop-filter: blur(12px);
-      border-top: 1px solid rgba(255,255,255,0.2);
-    }
-    .nav-item {
-      flex: 1; text-align: center;
-      font-size: 11px; padding: 4px 0;
-      cursor: pointer;
-      display: flex; flex-direction: column;
-      align-items: center;
-      color: #555;
-      transition: color 0.2s ease;
-    }
-    .nav-item svg {
-      width: 20px; height: 20px;
-      margin-bottom: 2px;
-      fill: currentColor;
-    }
-    .nav-item.active { color: #2ecc71; font-weight: 600; }
-  </style>
+        .container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header differenziato - blu più scuro */
+        .header {
+            background: linear-gradient(135deg, rgba(76, 99, 210, 0.25), rgba(90, 103, 216, 0.25));
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(76, 99, 210, 0.15);
+        }
+
+        .header-content {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .user-info h1 {
+            color: white;
+            font-size: clamp(24px, 5vw, 32px);
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 24px;
+        }
+
+        .header-stat {
+            text-align: left;
+        }
+
+        .header-stat-number {
+            display: block;
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            line-height: 1;
+        }
+
+        .header-stat-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        /* Pulsante Esci ROSSO */
+        .logout-btn {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(229, 62, 62, 0.6);
+            padding: 10px 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+        }
+
+        .logout-btn:hover, .logout-btn:active {
+            background: linear-gradient(135deg, #c53030, #9c1d1d);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(229, 62, 62, 0.4);
+        }
+
+        /* Main Content - con spazio per bottom nav */
+        .main-content {
+            flex: 1;
+            padding: 24px 16px 100px;
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .form-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 28px 24px;
+            box-shadow: var(--glass-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Hours Input - Hero Element */
+        .hours-group {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 28px 20px;
+            margin: 32px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hours-group::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hours-input {
+            text-align: center !important;
+            font-size: 36px !important;
+            font-weight: 700 !important;
+            background: transparent !important;
+            border: none !important;
+            color: white !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+            padding: 16px !important;
+        }
+
+        .hours-input::placeholder {
+            color: rgba(255, 255, 255, 0.3) !important;
+            font-weight: 400 !important;
+        }
+
+        .hours-input:focus {
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        .decimal-hint {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 8px;
+            font-weight: 400;
+        }
+
+        textarea {
+            min-height: 80px !important;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        /* Save Button */
+        .save-section {
+            margin-top: 32px;
+            text-align: center;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            padding: 18px 48px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 24px rgba(72, 187, 120, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .save-btn:hover, .save-btn:active {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(72, 187, 120, 0.4);
+        }
+
+        .save-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Bottom Navigation - più compatto */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, rgba(76, 99, 210, 0.2), rgba(90, 103, 216, 0.2));
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 12px 16px; /* Ridotto da 16px a 12px per il verticale */
+            z-index: 200;
+            box-shadow: 0 -6px 24px rgba(76, 99, 210, 0.15); /* Ombra ridotta */
+        }
+
+        .bottom-nav-container {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            gap: 12px; /* Ridotto da 16px a 12px */
+        }
+
+        .nav-tab {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px; /* Ridotto da 20px a 16px */
+            padding: 12px 16px; /* Ridotto da 14px 20px a 12px 16px */
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 15px; /* Ridotto da 16px a 15px */
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px; /* Ridotto da 8px a 6px */
+            text-decoration: none;
+            user-select: none;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: white;
+            box-shadow: 0 4px 16px rgba(72, 187, 120, 0.3);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+        }
+
+        .nav-tab .icon {
+            font-size: 18px;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Calendario placeholder */
+        .calendar-placeholder {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px 24px;
+            text-align: center;
+            box-shadow: var(--glass-shadow);
+        }
+
+        .calendar-placeholder h3 {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 16px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .calendar-placeholder p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* Validation Styles */
+        .form-validation {
+            border-color: var(--error) !important;
+            background: rgba(245, 101, 101, 0.1) !important;
+            box-shadow: 0 0 0 4px rgba(245, 101, 101, 0.2) !important;
+        }
+
+        .validation-message {
+            color: #ff6b6b;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+            font-weight: 600;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Select dropdown styling */
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        /* Mobile Optimizations - header compatto */
+        @media (max-width: 480px) {
+            .header {
+                padding: 14px;
+            }
+
+            .header-stats {
+                gap: 16px;
+            }
+
+            .header-stat-number {
+                font-size: 28px;
+            }
+
+            .user-info h1 {
+                font-size: clamp(20px, 5vw, 28px);
+            }
+
+            .user-info {
+                gap: 16px;
+            }
+
+            .form-card {
+                padding: 24px 20px;
+                border-radius: 20px;
+            }
+
+            .hours-input {
+                font-size: 32px !important;
+            }
+
+            .save-btn {
+                padding: 16px 40px;
+                font-size: 16px;
+                width: 100%;
+            }
+        }
+
+        /* Version Badge */
+        .version-badge {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: var(--glass-shadow);
+        }
+
+        .version-badge:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+    </style>
 </head>
 <body>
-  <!-- Header -->
-  <header>
-    <h1>Dashboard</h1>
-    <div class="stats">
-      <div class="glass-card stat-card"><h3>Ore Totali</h3><p id="totalHours">0</p></div>
-      <div class="glass-card stat-card"><h3>Settimana</h3><p id="weekHours">0</p></div>
-      <div class="glass-card stat-card"><h3>Mese</h3><p id="monthHours">0</p></div>
-      <div class="glass-card stat-card"><h3>Ultimo Cantiere</h3><p id="lastSite">-</p></div>
-    </div>
-  </header>
+    <div class="container">
+        <!-- Header differenziato con statistiche -->
+        <header class="header">
+            <div class="header-content">
+                <div class="user-info">
+                    <h1><span id="userName">Caricamento...</span></h1>
+                    <div class="header-stats">
+                        <div class="header-stat">
+                            <span class="header-stat-number" id="monthlyHours">0</span>
+                            <span class="header-stat-label">ORE MESE</span>
+                        </div>
+                        <div class="header-stat">
+                            <span class="header-stat-number" id="previousMonthHours">0</span>
+                            <span class="header-stat-label">MESE PREC.</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="logout-btn" onclick="logout()">
+                    Esci
+                </button>
+            </div>
+        </header>
 
-  <!-- Main -->
-  <main>
-    <!-- Ore Lavorate -->
-    <div id="workEntry" class="tab-content active">
-      <form id="workForm" class="glass-card grid">
-        <div>
-          <label for="ore">Ore</label>
-          <input id="ore" name="ore" type="number" step="0.25" min="0" max="24"
-                 placeholder="0 - 24" required class="input">
-          <span class="validation-message"></span>
-        </div>
-        <div>
-          <label for="cantiere">Cantiere</label>
-          <select id="cantiere" name="cantiere" required class="input">
-            <option value="">Seleziona...</option>
-          </select>
-          <span class="validation-message"></span>
-        </div>
-        <div>
-          <label for="workDate">Data</label>
-          <input id="workDate" name="workDate" type="date" required class="input">
-          <span class="validation-message"></span>
-        </div>
-        <button type="submit" id="saveBtn" class="btn">Salva</button>
-      </form>
+        <!-- Main Content - Tab System -->
+        <main class="main-content">
+            <!-- TAB: Inserisci (attivo di default) -->
+            <div id="tab-inserisci" class="tab-content active">
+                <div class="form-card">
+                    <form id="workEntryForm">
+                        <!-- Data -->
+                        <div class="form-group">
+                            <label for="workDate">📅 Data</label>
+                            <input type="date" id="workDate" name="workDate" required>
+                            <div class="validation-message">Seleziona una data valida</div>
+                        </div>
+
+                        <!-- Cantiere -->
+                        <div class="form-group">
+                            <label for="cantiere">🏗️ Cantiere</label>
+                            <select id="cantiere" name="cantiere" required>
+                                <option value="">Caricamento cantieri...</option>
+                            </select>
+                            <div class="validation-message">Seleziona un cantiere</div>
+                        </div>
+
+                        <!-- Ore - Hero Input -->
+                        <div class="form-group">
+                            <label for="ore">⏱️ Ore Lavorate</label>
+                            <div class="hours-group">
+                                <input type="text" id="ore" name="ore" class="hours-input" 
+                                       placeholder="8.5" required autocomplete="off" 
+                                       inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*">
+                                <div class="decimal-hint">Usa il punto per i decimali (es: 8.5)</div>
+                            </div>
+                            <div class="validation-message">Inserisci ore valide (0-24)</div>
+                        </div>
+
+                        <!-- Note -->
+                        <div class="form-group">
+                            <label for="note">📝 Note (opzionale)</label>
+                            <textarea id="note" name="note" placeholder="Eventuali note aggiuntive..."></textarea>
+                        </div>
+                    </form>
+
+                    <!-- Save Button -->
+                    <div class="save-section">
+                        <button type="submit" class="save-btn" id="saveBtn" form="workEntryForm">
+                            💾 Salva Ore
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: Calendario -->
+            <div id="tab-calendario" class="tab-content">
+                <div class="calendar-placeholder">
+                    <h3>📅 Calendario Ore</h3>
+                    <p>Qui potrai visualizzare il calendario con le ore lavorate per ogni giorno del mese.</p>
+                    <p><strong>Funzionalità in sviluppo...</strong></p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <div class="bottom-nav-container">
+                <div class="nav-tab active" data-tab="inserisci">
+                    <span class="icon">✏️</span>
+                    Inserisci
+                </div>
+                <div class="nav-tab" data-tab="calendario">
+                    <span class="icon">📅</span>
+                    Calendario
+                </div>
+            </div>
+        </nav>
     </div>
 
-    <!-- Statistiche -->
-    <div id="statsTab" class="tab-content">
-      <div class="glass-card"><p>Altre statistiche…</p></div>
+    <!-- Version Badge -->
+    <div class="version-badge" id="versionBadge">
+        V4.0 📱
     </div>
 
-    <!-- Calendario -->
-    <div id="calendar" class="tab-content">
-      <div class="glass-card"><p>Calendario in arrivo…</p></div>
-    </div>
+    <!-- Include il TUO config.js esistente -->
+    <script src="config.js"></script>
+    <script>
+        let currentUser = null;
+        let sessionToken = null;
+        let cantieri = [];
 
-    <!-- Impostazioni -->
-    <div id="settings" class="tab-content">
-      <div class="glass-card"><button onclick="logout()" class="btn">Logout</button></div>
-    </div>
-  </main>
+        // Gestione tab navigation
+        function initTabNavigation() {
+            const tabs = document.querySelectorAll('.nav-tab');
+            const contents = document.querySelectorAll('.tab-content');
 
-  <!-- Bottom nav con icone -->
-  <nav class="bottom-nav">
-    <div class="nav-item active" data-tab="workEntry">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 3h18v2H3V3zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"/></svg>
-      Ore
-    </div>
-    <div class="nav-item" data-tab="statsTab">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 3h4v18H5V3zm5 8h4v10h-4V11zm5-6h4v16h-4V5z"/></svg>
-      Stats
-    </div>
-    <div class="nav-item" data-tab="calendar">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 10h5v5H7v-5zm-2 9h14V8H5v11zm0-13h14V5h-2V3h-2v2H9V3H7v2H5v1z"/></svg>
-      Cal
-    </div>
-    <div class="nav-item" data-tab="settings">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7zM19.4 12.5a7.4 7.4 0 0 0 .1-1l2.1-1.6-2-3.5-2.5.6a7.5 7.5 0 0 0-1.7-1L15 2h-6l-.4 2.9a7.5 7.5 0 0 0-1.7 1l-2.5-.6-2 3.5 2.1 1.6a7.4 7.4 0 0 0 .1 1l-2.1 1.6 2 3.5 2.5-.6c.5.4 1.1.7 1.7 1L9 22h6l.4-2.9c.6-.3 1.2-.6 1.7-1l2.5.6 2-3.5-2.1-1.6z"/></svg>
-      Set
-    </div>
-  </nav>
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.dataset.tab;
+                    
+                    // Rimuovi active da tutti i tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+                    
+                    // Attiva tab selezionato
+                    tab.classList.add('active');
+                    document.getElementById(`tab-${targetTab}`).classList.add('active');
+                    
+                    console.log(`Switched to tab: ${targetTab}`);
+                });
+            });
+        }
 
-  <script>
-    // Switch tab
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.addEventListener('click', () => {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(item.dataset.tab).classList.add('active');
-        item.classList.add('active');
-      });
-    });
+        // Inizializzazione principale
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Dashboard V4.0 - Con Bottom Navigation e colori differenziati');
+            
+            // Inizializza tab navigation
+            initTabNavigation();
+            
+            // Verifica accesso
+            if (!PageGuard.requireLogin()) {
+                return;
+            }
+            
+            // Setup auto-logout
+            Utils.setupAutoLogout();
+            
+            // Carica dati utente
+            const session = Utils.getSession();
+            currentUser = session.user;
+            sessionToken = session.token;
+            
+            loadUserData();
+            
+            // Imposta data odierna
+            document.getElementById('workDate').value = new Date().toISOString().split('T')[0];
+            
+            setupForm();
+            
+            // Caricamento parallelo
+            console.log('Avvio caricamento parallelo...');
+            const startTime = performance.now();
+            
+            try {
+                await Promise.all([
+                    loadCantieri(),
+                    refreshUserStats()
+                ]);
+                
+                const endTime = performance.now();
+                const loadTime = (endTime - startTime).toFixed(0);
+                console.log(`Caricamento completato in ${loadTime}ms`);
+                
+                Utils.showNotification(`Dashboard pronta!`, 'success', 2000);
+                
+            } catch (error) {
+                console.error('Errore nel caricamento:', error);
+                Utils.showNotification('Errore nel caricamento dati', 'error');
+            }
+        });
 
-    // Logout (placeholder)
-    function logout() {
-      alert("Logout...");
-    }
-  </script>
+        function loadUserData() {
+            if (!currentUser) return;
+            
+            console.log('Caricando dati utente:', currentUser);
+            
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('monthlyHours').textContent = Utils.formatHours(currentUser.oreMese || 0);
+            document.getElementById('previousMonthHours').textContent = Utils.formatHours(currentUser.oreMesePrecedente || 0);
+        }
+
+        async function loadCantieri() {
+            try {
+                console.log('Caricando cantieri...');
+                const cantiereSelect = document.getElementById('cantiere');
+                
+                const result = await Utils.callAPI({
+                    action: 'getCantieri',
+                    sessionToken: sessionToken
+                });
+                
+                if (result.success && result.data) {
+                    cantieri = result.data;
+                    cantiereSelect.innerHTML = '<option value="">-- Seleziona Cantiere --</option>';
+                    
+                    cantieri.forEach(cantiere => {
+                        const option = document.createElement('option');
+                        option.value = cantiere.id;
+                        option.textContent = `${cantiere.nome} - ${cantiere.indirizzo}`;
+                        cantiereSelect.appendChild(option);
+                    });
+                    
+                    console.log('Cantieri caricati:', cantieri.length);
+                } else {
+                    throw new Error(result.message || 'Errore caricamento cantieri');
+                }
+                
+            } catch (error) {
+                console.error('Errore caricamento cantieri:', error);
+                const cantiereSelect = document.getElementById('cantiere');
+                cantiereSelect.innerHTML = '<option value="">❌ Errore caricamento</option>';
+                Utils.showNotification('Errore nel caricamento cantieri', 'error');
+            }
+        }
+
+        function setupForm() {
+            const form = document.getElementById('workEntryForm');
+            const oreInput = document.getElementById('ore');
+            
+            oreInput.addEventListener('input', function(e) {
+                let value = e.target.value;
+                
+                if (value.includes(',')) {
+                    value = value.replace(',', '.');
+                    e.target.value = value;
+                }
+                
+                clearValidation(e.target);
+            });
+            
+            oreInput.addEventListener('blur', function(e) {
+                validateHoursField(e.target);
+            });
+            
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await saveWorkEntry();
+            });
+
+            ['workDate', 'cantiere'].forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                field.addEventListener('blur', () => validateField(field));
+                field.addEventListener('change', () => clearValidation(field));
+            });
+            
+            console.log('Form setup completato');
+        }
+
+        function validateHoursField(field) {
+            let value = field.value.trim();
+            
+            if (value.includes(',')) {
+                value = value.replace(',', '.');
+                field.value = value;
+            }
+            
+            const isValid = Utils.validateHours && Utils.validateHours(value) ? 
+                            Utils.validateHours(value) : 
+                            (!isNaN(parseFloat(value)) && parseFloat(value) >= 0 && parseFloat(value) <= 24 && value !== '');
+            
+            if (!isValid) {
+                field.classList.add('form-validation');
+                field.parentElement.querySelector('.validation-message').style.display = 'block';
+                return false;
+            } else {
+                clearValidation(field);
+                return true;
+            }
+        }
+
+        function validateField(field) {
+            const value = field.value.trim();
+            const isValid = Utils.validateRequired && Utils.validateRequired(value) ? 
+                            Utils.validateRequired(value) : 
+                            (field.hasAttribute('required') ? value !== '' : true);
+            
+            if (!isValid) {
+                field.classList.add('form-validation');
+                const validationMsg = field.parentElement.querySelector('.validation-message');
+                if (validationMsg) validationMsg.style.display = 'block';
+                return false;
+            } else {
+                clearValidation(field);
+                return true;
+            }
+        }
+
+        function clearValidation(field) {
+            field.classList.remove('form-validation');
+            const validationMsgs = field.parentElement.querySelectorAll('.validation-message');
+            validationMsgs.forEach(msg => msg.style.display = 'none');
+        }
+
+        async function saveWorkEntry() {
+            const saveBtn = document.getElementById('saveBtn');
+            const form = document.getElementById('workEntryForm');
+            
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            let oreValue = data.ore.trim();
+            if (oreValue.includes(',')) {
+                oreValue = oreValue.replace(',', '.');
+            }
+            
+            const oreParsed = parseFloat(oreValue);
+            
+            let isValid = true;
+            ['workDate', 'cantiere'].forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!validateField(field)) {
+                    isValid = false;
+                }
+            });
+            
+            const oreField = document.getElementById('ore');
+            if (!validateHoursField(oreField)) {
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                Utils.showNotification('Completa tutti i campi obbligatori', 'warning');
+                return;
+            }
+            
+            // Loading state
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
+            
+            try {
+                console.log('Salvando ore lavorate...');
+                
+                const result = await Utils.callAPI({
+                    action: 'saveWorkEntry',
+                    sessionToken: sessionToken,
+                    workData: {
+                        data: data.workDate,
+                        cantiereId: data.cantiere,
+                        lavori: 'Lavoro registrato via dashboard',
+                        ore: oreParsed,
+                        note: data.note || ''
+                    }
+                });
+                
+                if (result.success) {
+                    Utils.showNotification(`${oreParsed} ore salvate con successo!`, 'success');
+                    
+                    // Reset form
+                    const currentDate = data.workDate;
+                    form.reset();
+                    document.getElementById('workDate').value = currentDate;
+                    
+                    // Focus per quick re-entry
+                    setTimeout(() => {
+                        document.getElementById('ore').focus();
+                    }, 1000);
+                    
+                    // Aggiorna statistiche
+                    setTimeout(() => {
+                        refreshUserStats();
+                    }, 1500);
+                    
+                } else {
+                    throw new Error(result.message || 'Errore nel salvataggio');
+                }
+                
+            } catch (error) {
+                console.error('Errore salvataggio:', error);
+                Utils.showNotification(`Errore: ${error.message}`, 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '💾 Salva Ore';
+            }
+        }
+
+        async function refreshUserStats() {
+            try {
+                console.log('Aggiornando statistiche...');
+                
+                const result = await Utils.callAPI({
+                    action: 'getUserInfo',
+                    sessionToken: sessionToken
+                });
+                
+                if (result.success && result.data) {
+                    currentUser = { ...currentUser, ...result.data };
+                    
+                    // Aggiorna statistiche con animazione
+                    animateStatUpdate('monthlyHours', result.data.oreMese || 0);
+                    animateStatUpdate('previousMonthHours', result.data.oreMesePrecedente || 0);
+                    
+                    console.log('Statistiche aggiornate:', result.data);
+                } else {
+                    console.log('Impossibile aggiornare statistiche:', result.message);
+                }
+            } catch (error) {
+                console.error('Errore aggiornamento stats:', error);
+            }
+        }
+
+        function animateStatUpdate(elementId, newValue) {
+            const element = document.getElementById(elementId);
+            const currentValue = parseFloat(element.textContent) || 0;
+            const formattedValue = Utils.formatHours(newValue);
+            
+            if (currentValue !== newValue) {
+                element.style.opacity = '0.5';
+                element.style.transform = 'scale(0.9)';
+                
+                setTimeout(() => {
+                    element.textContent = formattedValue;
+                    element.style.opacity = '1';
+                    element.style.transform = 'scale(1)';
+                }, 200);
+            }
+        }
+
+        function logout() {
+            if (confirm('Sei sicuro di voler uscire?')) {
+                Utils.clearSession();
+                Utils.showNotification('Logout effettuato', 'success');
+                setTimeout(() => {
+                    Utils.redirectToLogin();
+                }, 1500);
+            }
+        }
+
+        // Version badge per debug info
+        document.getElementById('versionBadge').addEventListener('click', function() {
+            const session = Utils.getSession();
+            let debugInfo = `Dashboard V4.0 - Bottom Navigation + Colori\n\n`;
+            debugInfo += `Design: Glassmorphism differenziato\n`;
+            debugInfo += `Header: Blu scuro\n`;
+            debugInfo += `Content: Gradiente originale\n`;
+            debugInfo += `Pulsante Esci: Rosso\n`;
+            debugInfo += `Tab attivo: Inserisci\n`;
+            debugInfo += `User: ${session.user ? session.user.name : 'Non loggato'}\n`;
+            debugInfo += `Session: ${session.token ? 'Attiva' : 'Assente'}`;
+            
+            alert(debugInfo);
+        });
+
+        // Auto-refresh stats ogni 5 minuti
+        setInterval(() => {
+            if (Utils.isLoggedIn()) {
+                refreshUserStats();
+            }
+        }, 5 * 60 * 1000);
+
+        // Handle visibility changes per mobile
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible' && Utils.isLoggedIn()) {
+                setTimeout(() => {
+                    refreshUserStats();
+                }, 1000);
+            }
+        });
+
+        console.log('Dashboard V4.0 con Bottom Navigation completamente inizializzata');
+    </script>
 </body>
 </html>
+                }
