@@ -604,8 +604,151 @@
         v4.0 Mobile
     </div>
 
-    <script src="config.js"></script>
+    <!-- Config.js integrato con backend reale -->
     <script>
+        // ===== CONFIGURAZIONE BACKEND =====
+        // 🔧 INSERISCI QUI L'URL DEL TUO GOOGLE APPS SCRIPT DEPLOYMENT
+        const SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+        
+        // ===== UTILITY FUNCTIONS =====
+        window.PageGuard = {
+            requireLogin: function() {
+                const session = localStorage.getItem('userSession');
+                if (!session) {
+                    window.location.href = 'login.html';
+                    return false;
+                }
+                return true;
+            }
+        };
+
+        window.Utils = {
+            getSession: function() {
+                const session = localStorage.getItem('userSession');
+                if (session) {
+                    try {
+                        return JSON.parse(session);
+                    } catch (e) {
+                        console.error('Errore parsing sessione:', e);
+                        return { user: null, token: null };
+                    }
+                }
+                return { user: null, token: null };
+            },
+            
+            setSession: function(userData, token) {
+                const session = {
+                    user: userData,
+                    token: token,
+                    timestamp: new Date().getTime()
+                };
+                localStorage.setItem('userSession', JSON.stringify(session));
+            },
+            
+            clearSession: function() {
+                localStorage.removeItem('userSession');
+            },
+            
+            isLoggedIn: function() {
+                const session = this.getSession();
+                return session && session.token && session.user;
+            },
+            
+            redirectToLogin: function() {
+                window.location.href = 'login.html';
+            },
+            
+            setupAutoLogout: function() {
+                let timeout;
+                const resetTimer = () => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        this.clearSession();
+                        this.redirectToLogin();
+                    }, 30 * 60 * 1000); // 30 minuti
+                };
+                
+                ['click', 'mousedown', 'keypress', 'touchstart', 'scroll'].forEach(event => {
+                    document.addEventListener(event, resetTimer, true);
+                });
+                
+                resetTimer();
+            },
+            
+            formatHours: function(hours) {
+                const h = parseFloat(hours) || 0;
+                return h.toFixed(1);
+            },
+            
+            showNotification: function(message, type, duration = 3000) {
+                if (typeof showToast === 'function') {
+                    showToast(message, type, duration);
+                }
+            },
+            
+            // ===== CHIAMATA API REALE AL GOOGLE APPS SCRIPT =====
+            callAPI: async function(params) {
+                try {
+                    console.log('📡 Chiamata API:', params.action);
+                    
+                    // Costruzione URL con parametri GET
+                    const url = new URL(SCRIPT_URL);
+                    
+                    // Aggiungi tutti i parametri all'URL
+                    Object.keys(params).forEach(key => {
+                        if (typeof params[key] === 'object') {
+                            // Serializza oggetti in JSON
+                            url.searchParams.append(key, JSON.stringify(params[key]));
+                        } else {
+                            url.searchParams.append(key, params[key]);
+                        }
+                    });
+                    
+                    // Chiamata GET al Google Apps Script
+                    const response = await fetch(url.toString(), {
+                        method: 'GET',
+                        mode: 'cors',
+                        redirect: 'follow' // Importante per Google Apps Script
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    console.log('✅ Risposta API:', result);
+                    
+                    return result;
+                    
+                } catch (error) {
+                    console.error('❌ Errore chiamata API:', error);
+                    
+                    // Gestione errori specifici
+                    if (error.message.includes('Failed to fetch')) {
+                        return {
+                            success: false,
+                            message: 'Errore di connessione. Verifica la tua connessione internet.',
+                            error: error.toString()
+                        };
+                    }
+                    
+                    if (error.message.includes('CORS')) {
+                        return {
+                            success: false,
+                            message: 'Errore CORS. Verifica il deployment del Google Apps Script.',
+                            error: error.toString()
+                        };
+                    }
+                    
+                    return {
+                        success: false,
+                        message: 'Errore nella comunicazione con il server',
+                        error: error.toString()
+                    };
+                }
+            }
+        };
+
         let currentUser = null;
         let sessionToken = null;
         let cantieri = [];
