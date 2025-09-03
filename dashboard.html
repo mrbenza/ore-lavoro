@@ -398,29 +398,26 @@
             transform: translateY(-2px);
         }
 
-        /* Mobile Optimizations */
+        /* Mobile Optimizations - header compatto */
         @media (max-width: 480px) {
             .header {
-                padding: 16px;
+                padding: 14px;
             }
 
             .header-stats {
-                gap: 24px;
+                gap: 16px;
             }
 
             .header-stat-number {
-                font-size: 24px;
+                font-size: 28px;
             }
 
-            .header-content {
-                flex-direction: column;
-                align-items: center;
-                gap: 20px;
+            .user-info h1 {
+                font-size: clamp(20px, 5vw, 28px);
             }
 
             .user-info {
-                align-items: center;
-                text-align: center;
+                gap: 16px;
             }
 
             .form-card {
