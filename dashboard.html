@@ -640,9 +640,34 @@
         let sessionToken = null;
         let cantieri = [];
 
+        // Gestione tab navigation
+        function initTabNavigation() {
+            const tabs = document.querySelectorAll('.nav-tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.dataset.tab;
+                    
+                    // Rimuovi active da tutti i tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+                    
+                    // Attiva tab selezionato
+                    tab.classList.add('active');
+                    document.getElementById(`tab-${targetTab}`).classList.add('active');
+                    
+                    console.log(`Switched to tab: ${targetTab}`);
+                });
+            });
+        }
+
         // Inizializzazione usando le TUE funzioni esistenti
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('Dashboard V4.0 - Glassmorphism con config.js esistente');
+            console.log('Dashboard V4.0 - Con Bottom Navigation');
+            
+            // Inizializza tab navigation
+            initTabNavigation();
             
             // Verifica accesso usando la TUA funzione
             if (!PageGuard.requireLogin()) {
