@@ -87,12 +87,44 @@
             gap: 16px;
         }
 
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
         .user-info h1 {
             color: white;
             font-size: clamp(20px, 5vw, 28px);
             font-weight: 700;
             margin: 0;
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 32px;
+        }
+
+        .header-stat {
+            text-align: center;
+        }
+
+        .header-stat-number {
+            display: block;
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-stat-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
         }
 
         .logout-btn {
@@ -112,77 +144,6 @@
         .logout-btn:hover, .logout-btn:active {
             background: rgba(255, 255, 255, 0.3);
             transform: translateY(-1px);
-        }
-
-        /* Stats Cards - Mobile First */
-        .stats-container {
-            padding: 16px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .stat-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 20px 16px;
-            text-align: center;
-            box-shadow: var(--glass-shadow);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            animation: shimmer 3s ease-in-out infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .stat-number {
-            display: block;
-            font-size: clamp(24px, 8vw, 32px);
-            font-weight: 800;
-            color: white;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.8);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-
-        .auto-badge {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: var(--success);
-            color: white;
-            font-size: 10px;
-            padding: 4px 8px;
-            border-radius: 50px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
         }
 
         /* Main Content - Form Focus */
@@ -300,13 +261,18 @@
 
         .hours-input {
             text-align: center !important;
-            font-size: 48px !important;
-            font-weight: 800 !important;
+            font-size: 36px !important;
+            font-weight: 700 !important;
             background: transparent !important;
             border: none !important;
             color: white !important;
-            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
             padding: 16px !important;
+        }
+
+        .hours-input::placeholder {
+            color: rgba(255, 255, 255, 0.3) !important;
+            font-weight: 400 !important;
         }
 
         .hours-input:focus {
@@ -315,10 +281,10 @@
         }
 
         .decimal-hint {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
             margin-top: 8px;
-            font-weight: 500;
+            font-weight: 400;
         }
 
         /* Textarea */
@@ -393,44 +359,6 @@
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
-        /* Notifications - Modern Toast */
-        .notification {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            padding: 16px 24px;
-            border-radius: 16px;
-            color: white;
-            font-weight: 600;
-            z-index: 1000;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            max-width: 90vw;
-            text-align: center;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        }
-
-        .notification.show {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .notification.success {
-            background: linear-gradient(135deg, var(--success), #38a169);
-        }
-
-        .notification.error {
-            background: linear-gradient(135deg, var(--error), #e53e3e);
-        }
-
-        .notification.warning {
-            background: linear-gradient(135deg, var(--warning), #dd6b20);
-        }
-
-        .notification.security {
-            background: linear-gradient(135deg, var(--accent), #5a67d8);
-        }
-
         /* Loading Animation */
         .loading {
             display: inline-block;
@@ -476,13 +404,32 @@
                 padding: 16px;
             }
 
+            .header-stats {
+                gap: 24px;
+            }
+
+            .header-stat-number {
+                font-size: 24px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+
+            .user-info {
+                align-items: center;
+                text-align: center;
+            }
+
             .form-card {
                 padding: 24px 20px;
                 border-radius: 20px;
             }
 
             .hours-input {
-                font-size: 40px !important;
+                font-size: 32px !important;
             }
 
             .save-btn {
@@ -490,23 +437,10 @@
                 font-size: 16px;
                 width: 100%;
             }
-
-            .stats-container {
-                gap: 10px;
-            }
-
-            .stat-card {
-                padding: 16px 12px;
-            }
         }
 
         /* Landscape Mobile */
         @media (max-height: 600px) and (orientation: landscape) {
-            .stats-container {
-                grid-template-columns: repeat(2, 1fr);
-                padding: 12px;
-            }
-
             .main-content {
                 padding: 16px;
             }
@@ -536,11 +470,6 @@
                 --glass-bg: rgba(255, 255, 255, 0.3);
                 --glass-border: rgba(255, 255, 255, 0.5);
             }
-        }
-
-        /* Dark mode support for future */
-        @media (prefers-color-scheme: dark) {
-            /* Already optimized for dark glassmorphism */
         }
 
         /* Focus indicators for accessibility */
@@ -574,37 +503,74 @@
             overflow: hidden;
             transition: height 0.3s ease;
         }
+
+        /* Notification styles per compatibilità */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            padding: 16px 24px;
+            border-radius: 16px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 90vw;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, var(--success), #38a169);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, var(--error), #e53e3e);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, var(--warning), #dd6b20);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, var(--accent), #5a67d8);
+        }
+
+        .notification.security {
+            background: linear-gradient(135deg, var(--accent), #5a67d8);
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header Glassmorphism -->
+        <!-- Header con statistiche integrate -->
         <header class="header">
             <div class="header-content">
                 <div class="user-info">
-                    <h1>👋 <span id="userName">Caricamento...</span></h1>
-                    <div class="user-details" id="userEmail">📧 Caricamento...</div>
+                    <h1><span id="userName">Caricamento...</span></h1>
+                    <div class="header-stats">
+                        <div class="header-stat">
+                            <span class="header-stat-number" id="monthlyHours">0</span>
+                            <span class="header-stat-label">ORE MESE</span>
+                        </div>
+                        <div class="header-stat">
+                            <span class="header-stat-number" id="previousMonthHours">0</span>
+                            <span class="header-stat-label">MESE PREC.</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <button class="logout-btn" onclick="logout()" aria-label="Logout">
-                    🚪 Esci
+                    Esci
                 </button>
             </div>
         </header>
-
-        <!-- Stats Cards -->
-        <section class="stats-container">
-            <div class="stat-card">
-                <span class="stat-number" id="monthlyHours">0</span>
-                <span class="stat-label">Ore Mese Corrente</span>
-                <span class="auto-badge">Auto</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" id="previousMonthHours">0</span>
-                <span class="stat-label">Ore Mese Precedente</span>
-                <span class="auto-badge">Auto</span>
-            </div>
-        </section>
 
         <!-- Main Form - Focus Point -->
         <main class="main-content">
@@ -665,48 +631,46 @@
         </main>
     </div>
 
-    <!-- Notifications Toast -->
-    <div id="notification" class="notification" role="alert" aria-live="polite"></div>
-
     <!-- Version Badge -->
     <div class="version-badge" id="versionBadge" title="Dashboard V4.0 - Glassmorphism Mobile">
-        V4.0 📱✨
+        V4.0 📱
     </div>
 
+    <!-- Include il TUO config.js esistente -->
     <script src="config.js"></script>
     <script>
         let currentUser = null;
         let sessionToken = null;
         let cantieri = [];
 
-        // ✨ INIZIALIZZAZIONE V4.0 - GLASSMORPHISM MOBILE
+        // Inizializzazione usando le TUE funzioni esistenti
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('✨ Dashboard V4.0 - Glassmorphism Mobile avviata');
+            console.log('Dashboard V4.0 - Glassmorphism con config.js esistente');
             
-            // Verifica accesso
+            // Verifica accesso usando la TUA funzione
             if (!PageGuard.requireLogin()) {
                 return;
             }
             
-            // Setup auto-logout
+            // Setup auto-logout usando la TUA funzione
             Utils.setupAutoLogout();
             
-            // Carica dati utente
+            // Carica dati utente usando le TUE funzioni
             const session = Utils.getSession();
             currentUser = session.user;
             sessionToken = session.token;
             
-            // ⚡ CARICAMENTO IMMEDIATO
+            // Caricamento immediato
             loadUserData();
             
             // Imposta data odierna
             document.getElementById('workDate').value = new Date().toISOString().split('T')[0];
             
-            // Setup form ottimizzato mobile
-            setupMobileForm();
+            // Setup form
+            setupForm();
             
-            // ✅ CARICAMENTO PARALLELO
-            console.log('⚡ Avvio caricamento parallelo...');
+            // Caricamento parallelo usando le TUE API
+            console.log('Avvio caricamento parallelo...');
             const startTime = performance.now();
             
             try {
@@ -717,12 +681,13 @@
                 
                 const endTime = performance.now();
                 const loadTime = (endTime - startTime).toFixed(0);
-                console.log(`⚡ Caricamento completato in ${loadTime}ms`);
+                console.log(`Caricamento completato in ${loadTime}ms`);
                 
-                Utils.showNotification(`Dashboard pronta! ✨`, 'success', 2000);
+                // Usa la TUA funzione showNotification
+                Utils.showNotification(`Dashboard pronta!`, 'success', 2000);
                 
             } catch (error) {
-                console.error('❌ Errore nel caricamento:', error);
+                console.error('Errore nel caricamento:', error);
                 Utils.showNotification('Errore nel caricamento dati', 'error');
             }
         });
@@ -730,21 +695,23 @@
         function loadUserData() {
             if (!currentUser) return;
             
-            console.log('📊 Caricando dati utente V4.0:', currentUser);
+            console.log('Caricando dati utente:', currentUser);
             
+            // Solo nome e cognome
             document.getElementById('userName').textContent = currentUser.name;
-            document.getElementById('userEmail').textContent = `📧 ${currentUser.email || 'Email non disponibile'}`;
             
+            // Statistiche ore nell'header usando la TUA funzione formatHours
             document.getElementById('monthlyHours').textContent = Utils.formatHours(currentUser.oreMese || 0);
             document.getElementById('previousMonthHours').textContent = Utils.formatHours(currentUser.oreMesePrecedente || 0);
         }
 
         async function loadCantieri() {
             try {
-                console.log('📋 Caricando cantieri...');
+                console.log('Caricando cantieri...');
                 const cantiereSelect = document.getElementById('cantiere');
                 
-                const result = await callGoogleAppsScript({
+                // Usa la TUA funzione callAPI
+                const result = await Utils.callAPI({
                     action: 'getCantieri',
                     sessionToken: sessionToken
                 });
@@ -760,74 +727,52 @@
                         cantiereSelect.appendChild(option);
                     });
                     
-                    console.log('✅ Cantieri caricati:', cantieri.length);
+                    console.log('Cantieri caricati:', cantieri.length);
                 } else {
                     throw new Error(result.message || 'Errore caricamento cantieri');
                 }
                 
             } catch (error) {
-                console.error('❌ Errore caricamento cantieri:', error);
+                console.error('Errore caricamento cantieri:', error);
                 const cantiereSelect = document.getElementById('cantiere');
                 cantiereSelect.innerHTML = '<option value="">❌ Errore caricamento</option>';
                 Utils.showNotification('Errore nel caricamento cantieri', 'error');
             }
         }
 
-        function setupMobileForm() {
+        function setupForm() {
             const form = document.getElementById('workEntryForm');
             const oreInput = document.getElementById('ore');
             
-            // Mobile-optimized decimal handling
+            // Gestione decimali
             oreInput.addEventListener('input', function(e) {
                 let value = e.target.value;
                 
-                // Handle comma/period for mobile
                 if (value.includes(',')) {
                     value = value.replace(',', '.');
                     e.target.value = value;
                 }
                 
                 clearValidation(e.target);
-                
-                // Visual feedback for valid input
-                const hours = parseFloat(value);
-                if (!isNaN(hours) && hours >= 0 && hours <= 24) {
-                    e.target.parentElement.style.borderColor = 'rgba(72, 187, 120, 0.5)';
-                } else {
-                    e.target.parentElement.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                }
             });
             
             oreInput.addEventListener('blur', function(e) {
                 validateHoursField(e.target);
             });
             
-            // Enhanced mobile form submission
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
-                // Haptic feedback if available
-                if (navigator.vibrate) {
-                    navigator.vibrate(50);
-                }
-                
                 await saveWorkEntry();
             });
 
-            // Mobile-friendly validation
+            // Validazione altri campi
             ['workDate', 'cantiere'].forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 field.addEventListener('blur', () => validateField(field));
-                field.addEventListener('change', () => {
-                    clearValidation(field);
-                    // Subtle visual feedback
-                    if (field.value) {
-                        field.style.borderColor = 'rgba(72, 187, 120, 0.5)';
-                    }
-                });
+                field.addEventListener('change', () => clearValidation(field));
             });
             
-            console.log('📱 Form mobile ottimizzato V4.0');
+            console.log('Form setup completato');
         }
 
         function validateHoursField(field) {
@@ -838,24 +783,27 @@
                 field.value = value;
             }
             
-            const hours = parseFloat(value);
-            const isValid = !isNaN(hours) && hours >= 0 && hours <= 24 && value !== '';
+            // Usa la TUA funzione di validazione
+            const isValid = Utils.validateHours && Utils.validateHours(value) ? 
+                            Utils.validateHours(value) : 
+                            (!isNaN(parseFloat(value)) && parseFloat(value) >= 0 && parseFloat(value) <= 24 && value !== '');
             
             if (!isValid) {
                 field.classList.add('form-validation');
                 field.parentElement.querySelector('.validation-message').style.display = 'block';
-                field.parentElement.style.borderColor = 'var(--error)';
                 return false;
             } else {
                 clearValidation(field);
-                field.parentElement.style.borderColor = 'rgba(72, 187, 120, 0.5)';
                 return true;
             }
         }
 
         function validateField(field) {
+            // Usa la TUA funzione di validazione se esiste
             const value = field.value.trim();
-            const isValid = field.hasAttribute('required') ? value !== '' : true;
+            const isValid = Utils.validateRequired && Utils.validateRequired(value) ? 
+                            Utils.validateRequired(value) : 
+                            (field.hasAttribute('required') ? value !== '' : true);
             
             if (!isValid) {
                 field.classList.add('form-validation');
@@ -872,19 +820,13 @@
             field.classList.remove('form-validation');
             const validationMsgs = field.parentElement.querySelectorAll('.validation-message');
             validationMsgs.forEach(msg => msg.style.display = 'none');
-            
-            // Reset border color
-            const parentElement = field.parentElement;
-            if (parentElement.classList.contains('hours-group')) {
-                parentElement.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-            }
         }
 
         async function saveWorkEntry() {
             const saveBtn = document.getElementById('saveBtn');
             const form = document.getElementById('workEntryForm');
             
-            // Mobile-optimized validation
+            // Validazione
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
             
@@ -895,14 +837,7 @@
             
             const oreParsed = parseFloat(oreValue);
             
-            console.log('🔢 Debug ore V4.0:', {
-                original: data.ore,
-                cleaned: oreValue,
-                parsed: oreParsed,
-                isValid: !isNaN(oreParsed) && oreParsed >= 0 && oreParsed <= 24
-            });
-            
-            // Enhanced mobile validation
+            // Validazione campi
             let isValid = true;
             ['workDate', 'cantiere'].forEach(fieldId => {
                 const field = document.getElementById(fieldId);
@@ -917,24 +852,19 @@
             }
             
             if (!isValid) {
-                Utils.showNotification('⚠️ Completa tutti i campi obbligatori', 'warning');
-                
-                // Haptic feedback for error
-                if (navigator.vibrate) {
-                    navigator.vibrate([100, 50, 100]);
-                }
+                Utils.showNotification('Completa tutti i campi obbligatori', 'warning');
                 return;
             }
             
-            // Enhanced loading state for mobile
+            // Loading state
             saveBtn.disabled = true;
             saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
-            saveBtn.style.transform = 'scale(0.98)';
             
             try {
-                console.log('💾 Salvando ore lavorate V4.0...');
+                console.log('Salvando ore lavorate...');
                 
-                const result = await callGoogleAppsScript({
+                // Usa la TUA funzione callAPI
+                const result = await Utils.callAPI({
                     action: 'saveWorkEntry',
                     sessionToken: sessionToken,
                     workData: {
@@ -947,32 +877,19 @@
                 });
                 
                 if (result.success) {
-                    // Success haptic feedback
-                    if (navigator.vibrate) {
-                        navigator.vibrate([50, 25, 50]);
-                    }
+                    Utils.showNotification(`${oreParsed} ore salvate con successo!`, 'success');
                     
-                    Utils.showNotification(`✅ ${oreParsed} ore salvate con successo!`, 'success');
-                    
-                    // Reset form with smooth animation
+                    // Reset form
                     const currentDate = data.workDate;
                     form.reset();
                     document.getElementById('workDate').value = currentDate;
                     
-                    // Reset visual states
-                    document.querySelectorAll('.form-group').forEach(group => {
-                        const elements = group.querySelectorAll('input, select, textarea');
-                        elements.forEach(el => {
-                            el.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                        });
-                    });
-                    
-                    // Focus back to hours input for quick re-entry
+                    // Focus per quick re-entry
                     setTimeout(() => {
                         document.getElementById('ore').focus();
                     }, 1000);
                     
-                    // Refresh stats with delay for better UX
+                    // Aggiorna statistiche
                     setTimeout(() => {
                         refreshUserStats();
                     }, 1500);
@@ -982,25 +899,20 @@
                 }
                 
             } catch (error) {
-                console.error('❌ Errore salvataggio:', error);
-                Utils.showNotification(`❌ Errore: ${error.message}`, 'error');
-                
-                // Error haptic feedback
-                if (navigator.vibrate) {
-                    navigator.vibrate([200, 50, 200]);
-                }
+                console.error('Errore salvataggio:', error);
+                Utils.showNotification(`Errore: ${error.message}`, 'error');
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = '💾 Salva Ore';
-                saveBtn.style.transform = 'scale(1)';
             }
         }
 
         async function refreshUserStats() {
             try {
-                console.log('🔄 Aggiornando statistiche V4.0...');
+                console.log('Aggiornando statistiche...');
                 
-                const result = await callGoogleAppsScript({
+                // Usa la TUA funzione callAPI
+                const result = await Utils.callAPI({
                     action: 'getUserInfo',
                     sessionToken: sessionToken
                 });
@@ -1008,16 +920,16 @@
                 if (result.success && result.data) {
                     currentUser = { ...currentUser, ...result.data };
                     
-                    // Smooth number animation for mobile
+                    // Aggiorna statistiche con animazione
                     animateStatUpdate('monthlyHours', result.data.oreMese || 0);
                     animateStatUpdate('previousMonthHours', result.data.oreMesePrecedente || 0);
                     
-                    console.log('✅ Statistiche aggiornate V4.0:', result.data);
+                    console.log('Statistiche aggiornate:', result.data);
                 } else {
-                    console.log('⚠️ Impossibile aggiornare statistiche:', result.message);
+                    console.log('Impossibile aggiornare statistiche:', result.message);
                 }
             } catch (error) {
-                console.error('❌ Errore aggiornamento stats:', error);
+                console.error('Errore aggiornamento stats:', error);
             }
         }
 
@@ -1027,7 +939,6 @@
             const formattedValue = Utils.formatHours(newValue);
             
             if (currentValue !== newValue) {
-                // Simple fade transition
                 element.style.opacity = '0.5';
                 element.style.transform = 'scale(0.9)';
                 
@@ -1039,72 +950,48 @@
             }
         }
 
-        async function callGoogleAppsScript(params) {
-            return await Utils.callAPI(params);
-        }
-
         function logout() {
             if (confirm('Sei sicuro di voler uscire?')) {
                 Utils.clearSession();
-                Utils.showNotification('👋 Logout effettuato', 'success');
+                Utils.showNotification('Logout effettuato', 'success');
                 setTimeout(() => {
                     Utils.redirectToLogin();
                 }, 1500);
             }
         }
 
-        // Version badge info per debug
+        // Version badge per debug info
         document.getElementById('versionBadge').addEventListener('click', function() {
             const session = Utils.getSession();
             let debugInfo = `Dashboard V4.0 - Glassmorphism Mobile\n\n`;
-            debugInfo += `🎨 Design: Glassmorphism + Mobile-First\n`;
-            debugInfo += `📱 Responsive: Nativo Mobile\n`;
-            debugInfo += `⚡ Performance: Caricamento Parallelo\n`;
-            debugInfo += `✨ Animazioni: Ottimizzate\n`;
-            debugInfo += `🔧 Build: 2025.09.03\n`;
-            debugInfo += `👤 User: ${session.user ? session.user.name : 'Non loggato'}\n`;
-            debugInfo += `🎫 Session: ${session.token ? 'Attiva' : 'Assente'}`;
+            debugInfo += `Design: Glassmorphism + Mobile-First\n`;
+            debugInfo += `Responsive: Nativo Mobile\n`;
+            debugInfo += `Performance: Caricamento Parallelo\n`;
+            debugInfo += `Compatibilità: Config.js Esistente\n`;
+            debugInfo += `Build: 2025.09.03\n`;
+            debugInfo += `User: ${session.user ? session.user.name : 'Non loggato'}\n`;
+            debugInfo += `Session: ${session.token ? 'Attiva' : 'Assente'}`;
             
             alert(debugInfo);
         });
 
-        // Enhanced mobile interactions
-        document.addEventListener('touchstart', function() {}, {passive: true});
-        
-        // Auto-refresh stats (mobile-friendly interval)
+        // Auto-refresh stats ogni 5 minuti
         setInterval(() => {
-            if (Utils.isLoggedIn() && document.visibilityState === 'visible') {
+            if (Utils.isLoggedIn()) {
                 refreshUserStats();
             }
         }, 5 * 60 * 1000);
 
-        // Handle visibility changes for mobile
+        // Handle visibility changes per mobile
         document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'visible' && Utils.isLoggedIn()) {
-                // Refresh when app comes back to foreground
                 setTimeout(() => {
                     refreshUserStats();
                 }, 1000);
             }
         });
 
-        // PWA-ready service worker registration (future)
-        if ('serviceWorker' in navigator) {
-            console.log('📱 PWA ready - Service Worker supportato');
-        }
-
-        // Enhanced mobile keyboard handling
-        const mobileInputs = document.querySelectorAll('input, textarea, select');
-        mobileInputs.forEach(input => {
-            input.addEventListener('focus', function() {
-                // Scroll into view for mobile keyboards
-                setTimeout(() => {
-                    this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 300);
-            });
-        });
-
-        console.log('✨ Dashboard V4.0 Glassmorphism Mobile completamente inizializzata');
+        console.log('Dashboard V4.0 inizializzata con config.js esistente');
     </script>
 </body>
 </html>
