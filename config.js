@@ -1,444 +1,997 @@
-// Configurazione Sistema Gestione Ore V3.5 - PRODUCTION MODE - CORS FIXED
-const CONFIG = {
-    // 🔧 PROXY VERCEL - URL RELATIVO (CORS gestito)
-    APPS_SCRIPT_URL: '/api/proxy',
- 
-    // 🔧 MODALITÀ PRODUZIONE
-    PRODUCTION_MODE: true,  // 🚀 CAMBIA A TRUE PER PRODUZIONE
-    
-    // Versioning V3.5
-    VERSION: {
-        frontend: '3.5.0',
-        buildDate: '2025-07-04',
-        description: 'Dashboard semplificata - UI pulita e focalizzata'
-    },
-    
-    // Pagine del sistema
-    PAGES: {
-        LOGIN: 'index.html',
-        DASHBOARD: 'dashboard.html',
-        ADMIN: 'admin.html'
-    },
-    
-    // Impostazioni UI V3.5 - Layout Semplificato
-    UI: {
-        NOTIFICATION_DURATION: 4000,
-        LOADING_MIN_TIME: 1000,
-        AUTO_LOGOUT_TIME: 30 * 60 * 1000, // 30 minuti
-        SHOW_AUTH_METHOD: false, // 🔧 NASCOSTO IN PRODUZIONE
-        SHOW_DEBUG_INFO: false,   // 🔧 NASCOSTO IN PRODUZIONE
-        SHOW_SECURITY_STATUS: false, // 🆕 V3.5 - Box sicurezza rimosso
-        SHOW_DERIVED_STATS: false   // 🆕 V3.5 - Statistiche derivate rimosse
-    },
-    
-    // Validazione
-    VALIDATION: {
-        MAX_HOURS_PER_DAY: 24,
-        MIN_HOURS: 0,
-        MAX_WORK_DESCRIPTION: 500,
-        MAX_NOTES: 200,
-        MIN_PASSWORD_LENGTH: 4
-    },
-    
-    // Debug e sicurezza - OTTIMIZZATO PER PRODUZIONE
-    DEBUG: false,              // 🔧 FALSE IN PRODUZIONE
-    SECURITY: {
-        HASH_ENABLED: true,
-        AUTO_MIGRATION: true,
-        SESSION_TIMEOUT: true,
-        LOG_AUTH_ATTEMPTS: false  // 🔧 PRIVACY IN PRODUZIONE
-    },
-    
-    // 🆕 CONFIGURAZIONE LOGGING FRONTEND V3.5
-    LOGGING: {
-        CONSOLE_LOGS: false,      // 🔧 DISABILITA CONSOLE.LOG IN PRODUZIONE
-        ERROR_LOGS: true,         // Mantieni log errori per troubleshooting
-        AUTH_LOGS: false,         // 🔧 DISABILITA LOG AUTH PER PRIVACY
-        API_LOGS: false,          // 🔧 DISABILITA LOG API CALLS
-        PERFORMANCE_LOGS: false   // 🔧 DISABILITA LOG PERFORMANCE
-    }
-};
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Dashboard - Gestione Ore V4.0</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --text-primary: #2d3748;
+            --text-secondary: #4a5568;
+            --text-light: #718096;
+            --success: #48bb78;
+            --error: #f56565;
+            --warning: #ed8936;
+            --accent: #667eea;
+        }
 
-// ===== SISTEMA LOGGING OTTIMIZZATO PER PRODUZIONE =====
-const ProductionLogger = {
-    log: function(...args) {
-        if (CONFIG.LOGGING.CONSOLE_LOGS && !CONFIG.PRODUCTION_MODE) {
-            console.log('[APP]', ...args);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
-    },
-    
-    error: function(...args) {
-        if (CONFIG.LOGGING.ERROR_LOGS) {
-            console.error('[ERROR]', ...args);
-        }
-    },
-    
-    warn: function(...args) {
-        if (CONFIG.LOGGING.ERROR_LOGS) {
-            console.warn('[WARN]', ...args);
-        }
-    },
-    
-    auth: function(...args) {
-        if (CONFIG.LOGGING.AUTH_LOGS && !CONFIG.PRODUCTION_MODE) {
-            console.log('[AUTH]', ...args);
-        }
-    },
-    
-    api: function(...args) {
-        if (CONFIG.LOGGING.API_CALLS && !CONFIG.PRODUCTION_MODE) {
-            console.log('[API]', ...args);
-        }
-    },
-    
-    performance: function(...args) {
-        if (CONFIG.LOGGING.PERFORMANCE_LOGS && !CONFIG.PRODUCTION_MODE) {
-            console.log('[PERF]', ...args);
-        }
-    },
-    
-    // Solo per debug interno - mai in produzione
-    debug: function(...args) {
-        if (CONFIG.DEBUG && !CONFIG.PRODUCTION_MODE) {
-            console.log('[DEBUG]', ...args);
-        }
-    }
-};
 
-// Funzioni di utilità comuni V3.5 - PRODUCTION OPTIMIZED + CORS FIXED
-const Utils = {
-    // ✅ Gestione chiamate API FIXED per URL relativi
-    async callAPI(params) {
-        ProductionLogger.api('API Call:', params.action);
-        
-        // 🔧 FIX: Gestione corretta URL relativi
-        let targetUrl;
-        if (CONFIG.APPS_SCRIPT_URL.startsWith('http')) {
-            // URL assoluto (sviluppo)
-            targetUrl = new URL(CONFIG.APPS_SCRIPT_URL);
-        } else {
-            // URL relativo (produzione con proxy)
-            targetUrl = new URL(CONFIG.APPS_SCRIPT_URL, window.location.origin);
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            padding: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        
-        // Gestione parametri con serializzazione JSON per oggetti complessi
-        Object.keys(params).forEach(key => {
-            const value = params[key];
+
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header glassmorphism */
+        .header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: clamp(16px, 4vw, 24px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--glass-shadow);
+        }
+
+        .header-content {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .user-info h1 {
+            color: white;
+            font-size: clamp(20px, 5vw, 28px);
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 32px;
+        }
+
+        .header-stat {
+            text-align: center;
+        }
+
+        .header-stat-number {
+            display: block;
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-stat-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .logout-btn:hover, .logout-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* Main Content - Form Focus */
+        .main-content {
+            flex: 1;
+            padding: 24px 16px 32px;
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .form-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 28px 24px;
+            box-shadow: var(--glass-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+        }
+
+        .form-title {
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-align: center;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-title .icon {
+            font-size: 24px;
+            margin-right: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Hours Input - Hero Element */
+        .hours-group {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 28px 20px;
+            margin: 32px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hours-group::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hours-input {
+            text-align: center !important;
+            font-size: 36px !important;
+            font-weight: 700 !important;
+            background: transparent !important;
+            border: none !important;
+            color: white !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+            padding: 16px !important;
+        }
+
+        .hours-input::placeholder {
+            color: rgba(255, 255, 255, 0.3) !important;
+            font-weight: 400 !important;
+        }
+
+        .hours-input:focus {
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        .decimal-hint {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 8px;
+            font-weight: 400;
+        }
+
+        /* Textarea */
+        textarea {
+            min-height: 80px !important;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        /* Save Button - CTA */
+        .save-section {
+            margin-top: 32px;
+            text-align: center;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            padding: 18px 48px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 24px rgba(72, 187, 120, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .save-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .save-btn:hover::before {
+            left: 100%;
+        }
+
+        .save-btn:hover, .save-btn:active {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(72, 187, 120, 0.4);
+        }
+
+        .save-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Validation Styles */
+        .form-validation {
+            border-color: var(--error) !important;
+            background: rgba(245, 101, 101, 0.1) !important;
+            box-shadow: 0 0 0 4px rgba(245, 101, 101, 0.2) !important;
+        }
+
+        .validation-message {
+            color: #ff6b6b;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+            font-weight: 600;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Version Badge */
+        .version-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: var(--glass-shadow);
+        }
+
+        .version-badge:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 480px) {
+            .header {
+                padding: 16px;
+            }
+
+            .header-stats {
+                gap: 24px;
+            }
+
+            .header-stat-number {
+                font-size: 24px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+
+            .user-info {
+                align-items: center;
+                text-align: center;
+            }
+
+            .form-card {
+                padding: 24px 20px;
+                border-radius: 20px;
+            }
+
+            .hours-input {
+                font-size: 32px !important;
+            }
+
+            .save-btn {
+                padding: 16px 40px;
+                font-size: 16px;
+                width: 100%;
+            }
+        }
+
+        /* Landscape Mobile */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .main-content {
+                padding: 16px;
+            }
+
+            .hours-group {
+                margin: 20px 0;
+                padding: 20px;
+            }
+
+            .hours-input {
+                font-size: 28px !important;
+            }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* High contrast mode */
+        @media (prefers-contrast: high) {
+            :root {
+                --glass-bg: rgba(255, 255, 255, 0.3);
+                --glass-border: rgba(255, 255, 255, 0.5);
+            }
+        }
+
+        /* Focus indicators for accessibility */
+        .save-btn:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible,
+        .logout-btn:focus-visible {
+            outline: 3px solid rgba(255, 255, 255, 0.8);
+            outline-offset: 2px;
+        }
+
+        /* Touch improvements */
+        .save-btn, .logout-btn {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        /* Select dropdown styling */
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        /* Future calendar space reservation */
+        .future-calendar-space {
+            height: 0;
+            overflow: hidden;
+            transition: height 0.3s ease;
+        }
+
+        /* Notification styles per compatibilità */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            padding: 16px 24px;
+            border-radius: 16px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 90vw;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, var(--success), #38a169);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, var(--error), #e53e3e);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, var(--warning), #dd6b20);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, var(--accent), #5a67d8);
+        }
+
+        .notification.security {
+            background: linear-gradient(135deg, var(--accent), #5a67d8);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header con statistiche integrate -->
+        <header class="header">
+            <div class="header-content">
+                <div class="user-info">
+                    <h1><span id="userName">Caricamento...</span></h1>
+                    <div class="header-stats">
+                        <div class="header-stat">
+                            <span class="header-stat-number" id="monthlyHours">0</span>
+                            <span class="header-stat-label">ORE MESE</span>
+                        </div>
+                        <div class="header-stat">
+                            <span class="header-stat-number" id="previousMonthHours">0</span>
+                            <span class="header-stat-label">MESE PREC.</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="logout-btn" onclick="logout()" aria-label="Logout">
+                    Esci
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Form - Focus Point -->
+        <main class="main-content">
+            <div class="form-card">
+                <h2 class="form-title">
+                    <span class="icon">⏰</span>
+                    Registra Ore
+                </h2>
+
+                <form id="workEntryForm">
+                    <!-- Data -->
+                    <div class="form-group">
+                        <label for="workDate">📅 Data</label>
+                        <input type="date" id="workDate" name="workDate" required>
+                        <div class="validation-message">Seleziona una data valida</div>
+                    </div>
+
+                    <!-- Cantiere -->
+                    <div class="form-group">
+                        <label for="cantiere">🏗️ Cantiere</label>
+                        <select id="cantiere" name="cantiere" required>
+                            <option value="">⚡ Caricamento cantieri...</option>
+                        </select>
+                        <div class="validation-message">Seleziona un cantiere</div>
+                    </div>
+
+                    <!-- Ore - Hero Input -->
+                    <div class="form-group">
+                        <label for="ore">⏱️ Ore Lavorate</label>
+                        <div class="hours-group">
+                            <input type="text" id="ore" name="ore" class="hours-input" 
+                                   placeholder="8.5" required autocomplete="off" 
+                                   inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*">
+                            <div class="decimal-hint">Usa il punto per i decimali (es: 8.5)</div>
+                        </div>
+                        <div class="validation-message">Inserisci ore valide (0-24)</div>
+                    </div>
+
+                    <!-- Note -->
+                    <div class="form-group">
+                        <label for="note">📝 Note (opzionale)</label>
+                        <textarea id="note" name="note" placeholder="Eventuali note aggiuntive..."></textarea>
+                    </div>
+                </form>
+
+                <!-- CTA Button -->
+                <div class="save-section">
+                    <button type="submit" class="save-btn" id="saveBtn" form="workEntryForm">
+                        💾 Salva Ore
+                    </button>
+                </div>
+            </div>
+
+            <!-- Future Calendar Space -->
+            <div class="future-calendar-space" id="calendarSpace">
+                <!-- Spazio riservato per il futuro calendario -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Version Badge -->
+    <div class="version-badge" id="versionBadge" title="Dashboard V4.0 - Glassmorphism Mobile">
+        V4.0 📱
+    </div>
+
+    <!-- Include il TUO config.js esistente -->
+    <script src="config.js"></script>
+    <script>
+        let currentUser = null;
+        let sessionToken = null;
+        let cantieri = [];
+
+        // Inizializzazione usando le TUE funzioni esistenti
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Dashboard V4.0 - Glassmorphism con config.js esistente');
             
-            if (typeof value === 'object' && value !== null) {
-                ProductionLogger.debug(`Serializzando oggetto ${key}:`, value);
-                targetUrl.searchParams.append(key, JSON.stringify(value));
+            // Verifica accesso usando la TUA funzione
+            if (!PageGuard.requireLogin()) {
+                return;
+            }
+            
+            // Setup auto-logout usando la TUA funzione
+            Utils.setupAutoLogout();
+            
+            // Carica dati utente usando le TUE funzioni
+            const session = Utils.getSession();
+            currentUser = session.user;
+            sessionToken = session.token;
+            
+            // Caricamento immediato
+            loadUserData();
+            
+            // Imposta data odierna
+            document.getElementById('workDate').value = new Date().toISOString().split('T')[0];
+            
+            // Setup form
+            setupForm();
+            
+            // Caricamento parallelo usando le TUE API
+            console.log('Avvio caricamento parallelo...');
+            const startTime = performance.now();
+            
+            try {
+                await Promise.all([
+                    loadCantieri(),
+                    refreshUserStats()
+                ]);
+                
+                const endTime = performance.now();
+                const loadTime = (endTime - startTime).toFixed(0);
+                console.log(`Caricamento completato in ${loadTime}ms`);
+                
+                // Usa la TUA funzione showNotification
+                Utils.showNotification(`Dashboard pronta!`, 'success', 2000);
+                
+            } catch (error) {
+                console.error('Errore nel caricamento:', error);
+                Utils.showNotification('Errore nel caricamento dati', 'error');
+            }
+        });
+
+        function loadUserData() {
+            if (!currentUser) return;
+            
+            console.log('Caricando dati utente:', currentUser);
+            
+            // Solo nome e cognome
+            document.getElementById('userName').textContent = currentUser.name;
+            
+            // Statistiche ore nell'header usando la TUA funzione formatHours
+            document.getElementById('monthlyHours').textContent = Utils.formatHours(currentUser.oreMese || 0);
+            document.getElementById('previousMonthHours').textContent = Utils.formatHours(currentUser.oreMesePrecedente || 0);
+        }
+
+        async function loadCantieri() {
+            try {
+                console.log('Caricando cantieri...');
+                const cantiereSelect = document.getElementById('cantiere');
+                
+                // Usa la TUA funzione callAPI
+                const result = await Utils.callAPI({
+                    action: 'getCantieri',
+                    sessionToken: sessionToken
+                });
+                
+                if (result.success && result.data) {
+                    cantieri = result.data;
+                    cantiereSelect.innerHTML = '<option value="">-- Seleziona Cantiere --</option>';
+                    
+                    cantieri.forEach(cantiere => {
+                        const option = document.createElement('option');
+                        option.value = cantiere.id;
+                        option.textContent = `${cantiere.nome} - ${cantiere.indirizzo}`;
+                        cantiereSelect.appendChild(option);
+                    });
+                    
+                    console.log('Cantieri caricati:', cantieri.length);
+                } else {
+                    throw new Error(result.message || 'Errore caricamento cantieri');
+                }
+                
+            } catch (error) {
+                console.error('Errore caricamento cantieri:', error);
+                const cantiereSelect = document.getElementById('cantiere');
+                cantiereSelect.innerHTML = '<option value="">❌ Errore caricamento</option>';
+                Utils.showNotification('Errore nel caricamento cantieri', 'error');
+            }
+        }
+
+        function setupForm() {
+            const form = document.getElementById('workEntryForm');
+            const oreInput = document.getElementById('ore');
+            
+            // Gestione decimali
+            oreInput.addEventListener('input', function(e) {
+                let value = e.target.value;
+                
+                if (value.includes(',')) {
+                    value = value.replace(',', '.');
+                    e.target.value = value;
+                }
+                
+                clearValidation(e.target);
+            });
+            
+            oreInput.addEventListener('blur', function(e) {
+                validateHoursField(e.target);
+            });
+            
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await saveWorkEntry();
+            });
+
+            // Validazione altri campi
+            ['workDate', 'cantiere'].forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                field.addEventListener('blur', () => validateField(field));
+                field.addEventListener('change', () => clearValidation(field));
+            });
+            
+            console.log('Form setup completato');
+        }
+
+        function validateHoursField(field) {
+            let value = field.value.trim();
+            
+            if (value.includes(',')) {
+                value = value.replace(',', '.');
+                field.value = value;
+            }
+            
+            // Usa la TUA funzione di validazione
+            const isValid = Utils.validateHours && Utils.validateHours(value) ? 
+                            Utils.validateHours(value) : 
+                            (!isNaN(parseFloat(value)) && parseFloat(value) >= 0 && parseFloat(value) <= 24 && value !== '');
+            
+            if (!isValid) {
+                field.classList.add('form-validation');
+                field.parentElement.querySelector('.validation-message').style.display = 'block';
+                return false;
             } else {
-                targetUrl.searchParams.append(key, String(value));
+                clearValidation(field);
+                return true;
+            }
+        }
+
+        function validateField(field) {
+            // Usa la TUA funzione di validazione se esiste
+            const value = field.value.trim();
+            const isValid = Utils.validateRequired && Utils.validateRequired(value) ? 
+                            Utils.validateRequired(value) : 
+                            (field.hasAttribute('required') ? value !== '' : true);
+            
+            if (!isValid) {
+                field.classList.add('form-validation');
+                const validationMsg = field.parentElement.querySelector('.validation-message');
+                if (validationMsg) validationMsg.style.display = 'block';
+                return false;
+            } else {
+                clearValidation(field);
+                return true;
+            }
+        }
+
+        function clearValidation(field) {
+            field.classList.remove('form-validation');
+            const validationMsgs = field.parentElement.querySelectorAll('.validation-message');
+            validationMsgs.forEach(msg => msg.style.display = 'none');
+        }
+
+        async function saveWorkEntry() {
+            const saveBtn = document.getElementById('saveBtn');
+            const form = document.getElementById('workEntryForm');
+            
+            // Validazione
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            let oreValue = data.ore.trim();
+            if (oreValue.includes(',')) {
+                oreValue = oreValue.replace(',', '.');
+            }
+            
+            const oreParsed = parseFloat(oreValue);
+            
+            // Validazione campi
+            let isValid = true;
+            ['workDate', 'cantiere'].forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!validateField(field)) {
+                    isValid = false;
+                }
+            });
+            
+            const oreField = document.getElementById('ore');
+            if (!validateHoursField(oreField)) {
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                Utils.showNotification('Completa tutti i campi obbligatori', 'warning');
+                return;
+            }
+            
+            // Loading state
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
+            
+            try {
+                console.log('Salvando ore lavorate...');
+                
+                // Usa la TUA funzione callAPI
+                const result = await Utils.callAPI({
+                    action: 'saveWorkEntry',
+                    sessionToken: sessionToken,
+                    workData: {
+                        data: data.workDate,
+                        cantiereId: data.cantiere,
+                        lavori: 'Lavoro registrato via dashboard',
+                        ore: oreParsed,
+                        note: data.note || ''
+                    }
+                });
+                
+                if (result.success) {
+                    Utils.showNotification(`${oreParsed} ore salvate con successo!`, 'success');
+                    
+                    // Reset form
+                    const currentDate = data.workDate;
+                    form.reset();
+                    document.getElementById('workDate').value = currentDate;
+                    
+                    // Focus per quick re-entry
+                    setTimeout(() => {
+                        document.getElementById('ore').focus();
+                    }, 1000);
+                    
+                    // Aggiorna statistiche
+                    setTimeout(() => {
+                        refreshUserStats();
+                    }, 1500);
+                    
+                } else {
+                    throw new Error(result.message || 'Errore nel salvataggio');
+                }
+                
+            } catch (error) {
+                console.error('Errore salvataggio:', error);
+                Utils.showNotification(`Errore: ${error.message}`, 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '💾 Salva Ore';
+            }
+        }
+
+        async function refreshUserStats() {
+            try {
+                console.log('Aggiornando statistiche...');
+                
+                // Usa la TUA funzione callAPI
+                const result = await Utils.callAPI({
+                    action: 'getUserInfo',
+                    sessionToken: sessionToken
+                });
+                
+                if (result.success && result.data) {
+                    currentUser = { ...currentUser, ...result.data };
+                    
+                    // Aggiorna statistiche con animazione
+                    animateStatUpdate('monthlyHours', result.data.oreMese || 0);
+                    animateStatUpdate('previousMonthHours', result.data.oreMesePrecedente || 0);
+                    
+                    console.log('Statistiche aggiornate:', result.data);
+                } else {
+                    console.log('Impossibile aggiornare statistiche:', result.message);
+                }
+            } catch (error) {
+                console.error('Errore aggiornamento stats:', error);
+            }
+        }
+
+        function animateStatUpdate(elementId, newValue) {
+            const element = document.getElementById(elementId);
+            const currentValue = parseFloat(element.textContent) || 0;
+            const formattedValue = Utils.formatHours(newValue);
+            
+            if (currentValue !== newValue) {
+                element.style.opacity = '0.5';
+                element.style.transform = 'scale(0.9)';
+                
+                setTimeout(() => {
+                    element.textContent = formattedValue;
+                    element.style.opacity = '1';
+                    element.style.transform = 'scale(1)';
+                }, 200);
+            }
+        }
+
+        function logout() {
+            if (confirm('Sei sicuro di voler uscire?')) {
+                Utils.clearSession();
+                Utils.showNotification('Logout effettuato', 'success');
+                setTimeout(() => {
+                    Utils.redirectToLogin();
+                }, 1500);
+            }
+        }
+
+        // Version badge per debug info
+        document.getElementById('versionBadge').addEventListener('click', function() {
+            const session = Utils.getSession();
+            let debugInfo = `Dashboard V4.0 - Glassmorphism Mobile\n\n`;
+            debugInfo += `Design: Glassmorphism + Mobile-First\n`;
+            debugInfo += `Responsive: Nativo Mobile\n`;
+            debugInfo += `Performance: Caricamento Parallelo\n`;
+            debugInfo += `Compatibilità: Config.js Esistente\n`;
+            debugInfo += `Build: 2025.09.03\n`;
+            debugInfo += `User: ${session.user ? session.user.name : 'Non loggato'}\n`;
+            debugInfo += `Session: ${session.token ? 'Attiva' : 'Assente'}`;
+            
+            alert(debugInfo);
+        });
+
+        // Auto-refresh stats ogni 5 minuti
+        setInterval(() => {
+            if (Utils.isLoggedIn()) {
+                refreshUserStats();
+            }
+        }, 5 * 60 * 1000);
+
+        // Handle visibility changes per mobile
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible' && Utils.isLoggedIn()) {
+                setTimeout(() => {
+                    refreshUserStats();
+                }, 1000);
             }
         });
-        
-        ProductionLogger.debug('URL finale:', targetUrl.toString());
-        
-        try {
-            const response = await fetch(targetUrl.toString(), { method: 'GET' });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const text = await response.text();
-            const cleanText = text.replace(/^\)\]\}',?\s*/, '');
-            const result = JSON.parse(cleanText);
-            
-            ProductionLogger.api('API Response per:', params.action, result.success ? 'SUCCESS' : 'FAILED');
-            
-            // Log informazioni sicurezza solo se non in produzione
-            if (!CONFIG.PRODUCTION_MODE && result.systemInfo) {
-                ProductionLogger.auth('Auth Method:', result.systemInfo.authMethod);
-                ProductionLogger.auth('Hash Support:', result.systemInfo.hashSupport);
-                ProductionLogger.auth('Backend Version:', result.systemInfo.version);
-            }
-            
-            return result;
-            
-        } catch (error) {
-            ProductionLogger.error('API Call failed per:', params.action, error.message);
-            throw error;
-        }
-    },
-    
-    // Gestione sessione V3.5 - Production
-    getSession() {
-        return {
-            user: JSON.parse(sessionStorage.getItem('currentUser') || 'null'),
-            token: sessionStorage.getItem('sessionToken')
-        };
-    },
-    
-    setSession(user, token) {
-        sessionStorage.setItem('currentUser', JSON.stringify(user));
-        sessionStorage.setItem('sessionToken', token);
-        
-        ProductionLogger.auth('Sessione salvata per utente:', user.name);
-    },
-    
-    clearSession() {
-        sessionStorage.removeItem('currentUser');
-        sessionStorage.removeItem('sessionToken');
-        ProductionLogger.auth('Sessione cancellata');
-    },
-    
-    isLoggedIn() {
-        const session = this.getSession();
-        return session.user && session.token;
-    },
-    
-    // Reindirizzamenti
-    redirectToLogin() {
-        window.location.href = CONFIG.PAGES.LOGIN;
-    },
-    
-    redirectToDashboard() {
-        window.location.href = CONFIG.PAGES.DASHBOARD;
-    },
-    
-    // Notifiche V3.5 ottimizzate
-    showNotification(message, type = 'success', duration = null) {
-        let notification = document.getElementById('notification');
-        
-        if (!notification) {
-            notification = document.createElement('div');
-            notification.id = 'notification';
-            notification.className = 'notification';
-            document.body.appendChild(notification);
-        }
-        
-        // Icone per tipo di notifica
-        const icons = {
-            success: '✅',
-            error: '❌',
-            warning: '⚠️',
-            info: 'ℹ️',
-            security: '🔐'
-        };
-        
-        const icon = icons[type] || icons.info;
-        notification.innerHTML = `${icon} ${message}`;
-        notification.className = `notification ${type}`;
-        notification.classList.add('show');
-        
-        const notificationDuration = duration || CONFIG.UI.NOTIFICATION_DURATION;
-        
-        setTimeout(() => {
-            notification.classList.remove('show');
-        }, notificationDuration);
-        
-        // Log solo errori in produzione
-        if (type === 'error') {
-            ProductionLogger.error('Notification:', message);
-        }
-    },
-    
-    // Formatters
-    formatCurrency(amount) {
-        return '€' + parseFloat(amount || 0).toFixed(2);
-    },
-    
-    formatHours(hours) {
-        return parseFloat(hours || 0).toFixed(1);
-    },
-    
-    formatDate(date) {
-        return new Date(date).toLocaleDateString('it-IT');
-    },
-    
-    // Validatori V3.5
-    validateHours(hours) {
-        const h = parseFloat(hours);
-        return !isNaN(h) && h >= CONFIG.VALIDATION.MIN_HOURS && h <= CONFIG.VALIDATION.MAX_HOURS_PER_DAY;
-    },
-    
-    validateRequired(value) {
-        return value && value.trim().length > 0;
-    },
-    
-    validatePassword(password) {
-        return password && password.length >= CONFIG.VALIDATION.MIN_PASSWORD_LENGTH;
-    },
-    
-    // Auto-logout per sicurezza V3.5
-    setupAutoLogout() {
-        if (!CONFIG.SECURITY.SESSION_TIMEOUT) return;
-        
-        let timeout;
-        
-        const resetTimeout = () => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                this.clearSession();
-                this.showNotification('Sessione scaduta per inattività', 'warning');
-                setTimeout(() => this.redirectToLogin(), 2000);
-            }, CONFIG.UI.AUTO_LOGOUT_TIME);
-        };
-        
-        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
-            document.addEventListener(event, resetTimeout, true);
-        });
-        
-        resetTimeout();
-        ProductionLogger.log('Auto-logout configurato per', CONFIG.UI.AUTO_LOGOUT_TIME / 60000, 'minuti');
-    },
-    
-    // ✅ Funzione sicurezza ottimizzata per produzione V3.5
-    showSecurityStatus(authMethod, hashSupport) {
-        // V3.5: Security status box rimosso completamente
-        if (!CONFIG.UI.SHOW_SECURITY_STATUS) {
-            return;
-        }
-        
-        // In produzione mostra solo notifiche essenziali
-        if (CONFIG.PRODUCTION_MODE) {
-            if (authMethod === 'plain_migrated') {
-                this.showNotification('Password aggiornata con successo', 'success', 3000);
-            }
-            return;
-        }
-        
-        // Modalità sviluppo - mostra info dettagliate
-        if (!CONFIG.UI.SHOW_AUTH_METHOD) return;
-        
-        const securityLevel = authMethod === 'hash' ? 'SICURO' : 'COMPATIBILITÀ';
-        const securityIcon = authMethod === 'hash' ? '🔐' : '⚠️';
-        
-        ProductionLogger.auth(`${securityIcon} Sicurezza: ${securityLevel} (Metodo: ${authMethod})`);
-        
-        if (authMethod === 'plain_migrated') {
-            this.showNotification('Password migrata automaticamente in hash sicuro!', 'security', 6000);
-        } else if (authMethod === 'plain_fallback') {
-            this.showNotification('Login in modalità compatibilità. Contatta admin per migrazione.', 'warning', 6000);
-        }
-    },
-    
-    // ✅ Performance monitoring (solo in sviluppo)
-    measurePerformance(operation, callback) {
-        if (!CONFIG.LOGGING.PERFORMANCE_LOGS || CONFIG.PRODUCTION_MODE) {
-            return callback();
-        }
-        
-        const start = performance.now();
-        const result = callback();
-        const end = performance.now();
-        
-        ProductionLogger.performance(`${operation} completato in ${(end - start).toFixed(2)}ms`);
-        return result;
-    },
-    
-    // ✅ Error reporting per produzione
-    reportError(error, context = '') {
-        const errorInfo = {
-            message: error.message,
-            stack: error.stack,
-            context: context,
-            timestamp: new Date().toISOString(),
-            userAgent: navigator.userAgent,
-            url: window.location.href,
-            version: CONFIG.VERSION.frontend
-        };
-        
-        ProductionLogger.error('Errore applicazione:', errorInfo);
-        
-        // In produzione potresti inviare questo a un servizio di monitoring
-        if (CONFIG.PRODUCTION_MODE) {
-            // Esempio: invio a servizio esterno di monitoring
-            // this.sendToMonitoring(errorInfo);
-        }
-        
-        return errorInfo;
-    }
-};
 
-// Protezione accesso pagine V3.5 - Production
-const PageGuard = {
-    requireLogin() {
-        if (!Utils.isLoggedIn()) {
-            Utils.showNotification('Accesso richiesto', 'error');
-            setTimeout(() => Utils.redirectToLogin(), 1500);
-            return false;
-        }
-        return true;
-    },
-    
-    redirectIfLoggedIn() {
-        if (Utils.isLoggedIn()) {
-            Utils.redirectToDashboard();
-            return true;
-        }
-        return false;
-    }
-};
-
-// ===== INIZIALIZZAZIONE SISTEMA PRODUCTION V3.5 =====
-function initializeSystem() {
-    if (CONFIG.PRODUCTION_MODE) {
-        // Produzione: Log minimo
-        ProductionLogger.log('Sistema Gestione Ore V3.5 - Modalità Produzione (UI Semplificata)');
-        
-        // Rimuovi informazioni debug dal DOM
-        removeDebugElements();
-        
-        // Setup error handling globale
-        setupGlobalErrorHandling();
-        
-    } else {
-        // Sviluppo: Log completo
-        ProductionLogger.log('🚀 Sistema Gestione Ore inizializzato V3.5 - Modalità Sviluppo');
-        ProductionLogger.log('📋 Configurazione:', CONFIG);
-        ProductionLogger.log('🎨 UI: Layout Semplificato');
-        ProductionLogger.log('🔐 Hash Support:', CONFIG.SECURITY.HASH_ENABLED);
-        ProductionLogger.log('🔐 Sessione attiva:', Utils.isLoggedIn());
-    }
-}
-
-function removeDebugElements() {
-    // Rimuovi elementi debug dal DOM in produzione
-    const debugSelectors = [
-        '.version-badge',
-        '.debug-info', 
-        '[data-debug]',
-        '.development-only'
-    ];
-    
-    debugSelectors.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach(el => {
-            if (CONFIG.PRODUCTION_MODE) {
-                el.style.display = 'none';
-            }
-        });
-    });
-}
-
-function setupGlobalErrorHandling() {
-    // Cattura errori JavaScript globali
-    window.addEventListener('error', (event) => {
-        Utils.reportError(event.error, 'Global JavaScript Error');
-    });
-    
-    // Cattura promise rejections non gestite
-    window.addEventListener('unhandledrejection', (event) => {
-        Utils.reportError(new Error(event.reason), 'Unhandled Promise Rejection');
-    });
-}
-
-// ===== COMPATIBILITÀ API =====
-// Mantieni le funzioni originali per compatibilità
-const Logger = ProductionLogger; // Alias per compatibilità
-
-// Export per uso globale
-window.CONFIG = CONFIG;
-window.Utils = Utils;
-window.PageGuard = PageGuard;
-window.Logger = ProductionLogger;
-
-// Auto-inizializzazione
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeSystem);
-} else {
-    initializeSystem();
-}
+        console.log('Dashboard V4.0 inizializzata con config.js esistente');
+    </script>
+</body>
+</html>
