@@ -317,7 +317,7 @@
             transform: none;
         }
 
-        /* Bottom Navigation - colore header */
+        /* Bottom Navigation - più compatto */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -326,26 +326,26 @@
             background: linear-gradient(135deg, rgba(76, 99, 210, 0.2), rgba(90, 103, 216, 0.2));
             backdrop-filter: blur(20px);
             border-top: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 16px;
+            padding: 12px 16px; /* Ridotto da 16px a 12px per il verticale */
             z-index: 200;
-            box-shadow: 0 -8px 32px rgba(76, 99, 210, 0.15);
+            box-shadow: 0 -6px 24px rgba(76, 99, 210, 0.15); /* Ombra ridotta */
         }
 
         .bottom-nav-container {
             max-width: 500px;
             margin: 0 auto;
             display: flex;
-            gap: 16px;
+            gap: 12px; /* Ridotto da 16px a 12px */
         }
 
         .nav-tab {
             flex: 1;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 14px 20px;
+            border-radius: 16px; /* Ridotto da 20px a 16px */
+            padding: 12px 16px; /* Ridotto da 14px 20px a 12px 16px */
             color: rgba(255, 255, 255, 0.7);
-            font-size: 16px;
+            font-size: 15px; /* Ridotto da 16px a 15px */
             font-weight: 600;
             text-align: center;
             cursor: pointer;
@@ -353,7 +353,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px; /* Ridotto da 8px a 6px */
             text-decoration: none;
             user-select: none;
         }
