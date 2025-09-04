@@ -18,45 +18,64 @@
             padding: 20px;
         }
 
-        /* MOBILE FIRST - Layout base per mobile */
         @media (max-width: 768px) {
             body {
                 padding: 0;
-                padding-bottom: 80px; /* Spazio per bottom nav mobile */
+                padding-bottom: 80px;
             }
         }
 
         .dashboard-container {
             max-width: 900px;
             margin: 0 auto;
+            padding-top: 120px;
         }
 
-        /* MOBILE: Container full-screen */
         @media (max-width: 768px) {
             .dashboard-container {
                 max-width: 100%;
                 margin: 0;
+                padding-top: 100px;
             }
         }
 
         .header {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 20px 20px 0 0;
+            border-radius: 0;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            position: relative;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
         }
 
-        /* MOBILE: Header compatto */
+        .header.scrolled {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 2px 30px rgba(0, 0, 0, 0.15);
+            padding: 20px 30px;
+        }
+
         @media (max-width: 768px) {
             .header {
                 border-radius: 0;
                 padding: 15px 20px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, rgba(102, 126, 234, 0.95), rgba(118, 75, 162, 0.95));
+                backdrop-filter: blur(15px);
                 color: white;
                 padding-top: max(15px, env(safe-area-inset-top));
+            }
+            
+            .header.scrolled {
+                background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
+                backdrop-filter: blur(25px);
+                padding: 12px 20px;
+                padding-top: max(12px, env(safe-area-inset-top));
             }
         }
 
@@ -66,39 +85,47 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 20px;
+            transition: all 0.3s ease;
         }
 
-        /* MOBILE: Header centrato */
+        .header.scrolled .header-content {
+            gap: 15px;
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
                 text-align: center;
                 gap: 15px;
             }
+            
+            .header.scrolled .header-content {
+                gap: 10px;
+            }
         }
 
         .user-info h1 {
             color: #333;
             font-size: 28px;
-            margin-bottom: 5px;
+            margin-bottom: 0;
+            transition: all 0.3s ease;
         }
 
-        .user-info .details {
-            color: #666;
-            font-size: 16px;
-            margin: 5px 0;
+        .header.scrolled .user-info h1 {
+            font-size: 24px;
+            margin-bottom: 0;
         }
 
-        /* MOBILE: Testo header bianco */
         @media (max-width: 768px) {
             .user-info h1 {
                 color: white;
                 font-size: 20px;
-                margin-bottom: 8px;
+                margin-bottom: 0;
             }
             
-            .user-info .details {
-                display: none; /* Nascondi dettagli su mobile */
+            .header.scrolled .user-info h1 {
+                font-size: 18px;
+                margin-bottom: 0;
             }
         }
 
@@ -108,7 +135,6 @@
             text-align: center;
         }
 
-        /* MOBILE: Stats orizzontali compatte */
         @media (max-width: 768px) {
             .user-stats {
                 gap: 20px;
@@ -138,7 +164,6 @@
             text-align: center;
         }
 
-        /* MOBILE: Stats bianche e più piccole */
         @media (max-width: 768px) {
             .stat-number {
                 font-size: 18px;
@@ -169,7 +194,6 @@
             box-shadow: 0 5px 15px rgba(238, 90, 82, 0.3);
         }
 
-        /* MOBILE: Logout button assoluto */
         @media (max-width: 768px) {
             .logout-btn {
                 position: absolute;
@@ -186,14 +210,13 @@
         .main-content {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 0 0 20px 20px;
+            border-radius: 20px;
             padding: 40px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-top: none;
+            margin-top: 20px;
         }
 
-        /* MOBILE: Main content senza border radius e padding ridotto */
         @media (max-width: 768px) {
             .main-content {
                 border-radius: 0;
@@ -201,6 +224,7 @@
                 border: none;
                 box-shadow: none;
                 background: rgba(255, 255, 255, 0.95);
+                margin-top: 0;
             }
         }
 
@@ -211,7 +235,6 @@
             margin-bottom: 30px;
         }
 
-        /* MOBILE: Form a colonna singola */
         @media (max-width: 768px) {
             .work-entry-form {
                 grid-template-columns: 1fr;
@@ -227,7 +250,6 @@
             border: 1px solid rgba(102, 126, 234, 0.1);
         }
 
-        /* MOBILE: Sezioni form più compatte */
         @media (max-width: 768px) {
             .form-section {
                 padding: 20px;
@@ -247,7 +269,6 @@
             gap: 10px;
         }
 
-        /* MOBILE: Titoli più piccoli */
         @media (max-width: 768px) {
             .section-title {
                 font-size: 16px;
@@ -260,7 +281,6 @@
             margin-bottom: 20px;
         }
 
-        /* MOBILE: Form group più compatti */
         @media (max-width: 768px) {
             .form-group {
                 margin-bottom: 15px;
@@ -296,7 +316,6 @@
             transform: translateY(-2px);
         }
 
-        /* MOBILE: Transform disabilitato su focus per evitare problemi */
         @media (max-width: 768px) {
             .form-group input:focus,
             .form-group select:focus,
@@ -310,7 +329,6 @@
             resize: vertical;
         }
 
-        /* MOBILE: Textarea più piccola */
         @media (max-width: 768px) {
             .form-group textarea {
                 min-height: 80px;
@@ -331,7 +349,6 @@
             border: 2px solid rgba(102, 126, 234, 0.2) !important;
         }
 
-        /* MOBILE: Hours section normale width */
         @media (max-width: 768px) {
             .hours-section {
                 grid-column: span 1;
@@ -349,7 +366,6 @@
             border: 1px solid rgba(102, 126, 234, 0.1);
         }
 
-        /* MOBILE: Save section più compatta */
         @media (max-width: 768px) {
             .save-section {
                 padding: 20px;
@@ -385,7 +401,6 @@
             transform: none;
         }
 
-        /* MOBILE: Save button full width e senza transform */
         @media (max-width: 768px) {
             .save-btn {
                 width: 100%;
@@ -438,7 +453,6 @@
             background: linear-gradient(135deg, #667eea, #764ba2);
         }
 
-        /* MOBILE: Notifiche full width */
         @media (max-width: 768px) {
             .notification {
                 top: 10px;
@@ -489,25 +503,6 @@
             text-align: center;
         }
 
-        .auto-badge {
-            display: inline-block;
-            background: #28a745;
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 5px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* MOBILE: Hide auto badge su schermi piccoli */
-        @media (max-width: 480px) {
-            .auto-badge {
-                display: none;
-            }
-        }
-
         .icon {
             font-size: 20px;
         }
@@ -531,14 +526,12 @@
             transform: translateY(-2px);
         }
 
-        /* MOBILE: Version badge nascosto per evitare overlap */
         @media (max-width: 768px) {
             .version-badge {
                 display: none;
             }
         }
 
-        /* MOBILE BOTTOM NAVIGATION - Solo su mobile */
         @media (max-width: 768px) {
             .mobile-bottom-nav {
                 position: fixed;
@@ -580,14 +573,12 @@
             }
         }
 
-        /* DESKTOP: Nascondi bottom nav */
         @media (min-width: 769px) {
             .mobile-bottom-nav {
                 display: none;
             }
         }
 
-        /* TABLET: Dimensioni intermedie */
         @media (min-width: 769px) and (max-width: 1024px) {
             .dashboard-container {
                 max-width: 800px;
@@ -605,35 +596,31 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Header responsive -->
+        <!-- Header fisso pulito -->
         <div class="header">
             <div class="header-content">
                 <div class="user-info">
-                    <h1>👋 Benvenuto, <span id="userName">Caricamento...</span></h1>
-                    <div class="details" id="userEmail">📧 Caricamento email...</div>
-                    <div class="details" id="userPhone">📱 Caricamento telefono...</div>
+                    <h1 id="userName">Nome Utente</h1>
                 </div>
                 
                 <div class="user-stats">
                     <div class="stat-item">
                         <span class="stat-number" id="monthlyHours">0</span>
                         <span class="stat-label">Ore Mese</span>
-                        <span class="auto-badge">Auto</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-number" id="previousMonthHours">0</span>
                         <span class="stat-label">Mese Prec.</span>
-                        <span class="auto-badge">Auto</span>
                     </div>
                 </div>
 
                 <button class="logout-btn" onclick="logout()">
-                    🚪 Esci
+                    Esci
                 </button>
             </div>
         </div>
 
-        <!-- Contenuto principale responsive -->
+        <!-- Contenuto principale -->
         <div class="main-content">
             <form id="workEntryForm" class="work-entry-form">
                 <!-- Sezione Data -->
@@ -658,13 +645,13 @@
                     <div class="form-group">
                         <label for="cantiere">Cantiere di Lavoro</label>
                         <select id="cantiere" name="cantiere" required>
-                            <option value="">⚡ Caricamento...</option>
+                            <option value="">Seleziona cantiere...</option>
                         </select>
                         <div class="validation-message">Seleziona un cantiere</div>
                     </div>
                 </div>
 
-                <!-- Sezione Ore (più prominente) -->
+                <!-- Sezione Ore -->
                 <div class="form-section hours-section">
                     <div class="section-title">
                         <span class="icon">⏰</span>
@@ -679,7 +666,7 @@
                     </div>
                 </div>
 
-                <!-- Sezione Note (opzionale) -->
+                <!-- Sezione Note -->
                 <div class="form-section">
                     <div class="section-title">
                         <span class="icon">📝</span>
@@ -695,16 +682,16 @@
             <!-- Sezione Salvataggio -->
             <div class="save-section">
                 <button type="submit" class="save-btn" id="saveBtn" form="workEntryForm">
-                    💾 Salva Ore
+                    Salva Ore
                 </button>
                 <div style="margin-top: 15px; font-size: 14px; color: #666;">
-                    <span class="icon">🔄</span> I totali si aggiornano automaticamente
+                    I totali si aggiornano automaticamente
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bottom Navigation - Solo mobile -->
+    <!-- Bottom Navigation - Design definitivo -->
     <div class="mobile-bottom-nav">
         <div class="nav-item active">
             <div class="nav-icon">✏️</div>
@@ -714,14 +701,18 @@
             <div class="nav-icon">📅</div>
             <div class="nav-label">Calendario</div>
         </div>
+        <div class="nav-item">
+            <div class="nav-icon">📊</div>
+            <div class="nav-label">Report</div>
+        </div>
     </div>
 
     <!-- Notifiche -->
     <div id="notification" class="notification"></div>
 
-    <!-- Badge versione V3.5 - Solo desktop -->
+    <!-- Badge versione - Solo desktop -->
     <div class="version-badge" id="versionBadge" title="Dashboard V3.5">
-        v3.5 - Responsive ⚡
+        v3.5 - Clean Header
     </div>
 
     <script src="config.js"></script>
@@ -730,9 +721,8 @@
         let sessionToken = null;
         let cantieri = [];
 
-        // ⚡ INIZIALIZZAZIONE V3.5 - RESPONSIVE
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('⚡ Dashboard Responsive V3.5 avviata');
+            console.log('Dashboard Clean Header V3.5 avviata');
             
             // Verifica accesso
             if (!PageGuard.requireLogin()) {
@@ -747,18 +737,13 @@
             currentUser = session.user;
             sessionToken = session.token;
             
-            // Caricamento immediato dati utente
             loadUserData();
             
             // Imposta data odierna
             document.getElementById('workDate').value = new Date().toISOString().split('T')[0];
             
-            // Setup form
             setupForm();
-            
-            // Caricamento parallelo
-            console.log('⚡ Avvio caricamento parallelo...');
-            const startTime = performance.now();
+            setupScrollEffect();
             
             try {
                 await Promise.all([
@@ -766,34 +751,51 @@
                     refreshUserStats()
                 ]);
                 
-                const endTime = performance.now();
-                const loadTime = (endTime - startTime).toFixed(0);
-                console.log(`⚡ Caricamento completato in ${loadTime}ms`);
-                
-                Utils.showNotification(`Dashboard caricata!⚡`, 'success', 2000);
+                Utils.showNotification('Dashboard caricata!', 'success', 2000);
                 
             } catch (error) {
-                console.error('❌ Errore nel caricamento:', error);
+                console.error('Errore nel caricamento:', error);
                 Utils.showNotification('Errore nel caricamento dati', 'error');
             }
         });
 
+        function setupScrollEffect() {
+            const header = document.querySelector('.header');
+            let ticking = false;
+            
+            function updateHeaderOnScroll() {
+                const scrollY = window.scrollY;
+                
+                if (scrollY > 20) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+                
+                ticking = false;
+            }
+            
+            function requestHeaderUpdate() {
+                if (!ticking) {
+                    requestAnimationFrame(updateHeaderOnScroll);
+                    ticking = true;
+                }
+            }
+            
+            window.addEventListener('scroll', requestHeaderUpdate, { passive: true });
+            updateHeaderOnScroll();
+        }
+
         function loadUserData() {
             if (!currentUser) return;
             
-            console.log('📊 Caricando dati utente V3.5:', currentUser);
-            
-            // Dati base - solo nome
             document.getElementById('userName').textContent = currentUser.name;
-            
-            // Ore mese corrente e precedente (dalle formule Excel)
             document.getElementById('monthlyHours').textContent = Utils.formatHours(currentUser.oreMese || 0);
             document.getElementById('previousMonthHours').textContent = Utils.formatHours(currentUser.oreMesePrecedente || 0);
         }
 
         async function loadCantieri() {
             try {
-                console.log('📋 Caricando cantieri ...');
                 const cantiereSelect = document.getElementById('cantiere');
                 
                 const result = await callGoogleAppsScript({
@@ -811,16 +813,14 @@
                         option.textContent = `${cantiere.nome} - ${cantiere.indirizzo}`;
                         cantiereSelect.appendChild(option);
                     });
-                    
-                    console.log('✅ Cantieri caricati:', cantieri.length);
                 } else {
                     throw new Error(result.message || 'Errore caricamento cantieri');
                 }
                 
             } catch (error) {
-                console.error('❌ Errore caricamento cantieri:', error);
+                console.error('Errore caricamento cantieri:', error);
                 const cantiereSelect = document.getElementById('cantiere');
-                cantiereSelect.innerHTML = '<option value="">❌ Errore caricamento cantieri</option>';
+                cantiereSelect.innerHTML = '<option value="">Errore caricamento cantieri</option>';
                 Utils.showNotification('Errore nel caricamento cantieri', 'error');
             }
         }
@@ -829,7 +829,6 @@
             const form = document.getElementById('workEntryForm');
             const oreInput = document.getElementById('ore');
             
-            // Gestione focus per cancellare placeholder
             oreInput.addEventListener('focus', function(e) {
                 if (!e.target.value) {
                     e.target.placeholder = '';
@@ -838,12 +837,11 @@
             
             oreInput.addEventListener('blur', function(e) {
                 if (!e.target.value) {
-                    e.target.placeholder = 'es: 8.0';
+                    e.target.placeholder = '8.5';
                 }
                 validateHoursField(e.target);
             });
             
-            // Gestione decimali con virgola/punto
             oreInput.addEventListener('input', function(e) {
                 let value = e.target.value;
                 
@@ -865,8 +863,6 @@
                 field.addEventListener('blur', () => validateField(field));
                 field.addEventListener('change', () => clearValidation(field));
             });
-            
-            console.log('⚡ Form setup completato');
         }
 
         function validateHoursField(field) {
@@ -925,13 +921,6 @@
             
             const oreParsed = parseFloat(oreValue);
             
-            console.log('🔢 Debug ore V3.5:', {
-                original: data.ore,
-                cleaned: oreValue,
-                parsed: oreParsed,
-                isValid: !isNaN(oreParsed) && oreParsed >= 0 && oreParsed <= 24
-            });
-            
             // Validazione campi
             let isValid = true;
             ['workDate', 'cantiere'].forEach(fieldId => {
@@ -956,8 +945,6 @@
             saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
             
             try {
-                console.log('💾 Salvando ore lavorate ...');
-                
                 const result = await callGoogleAppsScript({
                     action: 'saveWorkEntry',
                     sessionToken: sessionToken,
@@ -971,7 +958,7 @@
                 });
                 
                 if (result.success) {
-                    Utils.showNotification(`✅ ${oreParsed} ore salvate! Totali aggiornati.`, 'success');
+                    Utils.showNotification(`${oreParsed} ore salvate! Totali aggiornati.`, 'success');
                     
                     // Reset form mantenendo la data
                     const currentDate = data.workDate;
@@ -988,37 +975,29 @@
                 }
                 
             } catch (error) {
-                console.error('❌ Errore salvataggio:', error);
+                console.error('Errore salvataggio:', error);
                 Utils.showNotification('Errore nel salvataggio: ' + error.message, 'error');
             } finally {
                 saveBtn.disabled = false;
-                saveBtn.innerHTML = '💾 Salva Ore';
+                saveBtn.innerHTML = 'Salva Ore';
             }
         }
 
         async function refreshUserStats() {
             try {
-                console.log('🔄 Aggiornando statistiche V3.5 ...');
-                
                 const result = await callGoogleAppsScript({
                     action: 'getUserInfo',
                     sessionToken: sessionToken
                 });
                 
                 if (result.success && result.data) {
-                    // Aggiorna currentUser con i nuovi dati
                     currentUser = { ...currentUser, ...result.data };
                     
-                    // Aggiorna le statistiche nella UI
                     document.getElementById('monthlyHours').textContent = Utils.formatHours(result.data.oreMese || 0);
                     document.getElementById('previousMonthHours').textContent = Utils.formatHours(result.data.oreMesePrecedente || 0);
-                    
-                    console.log('✅ Statistiche aggiornate V3.5:', result.data);
-                } else {
-                    console.log('⚠️ Impossibile aggiornare statistiche:', result.message);
                 }
             } catch (error) {
-                console.error('❌ Errore aggiornamento stats:', error);
+                console.error('Errore aggiornamento stats:', error);
             }
         }
 
@@ -1039,13 +1018,14 @@
         // Gestione click version badge per debug info
         document.getElementById('versionBadge').addEventListener('click', function() {
             const session = Utils.getSession();
-            let debugInfo = `Dashboard Responsive V3.5 Debug Info:\n\n`;
+            let debugInfo = `Dashboard Clean Header V3.5 Debug Info:\n\n`;
             debugInfo += `Frontend: 3.5.0\n`;
             debugInfo += `Build: 2025.07.04\n`;
-            debugInfo += `Layout: Responsive (Mobile-First)\n`;
+            debugInfo += `Layout: Clean Fixed Header + Responsive\n`;
             debugInfo += `User: ${session.user ? session.user.name : 'Non loggato'}\n`;
             debugInfo += `Session Token: ${session.token ? 'Presente' : 'Assente'}\n`;
-            debugInfo += `Screen: ${window.innerWidth}x${window.innerHeight}`;
+            debugInfo += `Screen: ${window.innerWidth}x${window.innerHeight}\n`;
+            debugInfo += `Scroll Y: ${window.scrollY}px`;
             
             alert(debugInfo);
         });
@@ -1057,18 +1037,15 @@
             }
         }, 5 * 60 * 1000);
 
-        // Mobile bottom navigation handlers (solo placeholder per ora)
+        // Mobile bottom navigation handlers
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', function() {
-                // Rimuovi active da tutti
                 document.querySelectorAll('.nav-item').forEach(navItem => {
                     navItem.classList.remove('active');
                 });
                 
-                // Aggiungi active al corrente
                 this.classList.add('active');
                 
-                // Placeholder per funzionalità future (calendario, etc.)
                 const label = this.querySelector('.nav-label').textContent;
                 if (label === 'Calendario') {
                     Utils.showNotification('Calendario in sviluppo', 'warning');
