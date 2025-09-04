@@ -16,40 +16,44 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            padding-bottom: 120px; /* Spazio per footer */
         }
 
         @media (max-width: 768px) {
             body {
                 padding: 0;
-                padding-bottom: 80px;
+                padding-bottom: 100px;
             }
         }
 
         .dashboard-container {
             max-width: 900px;
             margin: 0 auto;
-            padding-top: 120px;
+            padding-top: 100px;
         }
 
         @media (max-width: 768px) {
             .dashboard-container {
                 max-width: 100%;
                 margin: 0;
-                padding-top: 100px;
+                padding-top: 80px;
             }
         }
 
+        /* HEADER COMPATTO E CENTRATO */
         .header {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 0;
-            padding: 30px;
+            border-radius: 20px;
+            padding: 20px 30px;
             box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 900px;
+            width: calc(100% - 40px);
             z-index: 1000;
             transition: all 0.3s ease;
         }
@@ -58,7 +62,8 @@
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px);
             box-shadow: 0 2px 30px rgba(0, 0, 0, 0.15);
-            padding: 20px 30px;
+            padding: 15px 25px;
+            border-radius: 15px;
         }
 
         @media (max-width: 768px) {
@@ -69,6 +74,11 @@
                 backdrop-filter: blur(15px);
                 color: white;
                 padding-top: max(15px, env(safe-area-inset-top));
+                top: 0;
+                left: 0;
+                transform: none;
+                width: 100%;
+                max-width: none;
             }
             
             .header.scrolled {
@@ -76,6 +86,7 @@
                 backdrop-filter: blur(25px);
                 padding: 12px 20px;
                 padding-top: max(12px, env(safe-area-inset-top));
+                border-radius: 0;
             }
         }
 
@@ -106,26 +117,23 @@
 
         .user-info h1 {
             color: #333;
-            font-size: 28px;
+            font-size: 24px;
             margin-bottom: 0;
             transition: all 0.3s ease;
         }
 
         .header.scrolled .user-info h1 {
-            font-size: 24px;
-            margin-bottom: 0;
+            font-size: 20px;
         }
 
         @media (max-width: 768px) {
             .user-info h1 {
                 color: white;
-                font-size: 20px;
-                margin-bottom: 0;
+                font-size: 18px;
             }
             
             .header.scrolled .user-info h1 {
-                font-size: 18px;
-                margin-bottom: 0;
+                font-size: 16px;
             }
         }
 
@@ -149,14 +157,14 @@
         }
 
         .stat-number {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: bold;
             color: #667eea;
             display: block;
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 11px;
             color: #888;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -166,12 +174,12 @@
 
         @media (max-width: 768px) {
             .stat-number {
-                font-size: 18px;
+                font-size: 16px;
                 color: white;
             }
             
             .stat-label {
-                font-size: 11px;
+                font-size: 10px;
                 color: rgba(255, 255, 255, 0.9);
                 letter-spacing: 0.5px;
             }
@@ -181,12 +189,12 @@
             background: linear-gradient(135deg, #ff6b6b, #ee5a52);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
+            padding: 10px 20px;
+            border-radius: 20px;
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
-            position: relative;
+            font-size: 14px;
         }
 
         .logout-btn:hover {
@@ -199,11 +207,8 @@
                 position: absolute;
                 top: 15px;
                 right: 20px;
-                padding: 10px 16px;
-                font-size: 14px;
-                gap: 6px;
-                display: flex;
-                align-items: center;
+                padding: 8px 14px;
+                font-size: 12px;
             }
         }
 
@@ -418,6 +423,64 @@
             }
         }
 
+        /* FOOTER FISSO - GARANTITO VISIBILE */
+        .bottom-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            padding: 15px 0;
+            z-index: 9999;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        /* DESKTOP: Footer centrato */
+        @media (min-width: 769px) {
+            .bottom-footer {
+                max-width: 860px;
+                left: 50%;
+                right: auto;
+                transform: translateX(-50%);
+                border-radius: 20px 20px 0 0;
+                margin: 0;
+            }
+        }
+
+        .footer-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            margin: 0 8px;
+            color: #666;
+        }
+
+        .footer-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .footer-item.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .footer-icon {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .footer-label {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
         .notification {
             position: fixed;
             top: 20px;
@@ -426,7 +489,7 @@
             border-radius: 10px;
             color: white;
             font-weight: 600;
-            z-index: 1000;
+            z-index: 10000;
             transform: translateX(400px);
             transition: all 0.3s ease;
             max-width: 350px;
@@ -447,10 +510,6 @@
         .notification.warning {
             background: linear-gradient(135deg, #ffc107, #fd7e14);
             color: #212529;
-        }
-
-        .notification.security {
-            background: linear-gradient(135deg, #667eea, #764ba2);
         }
 
         @media (max-width: 768px) {
@@ -506,97 +565,11 @@
         .icon {
             font-size: 20px;
         }
-
-        .version-badge {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(102, 126, 234, 0.9);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .version-badge:hover {
-            background: rgba(102, 126, 234, 1);
-            transform: translateY(-2px);
-        }
-
-        @media (max-width: 768px) {
-            .version-badge {
-                display: none;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .mobile-bottom-nav {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: white;
-                box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
-                display: flex;
-                padding: 10px 0;
-                padding-bottom: max(10px, env(safe-area-inset-bottom));
-                z-index: 1000;
-            }
-
-            .nav-item {
-                flex: 1;
-                text-align: center;
-                padding: 8px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                border-radius: 12px;
-                margin: 0 8px;
-            }
-
-            .nav-item.active {
-                background: linear-gradient(135deg, #667eea, #764ba2);
-                color: white;
-            }
-
-            .nav-icon {
-                font-size: 24px;
-                display: block;
-                margin-bottom: 4px;
-            }
-
-            .nav-label {
-                font-size: 12px;
-                font-weight: 500;
-            }
-        }
-
-        @media (min-width: 769px) {
-            .mobile-bottom-nav {
-                display: none;
-            }
-        }
-
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .dashboard-container {
-                max-width: 800px;
-            }
-            
-            .header {
-                padding: 25px;
-            }
-            
-            .main-content {
-                padding: 30px;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Header fisso pulito -->
+        <!-- Header compatto e centrato -->
         <div class="header">
             <div class="header-content">
                 <div class="user-info">
@@ -691,29 +664,24 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation - Design definitivo -->
-    <div class="mobile-bottom-nav">
-        <div class="nav-item active">
-            <div class="nav-icon">✏️</div>
-            <div class="nav-label">Inserisci</div>
+    <!-- FOOTER FISSO - Garantito visibile -->
+    <div class="bottom-footer">
+        <div class="footer-item active">
+            <div class="footer-icon">✏️</div>
+            <div class="footer-label">Inserisci</div>
         </div>
-        <div class="nav-item">
-            <div class="nav-icon">📅</div>
-            <div class="nav-label">Calendario</div>
+        <div class="footer-item">
+            <div class="footer-icon">📅</div>
+            <div class="footer-label">Calendario</div>
         </div>
-        <div class="nav-item">
-            <div class="nav-icon">📊</div>
-            <div class="nav-label">Report</div>
+        <div class="footer-item">
+            <div class="footer-icon">📊</div>
+            <div class="footer-label">Report</div>
         </div>
     </div>
 
     <!-- Notifiche -->
     <div id="notification" class="notification"></div>
-
-    <!-- Badge versione - Solo desktop -->
-    <div class="version-badge" id="versionBadge" title="Dashboard V3.5">
-        v3.5 - Clean Header
-    </div>
 
     <script src="config.js"></script>
     <script>
@@ -724,22 +692,18 @@
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('Dashboard Clean Header V3.5 avviata');
             
-            // Verifica accesso
             if (!PageGuard.requireLogin()) {
                 return;
             }
             
-            // Setup auto-logout
             Utils.setupAutoLogout();
             
-            // Carica dati utente
             const session = Utils.getSession();
             currentUser = session.user;
             sessionToken = session.token;
             
             loadUserData();
             
-            // Imposta data odierna
             document.getElementById('workDate').value = new Date().toISOString().split('T')[0];
             
             setupForm();
@@ -921,7 +885,6 @@
             
             const oreParsed = parseFloat(oreValue);
             
-            // Validazione campi
             let isValid = true;
             ['workDate', 'cantiere'].forEach(fieldId => {
                 const field = document.getElementById(fieldId);
@@ -940,7 +903,6 @@
                 return;
             }
             
-            // Loading state
             saveBtn.disabled = true;
             saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
             
@@ -960,12 +922,10 @@
                 if (result.success) {
                     Utils.showNotification(`${oreParsed} ore salvate! Totali aggiornati.`, 'success');
                     
-                    // Reset form mantenendo la data
                     const currentDate = data.workDate;
                     form.reset();
                     document.getElementById('workDate').value = currentDate;
                     
-                    // Aggiorna statistiche dal server
                     setTimeout(() => {
                         refreshUserStats();
                     }, 1500);
@@ -1015,21 +975,6 @@
             }
         }
 
-        // Gestione click version badge per debug info
-        document.getElementById('versionBadge').addEventListener('click', function() {
-            const session = Utils.getSession();
-            let debugInfo = `Dashboard Clean Header V3.5 Debug Info:\n\n`;
-            debugInfo += `Frontend: 3.5.0\n`;
-            debugInfo += `Build: 2025.07.04\n`;
-            debugInfo += `Layout: Clean Fixed Header + Responsive\n`;
-            debugInfo += `User: ${session.user ? session.user.name : 'Non loggato'}\n`;
-            debugInfo += `Session Token: ${session.token ? 'Presente' : 'Assente'}\n`;
-            debugInfo += `Screen: ${window.innerWidth}x${window.innerHeight}\n`;
-            debugInfo += `Scroll Y: ${window.scrollY}px`;
-            
-            alert(debugInfo);
-        });
-
         // Auto-refresh stats ogni 5 minuti
         setInterval(() => {
             if (Utils.isLoggedIn()) {
@@ -1037,18 +982,20 @@
             }
         }, 5 * 60 * 1000);
 
-        // Mobile bottom navigation handlers
-        document.querySelectorAll('.nav-item').forEach(item => {
+        // Footer navigation handlers
+        document.querySelectorAll('.footer-item').forEach(item => {
             item.addEventListener('click', function() {
-                document.querySelectorAll('.nav-item').forEach(navItem => {
-                    navItem.classList.remove('active');
+                document.querySelectorAll('.footer-item').forEach(footerItem => {
+                    footerItem.classList.remove('active');
                 });
                 
                 this.classList.add('active');
                 
-                const label = this.querySelector('.nav-label').textContent;
+                const label = this.querySelector('.footer-label').textContent;
                 if (label === 'Calendario') {
                     Utils.showNotification('Calendario in sviluppo', 'warning');
+                } else if (label === 'Report') {
+                    Utils.showNotification('Report in sviluppo', 'warning');
                 }
             });
         });
