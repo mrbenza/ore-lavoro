@@ -16,7 +16,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
-            padding-bottom: 120px; /* Spazio per footer */
+            padding-bottom: 120px;
         }
 
         @media (max-width: 768px) {
@@ -212,6 +212,7 @@
             }
         }
 
+        /* CONTENUTO PRINCIPALE */
         .main-content {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -233,6 +234,16 @@
             }
         }
 
+        /* SISTEMA PAGINE */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* PAGINA INSERISCI ORE */
         .work-entry-form {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -423,7 +434,234 @@
             }
         }
 
-        /* FOOTER FISSO - GARANTITO VISIBILE */
+        /* CALENDARIO */
+        .calendar-container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .calendar-nav-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .calendar-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e1e5e9;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-day-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 5px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .calendar-day {
+            background: white;
+            min-height: 80px;
+            padding: 8px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .calendar-day:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .calendar-day.other-month {
+            background: #f8f9fa;
+            color: #ccc;
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border: 2px solid #667eea;
+        }
+
+        .calendar-day.has-work {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1));
+        }
+
+        .calendar-day-number {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .work-indicator {
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border-radius: 50%;
+            margin-bottom: 2px;
+        }
+
+        .work-hours {
+            font-size: 11px;
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        /* POPUP */
+        .day-details-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .day-details-popup.show {
+            display: flex;
+        }
+
+        .popup-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .popup-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .popup-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .popup-close:hover {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .work-entry {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .work-entry:last-child {
+            margin-bottom: 0;
+        }
+
+        .work-entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .work-cantiere {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .work-hours-large {
+            font-size: 18px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .work-note {
+            color: #666;
+            font-style: italic;
+            margin-top: 8px;
+        }
+
+        .total-hours {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .total-hours-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .total-hours-value {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        /* FOOTER */
         .bottom-footer {
             position: fixed;
             bottom: 0;
@@ -438,7 +676,6 @@
             border-top: 1px solid rgba(0, 0, 0, 0.1);
         }
 
-        /* DESKTOP: Footer centrato */
         @media (min-width: 769px) {
             .bottom-footer {
                 max-width: 860px;
@@ -481,6 +718,7 @@
             font-weight: 500;
         }
 
+        /* UTILITIES */
         .notification {
             position: fixed;
             top: 20px;
@@ -565,6 +803,14 @@
         .icon {
             font-size: 20px;
         }
+
+        .calendar-loading {
+            grid-column: span 7;
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            background: white;
+        }
     </style>
 </head>
 <body>
@@ -593,78 +839,132 @@
             </div>
         </div>
 
-        <!-- Contenuto principale -->
+        <!-- Contenuto principale multi-page -->
         <div class="main-content">
-            <form id="workEntryForm" class="work-entry-form">
-                <!-- Sezione Data -->
-                <div class="form-section">
-                    <div class="section-title">
-                        <span class="icon">📅</span>
-                        Data
+            <!-- PAGINA INSERISCI ORE -->
+            <div id="insertPage" class="page active">
+                <form id="workEntryForm" class="work-entry-form">
+                    <!-- Sezione Data -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span class="icon">📅</span>
+                            Data
+                        </div>
+                        <div class="form-group">
+                            <label for="workDate">Seleziona Data</label>
+                            <input type="date" id="workDate" name="workDate" required>
+                            <div class="validation-message">Seleziona una data valida</div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="workDate">Seleziona Data</label>
-                        <input type="date" id="workDate" name="workDate" required>
-                        <div class="validation-message">Seleziona una data valida</div>
+
+                    <!-- Sezione Cantiere -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span class="icon">🏗️</span>
+                            Cantiere
+                        </div>
+                        <div class="form-group">
+                            <label for="cantiere">Cantiere di Lavoro</label>
+                            <select id="cantiere" name="cantiere" required>
+                                <option value="">Seleziona cantiere...</option>
+                            </select>
+                            <div class="validation-message">Seleziona un cantiere</div>
+                        </div>
+                    </div>
+
+                    <!-- Sezione Ore -->
+                    <div class="form-section hours-section">
+                        <div class="section-title">
+                            <span class="icon">⏰</span>
+                            Ore Lavorate
+                        </div>
+                        <div class="form-group">
+                            <label for="ore">Inserisci le ore</label>
+                            <input type="text" id="ore" name="ore" class="hours-input" 
+                                   placeholder="8.5" required autocomplete="off">
+                            <div class="decimal-hint">Usa il punto per i decimali (es: 8.5)</div>
+                            <div class="validation-message">Inserisci ore valide (0-24)</div>
+                        </div>
+                    </div>
+
+                    <!-- Sezione Note -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span class="icon">📝</span>
+                            Note
+                        </div>
+                        <div class="form-group">
+                            <label for="note">Note (opzionale)</label>
+                            <textarea id="note" name="note" placeholder="Eventuali note aggiuntive..."></textarea>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Sezione Salvataggio -->
+                <div class="save-section">
+                    <button type="submit" class="save-btn" id="saveBtn" form="workEntryForm">
+                        Salva Ore
+                    </button>
+                    <div style="margin-top: 15px; font-size: 14px; color: #666;">
+                        I totali si aggiornano automaticamente
                     </div>
                 </div>
+            </div>
 
-                <!-- Sezione Cantiere -->
-                <div class="form-section">
-                    <div class="section-title">
-                        <span class="icon">🏗️</span>
-                        Cantiere
+            <!-- PAGINA CALENDARIO -->
+            <div id="calendarPage" class="page">
+                <div class="calendar-container">
+                    <!-- Header calendario -->
+                    <div class="calendar-header">
+                        <button class="calendar-nav-btn" id="prevMonth">‹</button>
+                        <div class="calendar-title" id="calendarTitle">Settembre 2025</div>
+                        <button class="calendar-nav-btn" id="nextMonth">›</button>
                     </div>
-                    <div class="form-group">
-                        <label for="cantiere">Cantiere di Lavoro</label>
-                        <select id="cantiere" name="cantiere" required>
-                            <option value="">Seleziona cantiere...</option>
-                        </select>
-                        <div class="validation-message">Seleziona un cantiere</div>
+
+                    <!-- Griglia calendario -->
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Headers giorni settimana -->
+                        <div class="calendar-day-header">Lun</div>
+                        <div class="calendar-day-header">Mar</div>
+                        <div class="calendar-day-header">Mer</div>
+                        <div class="calendar-day-header">Gio</div>
+                        <div class="calendar-day-header">Ven</div>
+                        <div class="calendar-day-header">Sab</div>
+                        <div class="calendar-day-header">Dom</div>
+                        
+                        <!-- Loading -->
+                        <div class="calendar-loading" id="calendarLoading">
+                            <div class="loading"></div>
+                            Caricamento calendario...
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Sezione Ore -->
-                <div class="form-section hours-section">
-                    <div class="section-title">
-                        <span class="icon">⏰</span>
-                        Ore Lavorate
-                    </div>
-                    <div class="form-group">
-                        <label for="ore">Inserisci le ore</label>
-                        <input type="text" id="ore" name="ore" class="hours-input" 
-                               placeholder="8.5" required autocomplete="off">
-                        <div class="decimal-hint">Usa il punto per i decimali (es: 8.5)</div>
-                        <div class="validation-message">Inserisci ore valide (0-24)</div>
-                    </div>
-                </div>
-
-                <!-- Sezione Note -->
-                <div class="form-section">
-                    <div class="section-title">
-                        <span class="icon">📝</span>
-                        Note
-                    </div>
-                    <div class="form-group">
-                        <label for="note">Note (opzionale)</label>
-                        <textarea id="note" name="note" placeholder="Eventuali note aggiuntive..."></textarea>
-                    </div>
-                </div>
-            </form>
-
-            <!-- Sezione Salvataggio -->
-            <div class="save-section">
-                <button type="submit" class="save-btn" id="saveBtn" form="workEntryForm">
-                    Salva Ore
-                </button>
-                <div style="margin-top: 15px; font-size: 14px; color: #666;">
-                    I totali si aggiornano automaticamente
+            <!-- PAGINA REPORT -->
+            <div id="reportPage" class="page">
+                <div style="text-align: center; padding: 40px;">
+                    <h2>Report Dettagliati</h2>
+                    <p>Funzionalità in sviluppo...</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- FOOTER FISSO - Garantito visibile -->
+    <!-- Popup dettagli giorno -->
+    <div class="day-details-popup" id="dayDetailsPopup">
+        <div class="popup-content">
+            <div class="popup-header">
+                <div class="popup-title" id="popupTitle">Dettagli Giorno</div>
+                <button class="popup-close" id="popupClose">×</button>
+            </div>
+            <div id="popupContent">
+                <!-- Contenuto dinamico -->
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER FISSO -->
     <div class="bottom-footer">
         <div class="footer-item active">
             <div class="footer-icon">✏️</div>
@@ -688,9 +988,11 @@
         let currentUser = null;
         let sessionToken = null;
         let cantieri = [];
+        let currentDate = new Date();
+        let calendarData = {};
 
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('Dashboard Clean Header V3.5 avviata');
+            console.log('Dashboard con Calendario V3.5 avviata');
             
             if (!PageGuard.requireLogin()) {
                 return;
@@ -708,6 +1010,8 @@
             
             setupForm();
             setupScrollEffect();
+            setupNavigation();
+            setupCalendar();
             
             try {
                 await Promise.all([
@@ -723,6 +1027,234 @@
             }
         });
 
+        // NAVIGAZIONE TRA PAGINE
+        function setupNavigation() {
+            document.querySelectorAll('.footer-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const label = this.querySelector('.footer-label').textContent;
+                    navigateToPage(label);
+                    
+                    document.querySelectorAll('.footer-item').forEach(footerItem => {
+                        footerItem.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                });
+            });
+        }
+
+        function navigateToPage(pageName) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+
+            switch(pageName) {
+                case 'Inserisci':
+                    document.getElementById('insertPage').classList.add('active');
+                    break;
+                case 'Calendario':
+                    document.getElementById('calendarPage').classList.add('active');
+                    loadCalendarData();
+                    break;
+                case 'Report':
+                    document.getElementById('reportPage').classList.add('active');
+                    Utils.showNotification('Report in sviluppo', 'warning');
+                    break;
+            }
+        }
+
+        // CALENDARIO
+        function setupCalendar() {
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                loadCalendarData();
+            });
+
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                loadCalendarData();
+            });
+
+            document.getElementById('popupClose').addEventListener('click', closeDayDetails);
+            document.getElementById('dayDetailsPopup').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeDayDetails();
+                }
+            });
+        }
+
+        async function loadCalendarData() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1;
+            
+            console.log(`Caricando calendario per ${month}/${year}`);
+            
+            const monthNames = [
+                'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+            ];
+            document.getElementById('calendarTitle').textContent = `${monthNames[month - 1]} ${year}`;
+            
+            showCalendarLoading(true);
+            
+            try {
+                const result = await callGoogleAppsScript({
+                    action: 'getMonthlyWorkData',
+                    sessionToken: sessionToken,
+                    year: year,
+                    month: month
+                });
+                
+                if (result.success) {
+                    calendarData = result.data.workDays || {};
+                    renderCalendar(year, month);
+                    console.log('Calendario caricato:', calendarData);
+                } else {
+                    throw new Error(result.message || 'Errore caricamento calendario');
+                }
+                
+            } catch (error) {
+                console.error('Errore caricamento calendario:', error);
+                Utils.showNotification('Errore nel caricamento calendario', 'error');
+                renderCalendar(year, month);
+            }
+            
+            showCalendarLoading(false);
+        }
+
+        function showCalendarLoading(show) {
+            const loading = document.getElementById('calendarLoading');
+            if (show) {
+                loading.style.display = 'block';
+                document.querySelectorAll('.calendar-day').forEach(day => {
+                    day.style.display = 'none';
+                });
+            } else {
+                loading.style.display = 'none';
+            }
+        }
+
+        function renderCalendar(year, month) {
+            const grid = document.getElementById('calendarGrid');
+            
+            const existingDays = grid.querySelectorAll('.calendar-day, .calendar-loading');
+            existingDays.forEach(day => day.remove());
+            
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDay = firstDay.getDay();
+            const mondayStart = startDay === 0 ? 6 : startDay - 1;
+            
+            const prevMonth = new Date(year, month - 2, 0);
+            const daysInPrevMonth = prevMonth.getDate();
+            
+            for (let i = mondayStart - 1; i >= 0; i--) {
+                const day = daysInPrevMonth - i;
+                const dayElement = createDayElement(day, true, false);
+                grid.appendChild(dayElement);
+            }
+            
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const isToday = year === today.getFullYear() && 
+                               month - 1 === today.getMonth() && 
+                               day === today.getDate();
+                
+                const hasWork = calendarData[day] && calendarData[day].totalHours > 0;
+                const dayElement = createDayElement(day, false, isToday, hasWork, calendarData[day]);
+                grid.appendChild(dayElement);
+            }
+            
+            const totalCells = grid.children.length - 7;
+            const remainingCells = 42 - totalCells;
+            
+            for (let day = 1; day <= remainingCells; day++) {
+                const dayElement = createDayElement(day, true, false);
+                grid.appendChild(dayElement);
+            }
+        }
+
+        function createDayElement(dayNumber, isOtherMonth, isToday, hasWork = false, workData = null) {
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'calendar-day';
+            
+            if (isOtherMonth) {
+                dayDiv.classList.add('other-month');
+            }
+            if (isToday) {
+                dayDiv.classList.add('today');
+            }
+            if (hasWork) {
+                dayDiv.classList.add('has-work');
+            }
+            
+            const numberDiv = document.createElement('div');
+            numberDiv.className = 'calendar-day-number';
+            numberDiv.textContent = dayNumber;
+            dayDiv.appendChild(numberDiv);
+            
+            if (hasWork && workData) {
+                const indicator = document.createElement('div');
+                indicator.className = 'work-indicator';
+                dayDiv.appendChild(indicator);
+                
+                const hoursDiv = document.createElement('div');
+                hoursDiv.className = 'work-hours';
+                hoursDiv.textContent = `${workData.totalHours}h`;
+                dayDiv.appendChild(hoursDiv);
+                
+                dayDiv.addEventListener('click', () => {
+                    showDayDetails(dayNumber, workData);
+                });
+                
+                dayDiv.style.cursor = 'pointer';
+            }
+            
+            return dayDiv;
+        }
+
+        function showDayDetails(day, workData) {
+            const popup = document.getElementById('dayDetailsPopup');
+            const title = document.getElementById('popupTitle');
+            const content = document.getElementById('popupContent');
+            
+            const monthNames = [
+                'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+            ];
+            
+            title.textContent = `${day} ${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+            
+            let html = '';
+            
+            workData.entries.forEach((entry, index) => {
+                html += `
+                    <div class="work-entry">
+                        <div class="work-entry-header">
+                            <div class="work-cantiere">${entry.cantiere}</div>
+                            <div class="work-hours-large">${entry.ore}h</div>
+                        </div>
+                        ${entry.note ? `<div class="work-note">"${entry.note}"</div>` : ''}
+                    </div>
+                `;
+            });
+            
+            html += `
+                <div class="total-hours">
+                    <div class="total-hours-label">Totale giornaliero</div>
+                    <div class="total-hours-value">${workData.totalHours}h</div>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+            popup.classList.add('show');
+        }
+
+        function closeDayDetails() {
+            document.getElementById('dayDetailsPopup').classList.remove('show');
+        }
+
+        // FUNZIONI ESISTENTI
         function setupScrollEffect() {
             const header = document.querySelector('.header');
             let ticking = false;
@@ -975,30 +1507,11 @@
             }
         }
 
-        // Auto-refresh stats ogni 5 minuti
         setInterval(() => {
             if (Utils.isLoggedIn()) {
                 refreshUserStats();
             }
         }, 5 * 60 * 1000);
-
-        // Footer navigation handlers
-        document.querySelectorAll('.footer-item').forEach(item => {
-            item.addEventListener('click', function() {
-                document.querySelectorAll('.footer-item').forEach(footerItem => {
-                    footerItem.classList.remove('active');
-                });
-                
-                this.classList.add('active');
-                
-                const label = this.querySelector('.footer-label').textContent;
-                if (label === 'Calendario') {
-                    Utils.showNotification('Calendario in sviluppo', 'warning');
-                } else if (label === 'Report') {
-                    Utils.showNotification('Report in sviluppo', 'warning');
-                }
-            });
-        });
     </script>
 </body>
 </html>
