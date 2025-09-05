@@ -995,10 +995,21 @@
         if (typeof Utils === 'undefined') {
             console.error('ERRORE: config.js non caricato correttamente');
             document.body.innerHTML = '<div style="text-align: center; padding: 50px; color: red;"><h1>Errore di configurazione</h1><p>Il file config.js non è stato caricato correttamente.</p><p>Verifica che il file sia presente e accessibile.</p></div>';
+            return;
+        }
+
+        // Verifica che PageGuard sia disponibile
+        if (typeof PageGuard === 'undefined') {
+            console.error('ERRORE: PageGuard non disponibile');
+            alert('Errore di configurazione. Ricarica la pagina.');
+            return;
         }
 
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('Dashboard con Calendario V3.5 avviata');
+            
+            // Aggiungi un piccolo delay per assicurarsi che tutto sia caricato
+            await new Promise(resolve => setTimeout(resolve, 100));
             
             // Verifica login
             if (!PageGuard.requireLogin()) {
@@ -1008,6 +1019,12 @@
             Utils.setupAutoLogout();
             
             const session = Utils.getSession();
+            if (!session || !session.user || !session.token) {
+                console.error('Sessione non valida');
+                Utils.redirectToLogin();
+                return;
+            }
+            
             currentUser = session.user;
             sessionToken = session.token;
             
