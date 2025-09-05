@@ -1159,13 +1159,27 @@
 
         function showCalendarLoading(show) {
             const loading = document.getElementById('calendarLoading');
+            
             if (show) {
-                loading.style.display = 'block';
-                document.querySelectorAll('.calendar-day').forEach(day => {
-                    day.style.display = 'none';
-                });
+                // Mostra loading solo se l'elemento esiste
+                if (loading) {
+                    loading.style.display = 'block';
+                }
+                
+                // Nascondi i giorni del calendario solo se esistono
+                const calendarDays = document.querySelectorAll('.calendar-day');
+                if (calendarDays && calendarDays.length > 0) {
+                    calendarDays.forEach(day => {
+                        if (day && day.style) {
+                            day.style.display = 'none';
+                        }
+                    });
+                }
             } else {
-                loading.style.display = 'none';
+                // Nascondi loading solo se l'elemento esiste
+                if (loading) {
+                    loading.style.display = 'none';
+                }
             }
         }
 
