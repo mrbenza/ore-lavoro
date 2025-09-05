@@ -995,14 +995,14 @@
         if (typeof Utils === 'undefined') {
             console.error('ERRORE: config.js non caricato correttamente');
             document.body.innerHTML = '<div style="text-align: center; padding: 50px; color: red;"><h1>Errore di configurazione</h1><p>Il file config.js non è stato caricato correttamente.</p><p>Verifica che il file sia presente e accessibile.</p></div>';
-            return;
+            // Rimuovo il return che causava l'errore
         }
 
         // Verifica che PageGuard sia disponibile
         if (typeof PageGuard === 'undefined') {
             console.error('ERRORE: PageGuard non disponibile');
             alert('Errore di configurazione. Ricarica la pagina.');
-            return;
+            // Rimuovo il return che causava l'errore
         }
 
         document.addEventListener('DOMContentLoaded', async function() {
@@ -1087,48 +1087,15 @@
         }
 
         // CALENDARIO
-        // CALENDARIO
         function setupCalendar() {
-            document.getElementById('prevMonth').addEventListener('click', function() {
-            console.log('=== PREV MONTH CLICKED ===');
-            console.log('currentDate prima:', currentDate.toDateString());
-        
-            // Metodo più sicuro per cambiare mese
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-        
-            // Crea nuova data per il mese precedente
-            if (month === 0) {
-                // Da gennaio dell'anno corrente a dicembre dell'anno precedente
-                currentDate = new Date(year - 1, 11, 1);
-            } else {
-                // Mese precedente stesso anno
-                currentDate = new Date(year, month - 1, 1);
-            }
-        
-            console.log('currentDate dopo:', currentDate.toDateString());
-            loadCalendarData();
-        });
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                loadCalendarData();
+            });
 
-        document.getElementById('nextMonth').addEventListener('click', function() {
-            console.log('=== NEXT MONTH CLICKED ===');
-            console.log('currentDate prima:', currentDate.toDateString());
-        
-            // Metodo più sicuro per cambiare mese
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-        
-            // Crea nuova data per il mese successivo
-            if (month === 11) {
-                // Da dicembre dell'anno corrente a gennaio dell'anno successivo
-                currentDate = new Date(year + 1, 0, 1);
-            } else {
-                // Mese successivo stesso anno
-                currentDate = new Date(year, month + 1, 1);
-            }
-        
-            console.log('currentDate dopo:', currentDate.toDateString());
-            loadCalendarData();
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                loadCalendarData();
             });
 
             document.getElementById('popupClose').addEventListener('click', closeDayDetails);
@@ -1140,55 +1107,55 @@
         }
 
         async function loadCalendarData() {
-            const year = currentDate.getFullYear();        
+            const year = currentDate.getFullYear();
             const month = currentDate.getMonth() + 1;
-    
+            
             console.log('=== LOADCALENDARDATA DEBUG ===');
             console.log('currentDate object:', currentDate);
             console.log('year estratto:', year);
             console.log('month estratto:', month);
             console.log('sessionToken:', sessionToken);
-    
+            
             const monthNames = [
                 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
                 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
             ];
             document.getElementById('calendarTitle').textContent = monthNames[month - 1] + ' ' + year;
-    
+            
             showCalendarLoading(true);
-    
+            
             try {
                 // Costruisci parametri espliciti
                 const requestParams = {
-                action: 'getMonthlyWorkData',
-                sessionToken: sessionToken,
-                year: year,
-                month: month
-            };
-        
-            console.log('Parametri richiesta:', requestParams);
-        
-            const result = await callGoogleAppsScript(requestParams);
-        
-            console.log('Risultato API completo:', result);
-        
-            if (result.success) {
-                calendarData = result.data.workDays || {};
-                console.log('Dati calendario estratti:', calendarData);
-                console.log('Anno/mese ricevuti dal server:', result.data.year, '/', result.data.month);
+                    action: 'getMonthlyWorkData',
+                    sessionToken: sessionToken,
+                    year: year,
+                    month: month
+                };
+                
+                console.log('Parametri richiesta:', requestParams);
+                
+                const result = await callGoogleAppsScript(requestParams);
+                
+                console.log('Risultato API completo:', result);
+                
+                if (result.success) {
+                    calendarData = result.data.workDays || {};
+                    console.log('Dati calendario estratti:', calendarData);
+                    console.log('Anno/mese ricevuti dal server:', result.data.year, '/', result.data.month);
+                    renderCalendar(year, month);
+                } else {
+                    throw new Error(result.message || 'Errore caricamento calendario');
+                }
+                
+            } catch (error) {
+                console.error('Errore caricamento calendario:', error);
+                Utils.showNotification('Errore nel caricamento calendario', 'error');
                 renderCalendar(year, month);
-            } else {
-                throw new Error(result.message || 'Errore caricamento calendario');
             }
-        
-        } catch (error) {
-            console.error('Errore caricamento calendario:', error);
-            Utils.showNotification('Errore nel caricamento calendario', 'error');
-            renderCalendar(year, month);
+            
+            showCalendarLoading(false);
         }
-    
-        showCalendarLoading(false);
-    }
 
         function showCalendarLoading(show) {
             const loading = document.getElementById('calendarLoading');
