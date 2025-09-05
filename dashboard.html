@@ -991,9 +991,16 @@
         let currentDate = new Date();
         let calendarData = {};
 
+        // Verifica che Utils sia disponibile
+        if (typeof Utils === 'undefined') {
+            console.error('ERRORE: config.js non caricato correttamente');
+            document.body.innerHTML = '<div style="text-align: center; padding: 50px; color: red;"><h1>Errore di configurazione</h1><p>Il file config.js non è stato caricato correttamente.</p><p>Verifica che il file sia presente e accessibile.</p></div>';
+        }
+
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('Dashboard con Calendario V3.5 avviata');
             
+            // Verifica login
             if (!PageGuard.requireLogin()) {
                 return;
             }
@@ -1097,6 +1104,7 @@
             showCalendarLoading(true);
             
             try {
+                // ✅ CORREZIONE: Parametri definiti correttamente
                 const result = await callGoogleAppsScript({
                     action: 'getMonthlyWorkData',
                     sessionToken: sessionToken,
@@ -1136,6 +1144,7 @@
         function renderCalendar(year, month) {
             const grid = document.getElementById('calendarGrid');
             
+            // Rimuovi solo i giorni esistenti, mantieni i headers
             const existingDays = grid.querySelectorAll('.calendar-day, .calendar-loading');
             existingDays.forEach(day => day.remove());
             
@@ -1145,6 +1154,7 @@
             const startDay = firstDay.getDay();
             const mondayStart = startDay === 0 ? 6 : startDay - 1;
             
+            // Giorni del mese precedente
             const prevMonth = new Date(year, month - 2, 0);
             const daysInPrevMonth = prevMonth.getDate();
             
@@ -1154,6 +1164,7 @@
                 grid.appendChild(dayElement);
             }
             
+            // Giorni del mese corrente
             const today = new Date();
             for (let day = 1; day <= daysInMonth; day++) {
                 const isToday = year === today.getFullYear() && 
@@ -1165,7 +1176,8 @@
                 grid.appendChild(dayElement);
             }
             
-            const totalCells = grid.children.length - 7;
+            // Giorni del mese successivo
+            const totalCells = grid.children.length - 7; // Sottrai gli headers
             const remainingCells = 42 - totalCells;
             
             for (let day = 1; day <= remainingCells; day++) {
@@ -1507,6 +1519,7 @@
             }
         }
 
+        // Auto-refresh ogni 5 minuti
         setInterval(() => {
             if (Utils.isLoggedIn()) {
                 refreshUserStats();
