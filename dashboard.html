@@ -1249,6 +1249,10 @@
             
             showCalendarLoading(true);
             
+            // Delay minimo per assicurare che il loading sia visibile
+            const startTime = Date.now();
+            const minLoadingTime = 800; // 800ms minimo
+            
             try {
                 const result = await Utils.callAPI({
                     action: 'getMonthlyWorkData',
@@ -1256,6 +1260,15 @@
                     year: year,
                     month: month
                 });
+                
+                // Calcola il tempo trascorso
+                const elapsedTime = Date.now() - startTime;
+                const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+                
+                // Aspetta il tempo rimanente se necessario
+                if (remainingTime > 0) {
+                    await new Promise(resolve => setTimeout(resolve, remainingTime));
+                }
                 
                 if (result.success) {
                     calendarData = result.data.workDays || {};
