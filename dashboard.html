@@ -1249,26 +1249,17 @@
             
             showCalendarLoading(true);
             
-            // Delay minimo per assicurare che il loading sia visibile
-            const startTime = Date.now();
-            const minLoadingTime = 800; // 800ms minimo
-            
             try {
-                const result = await Utils.callAPI({
-                    action: 'getMonthlyWorkData',
-                    sessionToken: sessionToken,
-                    year: year,
-                    month: month
-                });
-                
-                // Calcola il tempo trascorso
-                const elapsedTime = Date.now() - startTime;
-                const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
-                
-                // Aspetta il tempo rimanente se necessario
-                if (remainingTime > 0) {
-                    await new Promise(resolve => setTimeout(resolve, remainingTime));
-                }
+                // Aggiungo un delay minimo di 400ms per rendere visibile il loading
+                const [result] = await Promise.all([
+                    Utils.callAPI({
+                        action: 'getMonthlyWorkData',
+                        sessionToken: sessionToken,
+                        year: year,
+                        month: month
+                    }),
+                    new Promise(resolve => setTimeout(resolve, 400))
+                ]);
                 
                 if (result.success) {
                     calendarData = result.data.workDays || {};
@@ -1310,6 +1301,11 @@
                 const nextBtn = document.getElementById('nextMonth');
                 if (prevBtn) prevBtn.disabled = false;
                 if (nextBtn) nextBtn.disabled = false;
+                
+                const calendarDays = elements.calendarGrid.querySelectorAll('.calendar-day');
+                calendarDays.forEach(day => {
+                    day.style.display = 'flex';
+                });
             }
         }
 
@@ -1317,7 +1313,7 @@
         function renderCalendar(year, month) {
             if (!elements.calendarGrid) return;
             
-            const existingDays = elements.calendarGrid.querySelectorAll('.calendar-day, .calendar-loading');
+            const existingDays = elements.calendarGrid.querySelectorAll('.calendar-day');
             existingDays.forEach(day => day.remove());
             
             const firstDay = new Date(year, month - 1, 1);
@@ -1350,7 +1346,7 @@
             
             // Giorni mese successivo
             const totalCells = fragment.children.length;
-            const remainingCells = 42 - totalCells;
+            const remainingCells = Math.max(0, 42 - totalCells);
             
             for (let day = 1; day <= remainingCells; day++) {
                 fragment.appendChild(createDayElement(day, true, false));
