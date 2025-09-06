@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema Gestione Ore V3.5</title>
+    <title>Login - Sistema Gestione Ore V3.6</title>
     <style>
         * {
             margin: 0;
@@ -25,11 +25,51 @@
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             padding: 40px;
             width: 100%;
             max-width: 400px;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                margin: 0;
+                padding: 30px 20px;
+                border-radius: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+        }
+
+        .version-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .fast-indicator {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
         }
 
         .logo-section {
@@ -49,12 +89,16 @@
             font-size: 28px;
             color: white;
             font-weight: bold;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
         }
 
         h1 {
-            color: #333;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             font-size: 28px;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 8px;
         }
 
@@ -62,82 +106,7 @@
             color: #666;
             font-size: 16px;
             margin-bottom: 30px;
-        }
-
-        /* ❌ CSS BOX STATUS COMMENTATO PER PERFORMANCE
-        .system-status {
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .system-status h3 {
-            color: #667eea;
-            font-size: 14px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .status-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 8px 0;
-            font-size: 12px;
-        }
-
-        .status-label {
-            color: #666;
-            font-weight: 500;
-        }
-
-        .status-value {
-            color: #333;
-            font-weight: 600;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-
-        .status-online { background-color: #28a745; }
-        .status-offline { background-color: #dc3545; }
-        .status-loading { 
-            background-color: #ffc107; 
-            animation: pulse 1s infinite; 
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .build-info {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(102, 126, 234, 0.2);
-            font-size: 11px;
-            color: #888;
-        }
-        FINE CSS BOX STATUS COMMENTATO */
-
-        .version-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(102, 126, 234, 0.9);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
+            font-weight: 400;
         }
 
         .form-group {
@@ -170,9 +139,20 @@
             transform: translateY(-2px);
         }
 
+        @media (max-width: 768px) {
+            input:focus {
+                transform: none;
+            }
+        }
+
+        input.error {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+        }
+
         .login-btn {
             width: 100%;
-            padding: 15px;
+            padding: 18px;
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
@@ -195,16 +175,26 @@
         }
 
         .login-btn:disabled {
-            opacity: 0.7;
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+        }
+
+        @media (max-width: 768px) {
+            .login-btn:hover {
+                transform: none;
+            }
+            
+            .login-btn:active {
+                transform: scale(0.98);
+            }
         }
 
         .error-message {
             background: rgba(220, 53, 69, 0.1);
             color: #dc3545;
             padding: 12px 16px;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 20px;
             border-left: 4px solid #dc3545;
             display: none;
@@ -215,7 +205,7 @@
             background: rgba(40, 167, 69, 0.1);
             color: #28a745;
             padding: 12px 16px;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 20px;
             border-left: 4px solid #28a745;
             display: none;
@@ -225,7 +215,7 @@
             background: rgba(102, 126, 234, 0.1);
             color: #667eea;
             padding: 12px 16px;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 20px;
             border-left: 4px solid #667eea;
             display: none;
@@ -261,14 +251,6 @@
             font-size: 14px;
         }
 
-        .footer .hash-info {
-            margin-top: 10px;
-            font-size: 12px;
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        /* Notifiche V3.5 */
         .notification {
             position: fixed;
             top: 20px;
@@ -277,10 +259,10 @@
             border-radius: 10px;
             color: white;
             font-weight: 600;
-            z-index: 1000;
+            z-index: 10000;
             transform: translateX(400px);
             transition: all 0.3s ease;
-            max-width: 300px;
+            max-width: 350px;
         }
 
         .notification.show {
@@ -304,58 +286,32 @@
             background: linear-gradient(135deg, #667eea, #764ba2);
         }
 
-        /* ⚡ FAST LOGIN INDICATOR */
-        .fast-indicator {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            background: #28a745;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 8px;
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
+        @media (max-width: 768px) {
+            .notification {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                max-width: none;
+                transform: translateY(-100px);
+                border-radius: 8px;
+                padding: 12px 20px;
+            }
+            
+            .notification.show {
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="version-badge" id="versionBadge">v3.5 Fast ⚡</div>
-    <div class="fast-indicator">⚡ Fast Mode</div>
+    <div class="fast-indicator">v3.6 Fast Mode</div>
     
     <div class="login-container">
         <div class="logo-section">
-            <div class="logo">🔐</div>
-            <h1>Ore Lavoro</h1>
-            <p class="subtitle">Gestione Ore lavorate</p>
+            <div class="logo">⏱️</div>
+            <h1>Gestione Ore</h1>
+            <p class="subtitle">Sistema di gestione ore lavorate</p>
         </div>
-
-        <!-- ❌ BOX STATUS COMMENTATO PER PERFORMANCE
-        <div class="system-status">
-            <h3>🚀 Stato Sistema</h3>
-            <div class="status-row">
-                <span class="status-label">Connessione:</span>
-                <span class="status-value">
-                    <span class="status-indicator status-loading" id="connectionIndicator"></span>
-                    <span id="connectionStatus">Verificando...</span>
-                </span>
-            </div>
-            <div class="status-row">
-                <span class="status-label">Endpoint:</span>
-                <span class="status-value" id="endpointVersion">Verificando...</span>
-            </div>
-            <div class="status-row">
-                <span class="status-label">Sicurezza:</span>
-                <span class="status-value" id="securityStatus">Verificando...</span>
-            </div>
-            <div class="build-info">
-                <div class="status-row">
-                    <span class="status-label">Build:</span>
-                    <span class="status-value" id="buildInfo">--</span>
-                </div>
-            </div>
-        </div>
-        FINE BOX STATUS COMMENTATO -->
 
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
@@ -378,69 +334,31 @@
         </form>
 
         <div class="footer">
-            <p>&copy; 2025 Sistema Gestione Ore V3.5</p>
+            <p>&copy; 2025 Sistema Gestione Ore V3.6</p>
         </div>
     </div>
 
+    <div id="notification" class="notification"></div>
+
     <script src="config.js"></script>
     <script>
-        // ❌ FUNZIONI BOX STATUS COMMENTATE PER PERFORMANCE
-        /*
-        async function testConnection() {
-            const statusElement = document.getElementById('connectionStatus');
-            const indicatorElement = document.getElementById('connectionIndicator');
-            const endpointElement = document.getElementById('endpointVersion');
-            const buildElement = document.getElementById('buildInfo');
-            const versionBadge = document.getElementById('versionBadge');
-            
-            statusElement.textContent = 'Verificando...';
-            indicatorElement.className = 'status-indicator status-loading';
-            
-            try {
-                const result = await Utils.callAPI({ action: 'ping' });
-                
-                if (result && result.success) {
-                    statusElement.textContent = '✅ Connesso';
-                    indicatorElement.className = 'status-indicator status-online';
-                    
-                    const version = result.version || 'N/A';
-                    const build = result.build || 'N/A';
-                    
-                    endpointElement.textContent = `v${version}`;
-                    buildElement.textContent = build;
-                    versionBadge.textContent = `v${version}`;
-                    
-                    console.log('✅ Sistema V3.5 connesso:', {
-                        version: version,
-                        build: build,
-                        features: result.features || []
-                    });
-                    
-                    if (result.features && result.features.includes('Hash Password SHA-256')) {
-                        document.getElementById('securityStatus').innerHTML = '🔐 ✅';
-                    }
-                    
-                    return true;
-                } else {
-                    throw new Error('Risposta non valida dal server');
-                }
-            } catch (error) {
-                console.error('❌ Test connessione fallito:', error);
-                statusElement.textContent = '❌ Errore';
-                indicatorElement.className = 'status-indicator status-offline';
-                endpointElement.textContent = 'Non disponibile';
-                buildElement.textContent = 'Errore';
-                versionBadge.textContent = 'Offline';
-                document.getElementById('securityStatus').innerHTML = '❌ Non disponibile';
-                return false;
-            }
-        }
-        */
-        // FINE FUNZIONI COMMENTATE
+        'use strict';
 
-        // ⚡ AUTENTICAZIONE VELOCE V3.5
+        // Cache elementi DOM
+        const elements = {
+            form: document.getElementById('loginForm'),
+            userId: document.getElementById('userId'),
+            password: document.getElementById('password'),
+            loginBtn: document.getElementById('loginBtn'),
+            errorMessage: document.getElementById('errorMessage'),
+            successMessage: document.getElementById('successMessage'),
+            securityMessage: document.getElementById('securityMessage'),
+            notification: document.getElementById('notification')
+        };
+
+        // Autenticazione veloce V3.6
         async function authenticateUser(userId, password) {
-            console.log('⚡ Autenticazione veloce V3.5:', userId);
+            console.log('Autenticazione veloce V3.6:', userId);
             
             try {
                 const result = await Utils.callAPI({
@@ -449,30 +367,24 @@
                     password: password
                 });
                 
-                console.log('⚡ Risultato autenticazione V3.5:', result.success ? 'SUCCESS' : 'FAILED');
+                console.log('Risultato autenticazione V3.6:', result.success ? 'SUCCESS' : 'FAILED');
                 return result;
                 
             } catch (error) {
-                console.error('❌ Errore autenticazione:', error);
+                console.error('Errore autenticazione:', error);
                 throw new Error('Errore di autenticazione: ' + error.message);
             }
         }
 
-        // ⚡ EVENT LISTENER OTTIMIZZATO
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        // Event listener ottimizzato
+        elements.form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const userId = document.getElementById('userId').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const loginBtn = document.getElementById('loginBtn');
-            const errorMessage = document.getElementById('errorMessage');
-            const successMessage = document.getElementById('successMessage');
-            const securityMessage = document.getElementById('securityMessage');
+            const userId = elements.userId.value.trim();
+            const password = elements.password.value.trim();
 
             // Reset messaggi
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-            securityMessage.style.display = 'none';
+            hideAllMessages();
 
             if (!userId || !password) {
                 showError('Per favore inserisci Username e Password');
@@ -480,103 +392,126 @@
             }
 
             // Validazione password
-            if (!Utils.validatePassword(password)) {
-                showError(`Password deve essere almeno ${CONFIG.VALIDATION.MIN_PASSWORD_LENGTH} caratteri`);
+            if (typeof Utils !== 'undefined' && Utils.validatePassword && !Utils.validatePassword(password)) {
+                showError(`Password deve essere almeno ${CONFIG?.VALIDATION?.MIN_PASSWORD_LENGTH || 6} caratteri`);
                 return;
             }
 
-            // ⚡ LOADING STATE VELOCE
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<span class="loading"></span>Accesso...';
+            // Loading state veloce
+            elements.loginBtn.disabled = true;
+            elements.loginBtn.innerHTML = '<span class="loading"></span>Accesso...';
 
             try {
                 const user = await authenticateUser(userId, password);
                 
                 if (user && user.success) {
-                    // ⚡ SUCCESS VELOCE
+                    // Success veloce
                     showSuccess(`Benvenuto ${user.data.name}!`);
+                    showSecurityInfo(user.authMethod || 'hash');
                     
-                    console.log('⚡ Login successful');
+                    console.log('Login successful');
                     
                     // Salva sessione
-                    Utils.setSession(user.data, user.sessionToken);
+                    if (typeof Utils !== 'undefined' && Utils.setSession) {
+                        Utils.setSession(user.data, user.sessionToken);
+                    }
                     
-                    // ⚡ REDIRECT IMMEDIATO
-                    console.log('⚡ Redirect alla dashboard...');
-                    window.location.href = CONFIG.PAGES.DASHBOARD;
+                    // Redirect immediato
+                    console.log('Redirect alla dashboard...');
+                    setTimeout(() => {
+                        window.location.href = CONFIG?.PAGES?.DASHBOARD || 'dashboard.html';
+                    }, 1500);
                    
                 } else {
                     showError(user.message || 'Credenziali non valide');
                 }
             } catch (error) {
                 showError('Errore durante l\'autenticazione: ' + error.message);
-                console.error('❌ Login error:', error);
+                console.error('Login error:', error);
             } finally {
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = 'Accedi';
+                elements.loginBtn.disabled = false;
+                elements.loginBtn.innerHTML = 'Accedi';
             }
         });
 
+        function hideAllMessages() {
+            elements.errorMessage.style.display = 'none';
+            elements.successMessage.style.display = 'none';
+            elements.securityMessage.style.display = 'none';
+        }
+
         function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
+            elements.errorMessage.textContent = message;
+            elements.errorMessage.style.display = 'block';
+            showNotification(message, 'error');
         }
 
         function showSuccess(message) {
-            const successDiv = document.getElementById('successMessage');
-            successDiv.textContent = message;
-            successDiv.style.display = 'block';
+            elements.successMessage.textContent = message;
+            elements.successMessage.style.display = 'block';
+            showNotification(message, 'success');
         }
 
         function showSecurityInfo(authMethod) {
-            const securityDiv = document.getElementById('securityMessage');
             let message = '';
             
             switch(authMethod) {
                 case 'hash':
-                    message = '🔐 Autenticato!';
+                    message = 'Autenticato con sicurezza avanzata';
                     break;
                 case 'plain_migrated':
-                    message = '🔄 Password migrata automaticamente in hash sicuro!';
+                    message = 'Password migrata automaticamente in hash sicuro!';
                     break;
                 case 'plain_fallback':
-                    message = '⚠️ Login in modalità compatibilità';
+                    message = 'Login in modalità compatibilità';
                     break;
                 default:
-                    message = '🔐 Autenticazione completata';
+                    message = 'Autenticazione completata';
             }
             
-            securityDiv.textContent = message;
-            securityDiv.style.display = 'block';
+            elements.securityMessage.textContent = message;
+            elements.securityMessage.style.display = 'block';
         }
 
-        // ⚡ SETUP VELOCE AL CARICAMENTO
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('⚡ Sistema Login V3.5 avviato');
+        function showNotification(message, type = 'info', duration = 5000) {
+            if (!elements.notification) return;
+
+            elements.notification.textContent = message;
+            elements.notification.className = `notification ${type}`;
+            elements.notification.classList.add('show');
+
+            setTimeout(() => {
+                elements.notification.classList.remove('show');
+            }, duration);
+        }
+
+        // Setup veloce al caricamento
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Sistema Login V2.2 avviato');
             
             // Se già loggato, redirect immediato
-            if (PageGuard.redirectIfLoggedIn()) {
+            if (typeof PageGuard !== 'undefined' && PageGuard.redirectIfLoggedIn && PageGuard.redirectIfLoggedIn()) {
                 return;
             }
             
-            // ✅ CONNECTION TEST DISABILITATO PER PERFORMANCE
-            console.log('⚡ Connection test disabilitato - modalità veloce attiva');
-            console.log('⚡ Form login pronto per l\'uso');
+            console.log('Form login pronto per l\'uso');
             
             // Focus automatico sul campo username
-            document.getElementById('userId').focus();
+            elements.userId.focus();
         });
 
-        // ⚡ ENTER KEY OPTIMIZATION
+        // Enter key optimization
         document.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                const loginForm = document.getElementById('loginForm');
-                if (loginForm) {
-                    e.preventDefault();
-                    loginForm.dispatchEvent(new Event('submit'));
-                }
+                e.preventDefault();
+                elements.form.dispatchEvent(new Event('submit'));
             }
+        });
+
+        // Gestione errori globali
+        window.addEventListener('error', function(e) {
+            console.error('Errore globale:', e.error);
+            showNotification('Si è verificato un errore imprevisto', 'error');
         });
     </script>
 </body>
