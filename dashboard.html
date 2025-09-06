@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Gestione Ore Lavoro V3.5</title>
+    <title>Dashboard - Gestione Ore Lavoro V3.6</title>
     <style>
         * {
             margin: 0;
@@ -40,7 +40,6 @@
             }
         }
 
-        /* HEADER COMPATTO E CENTRATO */
         .header {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -212,7 +211,6 @@
             }
         }
 
-        /* CONTENUTO PRINCIPALE */
         .main-content {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -234,7 +232,6 @@
             }
         }
 
-        /* SISTEMA PAGINE */
         .page {
             display: none;
         }
@@ -243,7 +240,6 @@
             display: block;
         }
 
-        /* PAGINA INSERISCI ORE */
         .work-entry-form {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -434,7 +430,6 @@
             }
         }
 
-        /* CALENDARIO */
         .calendar-container {
             max-width: 100%;
             margin: 0 auto;
@@ -462,9 +457,16 @@
             transition: all 0.3s ease;
         }
 
-        .calendar-nav-btn:hover {
+        .calendar-nav-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .calendar-nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .calendar-title {
@@ -543,7 +545,6 @@
             font-weight: 600;
         }
 
-        /* POPUP MODIFICATO */
         .day-details-popup {
             display: none;
             position: fixed;
@@ -574,7 +575,6 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
-        /* Aggiorna il popup header per includere le ore totali */
         .popup-header {
             display: flex;
             flex-direction: column;
@@ -603,12 +603,10 @@
             margin-top: 5px;
         }
 
-        /* Rimuovi il pulsante X */
         .popup-close {
             display: none;
         }
 
-        /* Nuovo stile per il pulsante OK */
         .popup-ok-button {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
@@ -636,7 +634,6 @@
             box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
         }
 
-        /* Responsive per mobile */
         @media (max-width: 768px) {
             .popup-total-hours {
                 font-size: 20px;
@@ -649,26 +646,8 @@
             }
         }
 
-        /* Rimuovi il vecchio stile delle ore totali dal contenuto */
         .total-hours {
             display: none;
-        }
-
-        .close-hint {
-            text-align: center;
-            color: #999;
-            font-size: 12px;
-            margin-top: 15px;
-            padding: 8px;
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: 8px;
-            border: 1px dashed rgba(102, 126, 234, 0.2);
-        }
-
-        .work-entry:hover {
-            background: rgba(102, 126, 234, 0.1);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .work-entry {
@@ -677,6 +656,13 @@
             padding: 15px;
             margin-bottom: 15px;
             border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .work-entry:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .work-entry:last-child {
@@ -707,7 +693,6 @@
             margin-top: 8px;
         }
 
-        /* FOOTER */
         .bottom-footer {
             position: fixed;
             bottom: 0;
@@ -764,7 +749,6 @@
             font-weight: 500;
         }
 
-        /* UTILITIES */
         .notification {
             position: fixed;
             top: 20px;
@@ -861,7 +845,6 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Header compatto e centrato -->
         <div class="header">
             <div class="header-content">
                 <div class="user-info">
@@ -885,12 +868,9 @@
             </div>
         </div>
 
-        <!-- Contenuto principale multi-page -->
         <div class="main-content">
-            <!-- PAGINA INSERISCI ORE -->
             <div id="insertPage" class="page active">
                 <form id="workEntryForm" class="work-entry-form">
-                    <!-- Sezione Data -->
                     <div class="form-section">
                         <div class="section-title">
                             <span class="icon">📅</span>
@@ -903,7 +883,6 @@
                         </div>
                     </div>
 
-                    <!-- Sezione Cantiere -->
                     <div class="form-section">
                         <div class="section-title">
                             <span class="icon">🏗️</span>
@@ -918,7 +897,6 @@
                         </div>
                     </div>
 
-                    <!-- Sezione Ore -->
                     <div class="form-section hours-section">
                         <div class="section-title">
                             <span class="icon">⏰</span>
@@ -933,7 +911,6 @@
                         </div>
                     </div>
 
-                    <!-- Sezione Note -->
                     <div class="form-section">
                         <div class="section-title">
                             <span class="icon">📝</span>
@@ -946,7 +923,6 @@
                     </div>
                 </form>
 
-                <!-- Sezione Salvataggio -->
                 <div class="save-section">
                     <button type="submit" class="save-btn" id="saveBtn" form="workEntryForm">
                         Salva Ore
@@ -957,19 +933,15 @@
                 </div>
             </div>
 
-            <!-- PAGINA CALENDARIO -->
             <div id="calendarPage" class="page">
                 <div class="calendar-container">
-                    <!-- Header calendario -->
                     <div class="calendar-header">
                         <button class="calendar-nav-btn" id="prevMonth">‹</button>
                         <div class="calendar-title" id="calendarTitle">Settembre 2025</div>
                         <button class="calendar-nav-btn" id="nextMonth">›</button>
                     </div>
 
-                    <!-- Griglia calendario -->
                     <div class="calendar-grid" id="calendarGrid">
-                        <!-- Headers giorni settimana -->
                         <div class="calendar-day-header">Lun</div>
                         <div class="calendar-day-header">Mar</div>
                         <div class="calendar-day-header">Mer</div>
@@ -978,7 +950,6 @@
                         <div class="calendar-day-header">Sab</div>
                         <div class="calendar-day-header">Dom</div>
                         
-                        <!-- Loading -->
                         <div class="calendar-loading" id="calendarLoading">
                             <div class="loading"></div>
                             Caricamento calendario...
@@ -987,7 +958,6 @@
                 </div>
             </div>
 
-            <!-- PAGINA REPORT -->
             <div id="reportPage" class="page">
                 <div style="text-align: center; padding: 40px;">
                     <h2>Report Dettagliati</h2>
@@ -997,7 +967,6 @@
         </div>
     </div>
 
-    <!-- Popup dettagli giorno -->
     <div class="day-details-popup" id="dayDetailsPopup">
         <div class="popup-content">
             <div class="popup-header">
@@ -1010,7 +979,6 @@
         </div>
     </div>
 
-    <!-- FOOTER FISSO -->
     <div class="bottom-footer">
         <div class="footer-item active">
             <div class="footer-icon">✏️</div>
@@ -1026,85 +994,171 @@
         </div>
     </div>
 
-    <!-- Notifiche -->
     <div id="notification" class="notification"></div>
 
     <script src="config.js"></script>
     <script>
+        'use strict';
+
+        // Variabili globali ottimizzate
         let currentUser = null;
         let sessionToken = null;
         let cantieri = [];
         let currentDate = new Date();
         let calendarData = {};
+        
+        // Cache DOM elements per performance
+        const elements = {};
+        
+        // Configurazione ottimizzata
+        const CONFIG = {
+            AUTO_REFRESH_INTERVAL: 300000, // 5 minuti
+            DEBOUNCE_SCROLL: 16, // ~60fps
+            API_TIMEOUT: 10000,
+            MAX_RETRIES: 3
+        };
 
-        // Verifica che Utils sia disponibile
-        if (typeof Utils === 'undefined') {
-            console.error('ERRORE: config.js non caricato correttamente');
-            document.body.innerHTML = '<div style="text-align: center; padding: 50px; color: red;"><h1>Errore di configurazione</h1><p>Il file config.js non è stato caricato correttamente.</p><p>Verifica che il file sia presente e accessibile.</p></div>';
-            // Rimuovo il return che causava l'errore
+        // Utility per debouncing ottimizzato
+        const debounce = (func, wait) => {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func.apply(this, args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        };
+
+        // Cache elementi DOM critici
+        function cacheElements() {
+            const elementIds = [
+                'userName', 'monthlyHours', 'previousMonthHours', 'workDate',
+                'cantiere', 'ore', 'note', 'saveBtn', 'calendarTitle', 
+                'calendarGrid', 'calendarLoading', 'dayDetailsPopup',
+                'popupTitle', 'popupContent', 'notification'
+            ];
+            
+            elementIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    elements[id] = element;
+                } else {
+                    console.warn(`Elemento ${id} non trovato`);
+                }
+            });
+            
+            elements.header = document.querySelector('.header');
+            elements.footerItems = document.querySelectorAll('.footer-item');
+            elements.pages = document.querySelectorAll('.page');
+            elements.form = document.getElementById('workEntryForm');
+            
+            // Verifica elementi critici
+            if (!elements.form || !elements.header) {
+                throw new Error('Elementi DOM critici mancanti');
+            }
         }
 
-        // Verifica che PageGuard sia disponibile
-        if (typeof PageGuard === 'undefined') {
-            console.error('ERRORE: PageGuard non disponibile');
-            alert('Errore di configurazione. Ricarica la pagina.');
-            // Rimuovo il return che causava l'errore
-        }
-
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('Dashboard con Calendario V3.5 avviata');
-            
-            // Aggiungi un piccolo delay per assicurarsi che tutto sia caricato
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Verifica login
-            if (!PageGuard.requireLogin()) {
-                return;
-            }
-            
-            Utils.setupAutoLogout();
-            
-            const session = Utils.getSession();
-            if (!session || !session.user || !session.token) {
-                console.error('Sessione non valida');
-                Utils.redirectToLogin();
-                return;
-            }
-            
-            currentUser = session.user;
-            sessionToken = session.token;
-            
-            loadUserData();
-            
-            document.getElementById('workDate').value = new Date().toISOString().split('T')[0];
-            
-            setupForm();
-            setupScrollEffect();
-            setupNavigation();
-            setupCalendar();
-            
+        // Verifica dipendenze ottimizzata
+        function checkDependencies() {
             try {
-                await Promise.all([
+                if (typeof Utils === 'undefined' || typeof PageGuard === 'undefined') {
+                    document.body.innerHTML = '<div style="text-align: center; padding: 50px; color: red;"><h1>Errore di configurazione</h1><p>Dipendenze mancanti. Ricarica la pagina.</p></div>';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                document.body.innerHTML = '<div style="text-align: center; padding: 50px; color: red;"><h1>Errore critico</h1><p>Impossibile verificare le dipendenze.</p></div>';
+                return false;
+            }
+        }
+
+        // Inizializzazione ottimizzata
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                if (!checkDependencies()) return;
+                
+                // Cache elementi DOM
+                cacheElements();
+                
+                // Verifica login
+                if (!PageGuard.requireLogin()) return;
+                
+                Utils.setupAutoLogout();
+                
+                const session = Utils.getSession();
+                if (!session?.user || !session?.token) {
+                    Utils.redirectToLogin();
+                    return;
+                }
+                
+                currentUser = session.user;
+                sessionToken = session.token;
+                
+                // Inizializzazione parallela
+                await Promise.allSettled([
+                    initializeApp(),
+                    loadAppData()
+                ]);
+            } catch (error) {
+                console.error('Errore inizializzazione:', error);
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification('Errore durante l\'inizializzazione', 'error');
+                }
+            }
+        });
+
+        async function initializeApp() {
+            try {
+                loadUserData();
+                if (elements.workDate) {
+                    elements.workDate.value = new Date().toISOString().split('T')[0];
+                }
+                setupForm();
+                setupScrollEffect();
+                setupNavigation();
+                setupCalendar();
+            } catch (error) {
+                console.error('Errore inizializzazione app:', error);
+                throw error;
+            }
+        }
+
+        async function loadAppData() {
+            try {
+                const results = await Promise.allSettled([
                     loadCantieri(),
                     refreshUserStats()
                 ]);
                 
-                Utils.showNotification('Dashboard caricata!', 'success', 2000);
+                // Controlla se ci sono stati errori critici
+                const failures = results.filter(result => result.status === 'rejected');
+                if (failures.length > 0) {
+                    console.warn('Alcuni dati non sono stati caricati:', failures);
+                }
                 
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification('Dashboard caricata!', 'success', 2000);
+                }
             } catch (error) {
-                console.error('Errore nel caricamento:', error);
-                Utils.showNotification('Errore nel caricamento dati', 'error');
+                console.error('Errore caricamento dati:', error);
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification('Errore nel caricamento dati', 'error');
+                }
             }
-        });
+        }
 
-        // NAVIGAZIONE TRA PAGINE
+        // Navigazione ottimizzata
         function setupNavigation() {
-            document.querySelectorAll('.footer-item').forEach(item => {
+            if (!elements.footerItems) return;
+            
+            elements.footerItems.forEach(item => {
                 item.addEventListener('click', function() {
                     const label = this.querySelector('.footer-label').textContent;
                     navigateToPage(label);
                     
-                    document.querySelectorAll('.footer-item').forEach(footerItem => {
+                    elements.footerItems.forEach(footerItem => {
                         footerItem.classList.remove('active');
                     });
                     this.classList.add('active');
@@ -1113,9 +1167,9 @@
         }
 
         function navigateToPage(pageName) {
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-            });
+            if (!elements.pages) return;
+            
+            elements.pages.forEach(page => page.classList.remove('active'));
 
             switch(pageName) {
                 case 'Inserisci':
@@ -1127,34 +1181,40 @@
                     break;
                 case 'Report':
                     document.getElementById('reportPage').classList.add('active');
-                    Utils.showNotification('Report in sviluppo', 'warning');
+                    if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                        Utils.showNotification('Report in sviluppo', 'warning');
+                    }
                     break;
             }
         }
 
-        // CALENDARIO MODIFICATO
+        // Calendario ottimizzato
         function setupCalendar() {
-            document.getElementById('prevMonth').addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() - 1);
-                loadCalendarData();
-            });
-
-            document.getElementById('nextMonth').addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() + 1);
-                loadCalendarData();
-            });
-
-            // Chiusura al click sullo sfondo
-            document.getElementById('dayDetailsPopup').addEventListener('click', function(e) {
-                // Chiudi solo se si clicca sullo sfondo, non sul contenuto
-                if (e.target === this) {
-                    closeDayDetails();
-                }
-            });
+            const prevBtn = document.getElementById('prevMonth');
+            const nextBtn = document.getElementById('nextMonth');
             
-            // Chiusura con tasto Escape
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    currentDate.setMonth(currentDate.getMonth() - 1);
+                    loadCalendarData();
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                    loadCalendarData();
+                });
+            }
+
+            if (elements.dayDetailsPopup) {
+                elements.dayDetailsPopup.addEventListener('click', function(e) {
+                    if (e.target === this) closeDayDetails();
+                });
+            }
+            
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && document.getElementById('dayDetailsPopup').classList.contains('show')) {
+                if (e.key === 'Escape' && elements.dayDetailsPopup && elements.dayDetailsPopup.classList.contains('show')) {
                     closeDayDetails();
                 }
             });
@@ -1164,84 +1224,61 @@
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth() + 1;
             
-            console.log('=== LOADCALENDARDATA DEBUG ===');
-            console.log('currentDate object:', currentDate);
-            console.log('year estratto:', year);
-            console.log('month estratto:', month);
-            console.log('sessionToken:', sessionToken);
-            
             const monthNames = [
                 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
                 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
             ];
-            document.getElementById('calendarTitle').textContent = monthNames[month - 1] + ' ' + year;
+            
+            if (elements.calendarTitle) {
+                elements.calendarTitle.textContent = `${monthNames[month - 1]} ${year}`;
+            }
             
             showCalendarLoading(true);
             
             try {
-                // Costruisci parametri espliciti
-                const requestParams = {
+                const result = await callGoogleAppsScript({
                     action: 'getMonthlyWorkData',
                     sessionToken: sessionToken,
                     year: year,
                     month: month
-                };
-                
-                console.log('Parametri richiesta:', requestParams);
-                
-                const result = await callGoogleAppsScript(requestParams);
-                
-                console.log('Risultato API completo:', result);
+                });
                 
                 if (result.success) {
                     calendarData = result.data.workDays || {};
-                    console.log('Dati calendario estratti:', calendarData);
-                    console.log('Anno/mese ricevuti dal server:', result.data.year, '/', result.data.month);
                     renderCalendar(year, month);
                 } else {
                     throw new Error(result.message || 'Errore caricamento calendario');
                 }
                 
             } catch (error) {
-                console.error('Errore caricamento calendario:', error);
-                Utils.showNotification('Errore nel caricamento calendario', 'error');
+                console.error('Errore calendario:', error);
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification('Errore nel caricamento calendario', 'error');
+                }
                 renderCalendar(year, month);
+            } finally {
+                showCalendarLoading(false);
             }
-            
-            showCalendarLoading(false);
         }
 
         function showCalendarLoading(show) {
-            const loading = document.getElementById('calendarLoading');
-            
-            if (show) {
-                // Mostra loading solo se l'elemento esiste
-                if (loading) {
-                    loading.style.display = 'block';
-                }
-                
-                // Nascondi i giorni del calendario solo se esistono
-                const calendarDays = document.querySelectorAll('.calendar-day');
-                if (calendarDays && calendarDays.length > 0) {
-                    calendarDays.forEach(day => {
-                        if (day && day.style) {
-                            day.style.display = 'none';
-                        }
-                    });
-                }
-            } else {
-                // Nascondi loading solo se l'elemento esiste
-                if (loading) {
-                    loading.style.display = 'none';
-                }
+            if (elements.calendarLoading) {
+                elements.calendarLoading.style.display = show ? 'block' : 'none';
             }
+            
+            if (!show || !elements.calendarGrid) return;
+            
+            const calendarDays = elements.calendarGrid.querySelectorAll('.calendar-day');
+            calendarDays.forEach(day => {
+                day.style.display = 'none';
+            });
         }
 
         function renderCalendar(year, month) {
-            const grid = document.getElementById('calendarGrid');
+            if (!elements.calendarGrid) return;
             
-            // Rimuovi solo i giorni esistenti, mantieni i headers
-            const existingDays = grid.querySelectorAll('.calendar-day, .calendar-loading');
+            // Rimuovi giorni esistenti
+            const existingDays = elements.calendarGrid.querySelectorAll('.calendar-day, .calendar-loading');
             existingDays.forEach(day => day.remove());
             
             const firstDay = new Date(year, month - 1, 1);
@@ -1250,51 +1287,47 @@
             const startDay = firstDay.getDay();
             const mondayStart = startDay === 0 ? 6 : startDay - 1;
             
-            // Giorni del mese precedente
+            // Fragment per performance
+            const fragment = document.createDocumentFragment();
+            
+            // Giorni mese precedente
             const prevMonth = new Date(year, month - 2, 0);
             const daysInPrevMonth = prevMonth.getDate();
             
             for (let i = mondayStart - 1; i >= 0; i--) {
                 const day = daysInPrevMonth - i;
-                const dayElement = createDayElement(day, true, false);
-                grid.appendChild(dayElement);
+                fragment.appendChild(createDayElement(day, true, false));
             }
             
-            // Giorni del mese corrente
+            // Giorni mese corrente
             const today = new Date();
             for (let day = 1; day <= daysInMonth; day++) {
                 const isToday = year === today.getFullYear() && 
                                month - 1 === today.getMonth() && 
                                day === today.getDate();
                 
-                const hasWork = calendarData[day] && calendarData[day].totalHours > 0;
-                const dayElement = createDayElement(day, false, isToday, hasWork, calendarData[day]);
-                grid.appendChild(dayElement);
+                const hasWork = calendarData[day]?.totalHours > 0;
+                fragment.appendChild(createDayElement(day, false, isToday, hasWork, calendarData[day]));
             }
             
-            // Giorni del mese successivo
-            const totalCells = grid.children.length - 7; // Sottrai gli headers
+            // Giorni mese successivo
+            const totalCells = fragment.children.length;
             const remainingCells = 42 - totalCells;
             
             for (let day = 1; day <= remainingCells; day++) {
-                const dayElement = createDayElement(day, true, false);
-                grid.appendChild(dayElement);
+                fragment.appendChild(createDayElement(day, true, false));
             }
+            
+            elements.calendarGrid.appendChild(fragment);
         }
 
         function createDayElement(dayNumber, isOtherMonth, isToday, hasWork = false, workData = null) {
             const dayDiv = document.createElement('div');
             dayDiv.className = 'calendar-day';
             
-            if (isOtherMonth) {
-                dayDiv.classList.add('other-month');
-            }
-            if (isToday) {
-                dayDiv.classList.add('today');
-            }
-            if (hasWork) {
-                dayDiv.classList.add('has-work');
-            }
+            if (isOtherMonth) dayDiv.classList.add('other-month');
+            if (isToday) dayDiv.classList.add('today');
+            if (hasWork) dayDiv.classList.add('has-work');
             
             const numberDiv = document.createElement('div');
             numberDiv.className = 'calendar-day-number';
@@ -1311,37 +1344,28 @@
                 hoursDiv.textContent = `${workData.totalHours}h`;
                 dayDiv.appendChild(hoursDiv);
                 
-                dayDiv.addEventListener('click', () => {
-                    showDayDetails(dayNumber, workData);
-                });
-                
+                dayDiv.addEventListener('click', () => showDayDetails(dayNumber, workData));
                 dayDiv.style.cursor = 'pointer';
             }
             
             return dayDiv;
         }
 
-        // FUNZIONE POPUP MODIFICATA
         function showDayDetails(day, workData) {
-            const popup = document.getElementById('dayDetailsPopup');
-            const title = document.getElementById('popupTitle');
-            const content = document.getElementById('popupContent');
+            if (!elements.popupTitle || !elements.popupContent || !elements.dayDetailsPopup) return;
             
             const monthNames = [
                 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
                 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
             ];
             
-            // Aggiorna il titolo con data e ore totali
-            title.innerHTML = `
+            elements.popupTitle.innerHTML = `
                 <div class="popup-title">${day} ${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}</div>
                 <div class="popup-total-hours">${workData.totalHours}h totali</div>
             `;
             
-            // Genera il contenuto delle voci di lavoro
             let html = '';
-            
-            workData.entries.forEach((entry, index) => {
+            workData.entries.forEach(entry => {
                 html += `
                     <div class="work-entry">
                         <div class="work-entry-header">
@@ -1353,61 +1377,43 @@
                 `;
             });
             
-            // Aggiungi il pulsante OK
-            html += `
-                <button class="popup-ok-button" onclick="closeDayDetails()">
-                    OK
-                </button>
-            `;
+            html += '<button class="popup-ok-button" onclick="closeDayDetails()">OK</button>';
             
-            content.innerHTML = html;
-            popup.classList.add('show');
+            elements.popupContent.innerHTML = html;
+            elements.dayDetailsPopup.classList.add('show');
         }
 
         function closeDayDetails() {
-            document.getElementById('dayDetailsPopup').classList.remove('show');
+            if (elements.dayDetailsPopup) {
+                elements.dayDetailsPopup.classList.remove('show');
+            }
         }
 
-        // FUNZIONI ESISTENTI
+        // Scroll effect ottimizzato con debouncing
         function setupScrollEffect() {
-            const header = document.querySelector('.header');
-            let ticking = false;
+            if (!elements.header) return;
             
-            function updateHeaderOnScroll() {
+            const updateHeader = debounce(() => {
                 const scrollY = window.scrollY;
-                
-                if (scrollY > 20) {
-                    header.classList.add('scrolled');
-                } else {
-                    header.classList.remove('scrolled');
-                }
-                
-                ticking = false;
-            }
+                elements.header.classList.toggle('scrolled', scrollY > 20);
+            }, CONFIG.DEBOUNCE_SCROLL);
             
-            function requestHeaderUpdate() {
-                if (!ticking) {
-                    requestAnimationFrame(updateHeaderOnScroll);
-                    ticking = true;
-                }
-            }
-            
-            window.addEventListener('scroll', requestHeaderUpdate, { passive: true });
-            updateHeaderOnScroll();
+            window.addEventListener('scroll', updateHeader, { passive: true });
+            updateHeader();
         }
 
         function loadUserData() {
             if (!currentUser) return;
             
-            document.getElementById('userName').textContent = currentUser.name;
-            document.getElementById('monthlyHours').textContent = Utils.formatHours(currentUser.oreMese || 0);
-            document.getElementById('previousMonthHours').textContent = Utils.formatHours(currentUser.oreMesePrecedente || 0);
+            if (elements.userName) elements.userName.textContent = currentUser.name;
+            if (elements.monthlyHours) elements.monthlyHours.textContent = Utils.formatHours(currentUser.oreMese || 0);
+            if (elements.previousMonthHours) elements.previousMonthHours.textContent = Utils.formatHours(currentUser.oreMesePrecedente || 0);
         }
 
         async function loadCantieri() {
+            if (!elements.cantiere) return;
+            
             try {
-                const cantiereSelect = document.getElementById('cantiere');
-                
                 const result = await callGoogleAppsScript({
                     action: 'getCantieri',
                     sessionToken: sessionToken
@@ -1415,73 +1421,72 @@
                 
                 if (result.success && result.data) {
                     cantieri = result.data;
-                    cantiereSelect.innerHTML = '<option value="">-- Seleziona Cantiere --</option>';
+                    elements.cantiere.innerHTML = '<option value="">-- Seleziona Cantiere --</option>';
                     
+                    const fragment = document.createDocumentFragment();
                     cantieri.forEach(cantiere => {
                         const option = document.createElement('option');
                         option.value = cantiere.id;
                         option.textContent = `${cantiere.nome} - ${cantiere.indirizzo}`;
-                        cantiereSelect.appendChild(option);
+                        fragment.appendChild(option);
                     });
+                    elements.cantiere.appendChild(fragment);
                 } else {
                     throw new Error(result.message || 'Errore caricamento cantieri');
                 }
                 
             } catch (error) {
-                console.error('Errore caricamento cantieri:', error);
-                const cantiereSelect = document.getElementById('cantiere');
-                cantiereSelect.innerHTML = '<option value="">Errore caricamento cantieri</option>';
-                Utils.showNotification('Errore nel caricamento cantieri', 'error');
+                console.error('Errore cantieri:', error);
+                elements.cantiere.innerHTML = '<option value="">Errore caricamento cantieri</option>';
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification('Errore nel caricamento cantieri', 'error');
+                }
             }
         }
 
         function setupForm() {
-            const form = document.getElementById('workEntryForm');
-            const oreInput = document.getElementById('ore');
-            
-            oreInput.addEventListener('focus', function(e) {
-                if (!e.target.value) {
-                    e.target.placeholder = '';
-                }
+            if (!elements.ore || !elements.form) {
+                console.error('Elementi form mancanti');
+                return;
+            }
+
+            elements.ore.addEventListener('focus', function(e) {
+                if (!e.target.value) e.target.placeholder = '';
             });
             
-            oreInput.addEventListener('blur', function(e) {
-                if (!e.target.value) {
-                    e.target.placeholder = '8.5';
-                }
+            elements.ore.addEventListener('blur', function(e) {
+                if (!e.target.value) e.target.placeholder = '8.5';
                 validateHoursField(e.target);
             });
             
-            oreInput.addEventListener('input', function(e) {
-                let value = e.target.value;
-                
-                if (value.includes(',')) {
-                    value = value.replace(',', '.');
-                    e.target.value = value;
+            elements.ore.addEventListener('input', function(e) {
+                if (e.target.value.includes(',')) {
+                    e.target.value = e.target.value.replace(',', '.');
                 }
-                
                 clearValidation(e.target);
             });
             
-            form.addEventListener('submit', async function(e) {
+            elements.form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 await saveWorkEntry();
             });
 
-            ['workDate', 'cantiere'].forEach(fieldId => {
-                const field = document.getElementById(fieldId);
-                field.addEventListener('blur', () => validateField(field));
-                field.addEventListener('change', () => clearValidation(field));
+            // Gestione sicura dei campi di validazione
+            const validationFields = ['workDate', 'cantiere'];
+            validationFields.forEach(fieldId => {
+                const field = elements[fieldId];
+                if (field) {
+                    field.addEventListener('blur', () => validateField(field));
+                    field.addEventListener('change', () => clearValidation(field));
+                } else {
+                    console.warn(`Campo di validazione ${fieldId} non trovato`);
+                }
             });
         }
 
         function validateHoursField(field) {
-            let value = field.value.trim();
-            
-            if (value.includes(',')) {
-                value = value.replace(',', '.');
-                field.value = value;
-            }
+            let value = field.value.trim().replace(',', '.');
+            field.value = value;
             
             const hours = parseFloat(value);
             const isValid = !isNaN(hours) && hours >= 0 && hours <= 24 && value !== '';
@@ -1518,39 +1523,37 @@
         }
 
         async function saveWorkEntry() {
-            const saveBtn = document.getElementById('saveBtn');
-            const form = document.getElementById('workEntryForm');
-            
-            const formData = new FormData(form);
+            if (!elements.form || !elements.saveBtn) {
+                console.error('Elementi form per il salvataggio mancanti');
+                return;
+            }
+
+            const formData = new FormData(elements.form);
             const data = Object.fromEntries(formData);
             
-            let oreValue = data.ore.trim();
-            if (oreValue.includes(',')) {
-                oreValue = oreValue.replace(',', '.');
-            }
-            
-            const oreParsed = parseFloat(oreValue);
+            const oreParsed = parseFloat(data.ore.trim().replace(',', '.'));
             
             let isValid = true;
-            ['workDate', 'cantiere'].forEach(fieldId => {
-                const field = document.getElementById(fieldId);
-                if (!validateField(field)) {
+            const requiredFields = ['workDate', 'cantiere'];
+            requiredFields.forEach(fieldId => {
+                if (elements[fieldId] && !validateField(elements[fieldId])) {
                     isValid = false;
                 }
             });
             
-            const oreField = document.getElementById('ore');
-            if (!validateHoursField(oreField)) {
+            if (elements.ore && !validateHoursField(elements.ore)) {
                 isValid = false;
             }
             
             if (!isValid) {
-                Utils.showNotification('Per favore completa tutti i campi obbligatori', 'error');
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification('Per favore completa tutti i campi obbligatori', 'error');
+                }
                 return;
             }
             
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
+            elements.saveBtn.disabled = true;
+            elements.saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
             
             try {
                 const result = await callGoogleAppsScript({
@@ -1566,26 +1569,29 @@
                 });
                 
                 if (result.success) {
-                    Utils.showNotification(`${oreParsed} ore salvate! Totali aggiornati.`, 'success');
+                    if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                        Utils.showNotification(`${oreParsed} ore salvate! Totali aggiornati.`, 'success');
+                    }
                     
-                    const currentDate = data.workDate;
-                    form.reset();
-                    document.getElementById('workDate').value = currentDate;
+                    const currentDateValue = data.workDate;
+                    elements.form.reset();
+                    if (elements.workDate) {
+                        elements.workDate.value = currentDateValue;
+                    }
                     
-                    setTimeout(() => {
-                        refreshUserStats();
-                    }, 1500);
-                    
+                    setTimeout(refreshUserStats, 1500);
                 } else {
                     throw new Error(result.message || 'Errore nel salvataggio');
                 }
                 
             } catch (error) {
                 console.error('Errore salvataggio:', error);
-                Utils.showNotification('Errore nel salvataggio: ' + error.message, 'error');
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification('Errore nel salvataggio: ' + error.message, 'error');
+                }
             } finally {
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = 'Salva Ore';
+                elements.saveBtn.disabled = false;
+                elements.saveBtn.innerHTML = 'Salva Ore';
             }
         }
 
@@ -1598,12 +1604,11 @@
                 
                 if (result.success && result.data) {
                     currentUser = { ...currentUser, ...result.data };
-                    
-                    document.getElementById('monthlyHours').textContent = Utils.formatHours(result.data.oreMese || 0);
-                    document.getElementById('previousMonthHours').textContent = Utils.formatHours(result.data.oreMesePrecedente || 0);
+                    if (elements.monthlyHours) elements.monthlyHours.textContent = Utils.formatHours(result.data.oreMese || 0);
+                    if (elements.previousMonthHours) elements.previousMonthHours.textContent = Utils.formatHours(result.data.oreMesePrecedente || 0);
                 }
             } catch (error) {
-                console.error('Errore aggiornamento stats:', error);
+                // Silent fail per stats
             }
         }
 
@@ -1614,19 +1619,36 @@
         function logout() {
             if (confirm('Sei sicuro di voler uscire?')) {
                 Utils.clearSession();
-                Utils.showNotification('Logout effettuato con successo', 'success');
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification('Logout effettuato con successo', 'success');
+                }
                 setTimeout(() => {
-                    Utils.redirectToLogin();
+                    if (typeof Utils !== 'undefined' && Utils.redirectToLogin) {
+                        Utils.redirectToLogin();
+                    }
                 }, 1500);
             }
         }
 
-        // Auto-refresh ogni 5 minuti
-        setInterval(() => {
-            if (Utils.isLoggedIn()) {
-                refreshUserStats();
-            }
-        }, 5 * 60 * 1000);
+        // Auto-refresh ottimizzato
+        let refreshInterval;
+        function startAutoRefresh() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(() => {
+                if (typeof Utils !== 'undefined' && Utils.isLoggedIn && Utils.isLoggedIn()) {
+                    refreshUserStats().catch(() => {
+                        // Silent fail per auto-refresh
+                    });
+                } else {
+                    clearInterval(refreshInterval);
+                }
+            }, CONFIG.AUTO_REFRESH_INTERVAL);
+        }
+
+        // Avvia auto-refresh dopo il caricamento
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(startAutoRefresh, 5000); // Delay iniziale
+        });
     </script>
 </body>
 </html>
