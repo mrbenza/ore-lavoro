@@ -618,7 +618,7 @@
             securityMessage: document.getElementById('securityMessage')
         };
 
-        // ⚡ AUTENTICAZIONE VELOCE V2.2
+        // ⚡ AUTENTICAZIONE VELOCE V2.2 - COMPLETAMENTE SILENZIOSA
         async function authenticateUser(userId, password) {
             console.log('⚡ Autenticazione veloce V2.2:', userId);
             
@@ -630,6 +630,13 @@
                 });
                 
                 console.log('⚡ Risultato autenticazione V2.2:', result.success ? 'SUCCESS' : 'FAILED');
+                
+                // BLOCCA qualsiasi chiamata a showSecurityStatus
+                if (result.success && result.systemInfo) {
+                    // Cancella l'authMethod per evitare messaggi
+                    delete result.systemInfo.authMethod;
+                }
+                
                 return result;
                 
             } catch (error) {
