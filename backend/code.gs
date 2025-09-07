@@ -1,166 +1,131 @@
 /*
 ================================================================================
-SCRIPT CONTAINER-BOUND COMPLETO - SISTEMA GESTIONE ORE V3.4
-🚀 OTTIMIZZATO PER VERCEL WEBAPP + CORS INTEGRATO
-================================================================================
-
-🔧 ISTRUZIONI INSTALLAZIONE:
-1. Apri il tuo Google Sheet
-2. Estensioni → Apps Script  
-3. Cancella tutto il codice esistente
-4. Incolla TUTTO questo script
-5. Salva (Ctrl+S)
-6. Deploy → Nuova distribuzione → Web app
-7. Esegui come: "Me", Chi ha accesso: "Chiunque"
-8. Copia l'URL e aggiornalo nella webapp
-
+SCRIPT CONTAINER-BOUND COMPLETO - SISTEMA GESTIONE ORE V3.5
+VERSIONE FINALE - SINTASSI VERIFICATA
 ================================================================================
 */
 
-// ===== CONFIGURAZIONE AUTOMATICA CONTAINER-BOUND =====
+// CONFIGURAZIONE
 const SPREADSHEET_ID = SpreadsheetApp.getActiveSpreadsheet().getId();
 const USER_SHEET_NAME = 'Utenti';
 
-console.log('🚀 Script Container-bound V3.4 inizializzato per foglio:', SPREADSHEET_ID);
-
-// ===== CONFIGURAZIONE PRODUZIONE =====
 const PRODUCTION_CONFIG = {
-  DEBUG_MODE: false,           // 🔧 FALSE per produzione
-  LOG_LEVEL: 'ERROR',         // Minimal logging
-  LOG_AUTH: true,             // Mantieni log sicurezza
-  LOG_CRITICAL_ERRORS: true, // Mantieni errori critici
-  LOG_SAVE_OPERATIONS: true  // Mantieni log salvataggi
+  DEBUG_MODE: false,
+  LOG_LEVEL: 'ERROR',
+  LOG_AUTH: true,
+  LOG_CRITICAL_ERRORS: true,
+  LOG_SAVE_OPERATIONS: true
 };
 
-// ===== LOGGER OTTIMIZZATO =====
+// LOGGER
 const Logger = {
-  debug: function(...args) {
-    if (PRODUCTION_CONFIG.DEBUG_MODE && this.shouldLog('DEBUG')) {
-      console.log('[DEBUG]', ...args);
+  debug: function() {
+    if (PRODUCTION_CONFIG.DEBUG_MODE) {
+      console.log.apply(console, ['[DEBUG]'].concat(Array.prototype.slice.call(arguments)));
     }
   },
-  
-  info: function(...args) {
-    if (this.shouldLog('INFO')) {
-      console.log('[INFO]', ...args);
-    }
+  info: function() {
+    console.log.apply(console, ['[INFO]'].concat(Array.prototype.slice.call(arguments)));
   },
-  
-  warn: function(...args) {
-    if (this.shouldLog('WARN')) {
-      console.warn('[WARN]', ...args);
-    }
+  warn: function() {
+    console.warn.apply(console, ['[WARN]'].concat(Array.prototype.slice.call(arguments)));
   },
-  
-  error: function(...args) {
-    if (this.shouldLog('ERROR')) {
-      console.error('[ERROR]', ...args);
-    }
+  error: function() {
+    console.error.apply(console, ['[ERROR]'].concat(Array.prototype.slice.call(arguments)));
   },
-  
-  auth: function(...args) {
+  auth: function() {
     if (PRODUCTION_CONFIG.LOG_AUTH) {
-      console.log('[AUTH]', ...args);
+      console.log.apply(console, ['[AUTH]'].concat(Array.prototype.slice.call(arguments)));
     }
   },
-  
-  save: function(...args) {
+  save: function() {
     if (PRODUCTION_CONFIG.LOG_SAVE_OPERATIONS) {
-      console.log('[SAVE]', ...args);
+      console.log.apply(console, ['[SAVE]'].concat(Array.prototype.slice.call(arguments)));
     }
   },
-  
-  critical: function(...args) {
+  critical: function() {
     if (PRODUCTION_CONFIG.LOG_CRITICAL_ERRORS) {
-      console.error('[CRITICAL]', ...args);
+      console.error.apply(console, ['[CRITICAL]'].concat(Array.prototype.slice.call(arguments)));
     }
-  },
-  
-  shouldLog: function(level) {
-    const levels = ['DEBUG', 'INFO', 'WARN', 'ERROR', 'OFF'];
-    const currentLevelIndex = levels.indexOf(PRODUCTION_CONFIG.LOG_LEVEL);
-    const requestedLevelIndex = levels.indexOf(level);
-    return requestedLevelIndex >= currentLevelIndex && PRODUCTION_CONFIG.LOG_LEVEL !== 'OFF';
   }
 };
 
-// ===== INFORMAZIONI SISTEMA =====
+// SYSTEM INFO
 const SYSTEM_INFO = {
-  version: '3.4.1',
-  build: '2025.06.27',
+  version: '3.5',
+  build: '2025.09.05',
   mode: PRODUCTION_CONFIG.DEBUG_MODE ? 'DEVELOPMENT' : 'PRODUCTION',
-  description: 'Container-bound script con CORS ottimizzato per Vercel',
-  features: ['Hash Password SHA-256', 'CORS Headers', 'Righe Sicure ≥5', 'Container-bound', 'Vercel Ready'],
-  installType: 'CONTAINER_BOUND_CORS'
+  description: 'Container-bound script con CORS e Calendario',
+  features: ['Hash Password SHA-256', 'CORS Headers', 'Righe Sicure', 'Container-bound', 'Calendario'],
+  installType: 'CONTAINER_BOUND_CORS_CALENDAR'
 };
 
-// ===== MAPPING COLONNE FOGLIO UTENTI =====
+// MAPPING COLONNE
 const COLUMNS = {
-  ID_UTENTE: 0,        // A - ID Utente (U001, U002, etc.)
-  NOME: 1,             // B - Nome Completo  
-  EMAIL: 2,            // C - Email
-  TELEFONO: 3,         // D - Telefono
-  DATA_ASSUNZIONE: 4,  // E - Data Assunzione
-  USER_ID: 5,          // F - Username (per login)
-  PASSWORD: 6,         // G - Password
-  PASSWORD_HASH: 7,    // H - Password Hash
-  ATTIVO: 8,           // I - Attivo (Si/No)
+  ID_UTENTE: 0,
+  NOME: 1,
+  EMAIL: 2,
+  TELEFONO: 3,
+  DATA_ASSUNZIONE: 4,
+  USER_ID: 5,
+  PASSWORD: 6,
+  PASSWORD_HASH: 7,
+  ATTIVO: 8
 };
 
-// ===== CELLE ORE NEI FOGLI UTENTE =====
+// CELLE ORE
 const USER_SHEET_CELLS = {
-  ORE_MESE_CORRENTE: 'F3',    // Formule Excel ore mese corrente
-  ORE_MESE_PRECEDENTE: 'G3',  // Formule Excel ore mese precedente
-  ANNO_CORRENTE: 'H3'         // Opzionale: ore anno corrente
+  ORE_MESE_CORRENTE: 'F3',
+  ORE_MESE_PRECEDENTE: 'G3',
+  ANNO_CORRENTE: 'H3'
 };
 
-// ===== FUNZIONE HASH PASSWORD SICURA =====
+// HASH PASSWORD
 function generatePasswordHash(password) {
-  const salt = "OreLavoro2025_Salt_";
-  const dataToHash = salt + password + salt;
+  var salt = "OreLavoro2025_Salt_";
+  var dataToHash = salt + password + salt;
   
-  const hash = Utilities.computeDigest(
+  var hash = Utilities.computeDigest(
     Utilities.DigestAlgorithm.SHA_256, 
     dataToHash,
     Utilities.Charset.UTF_8
   );
   
-  return hash.map(byte => (byte < 0 ? byte + 256 : byte).toString(16).padStart(2, '0')).join('');
+  return hash.map(function(byte) {
+    return (byte < 0 ? byte + 256 : byte).toString(16).padStart(2, '0');
+  }).join('');
 }
 
-// ===== HELPER CORS - RESPONSE SEMPLIFICATA =====
+// CORS RESPONSE
 function createCORSResponse(data) {
-  // Google Apps Script non supporta setHeaders() su ContentService
-  // CORS deve essere gestito a livello di webapp/proxy
   return ContentService
     .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// ===== ACCESSO FOGLIO CONTAINER-BOUND =====
+// ACCESSO FOGLIO
 function getWorksheet() {
   try {
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     
     if (!spreadsheet) {
       throw new Error('Impossibile accedere al spreadsheet container');
     }
     
-    // Cerca foglio utenti per nome
     try {
-      const userSheet = spreadsheet.getSheetByName(USER_SHEET_NAME);
+      var userSheet = spreadsheet.getSheetByName(USER_SHEET_NAME);
       Logger.debug('Foglio utenti trovato:', USER_SHEET_NAME);
       return userSheet;
     } catch (e) {
       Logger.warn('Foglio utenti non trovato per nome:', USER_SHEET_NAME);
     }
     
-    // Fallback: cerca per contenuto header
-    const sheets = spreadsheet.getSheets();
-    for (let sheet of sheets) {
+    var sheets = spreadsheet.getSheets();
+    for (var i = 0; i < sheets.length; i++) {
+      var sheet = sheets[i];
       try {
-        const firstRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-        if (firstRow.includes('Username') || firstRow.includes('ID Utente') || firstRow.includes('Nome Completo')) {
+        var firstRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+        if (firstRow.indexOf('Username') !== -1 || firstRow.indexOf('ID Utente') !== -1 || firstRow.indexOf('Nome Completo') !== -1) {
           Logger.debug('Foglio utenti trovato per contenuto:', sheet.getName());
           return sheet;
         }
@@ -169,7 +134,6 @@ function getWorksheet() {
       }
     }
     
-    // Ultimo fallback
     Logger.warn('Uso primo foglio disponibile');
     return sheets[0];
     
@@ -179,24 +143,23 @@ function getWorksheet() {
   }
 }
 
-// ===== LETTURA ORE DAL FOGLIO UTENTE =====
+// LETTURA ORE
 function getUserHoursFromSheet(userName) {
   try {
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     
-    let userSheet;
+    var userSheet;
     try {
       userSheet = spreadsheet.getSheetByName(userName);
     } catch (e) {
-      Logger.warn(`Foglio "${userName}" non trovato`);
+      Logger.warn('Foglio "' + userName + '" non trovato');
       return { oreMeseCorrente: 0, oreMesePrecedente: 0, oreAnnoCorrente: 0 };
     }
     
-    // Leggi celle con formule Excel
-    const oreMeseCorrente = userSheet.getRange(USER_SHEET_CELLS.ORE_MESE_CORRENTE).getValue() || 0;
-    const oreMesePrecedente = userSheet.getRange(USER_SHEET_CELLS.ORE_MESE_PRECEDENTE).getValue() || 0;
+    var oreMeseCorrente = userSheet.getRange(USER_SHEET_CELLS.ORE_MESE_CORRENTE).getValue() || 0;
+    var oreMesePrecedente = userSheet.getRange(USER_SHEET_CELLS.ORE_MESE_PRECEDENTE).getValue() || 0;
     
-    let oreAnnoCorrente = 0;
+    var oreAnnoCorrente = 0;
     try {
       oreAnnoCorrente = userSheet.getRange(USER_SHEET_CELLS.ANNO_CORRENTE).getValue() || 0;
     } catch (e) {
@@ -210,53 +173,49 @@ function getUserHoursFromSheet(userName) {
     };
     
   } catch (error) {
-    Logger.error(`Errore lettura ore per ${userName}:`, error);
+    Logger.error('Errore lettura ore per ' + userName + ':', error);
     return { oreMeseCorrente: 0, oreMesePrecedente: 0, oreAnnoCorrente: 0 };
   }
 }
 
-// ===== AUTENTICAZIONE CON HASH PASSWORD =====
+// AUTENTICAZIONE
 function authenticateUser(userId, password) {
   try {
     Logger.auth('Tentativo autenticazione per:', userId);
     
-    const sheet = getWorksheet();
-    const data = sheet.getDataRange().getValues();
+    var sheet = getWorksheet();
+    var data = sheet.getDataRange().getValues();
     
     if (data.length < 2) {
       return { success: false, message: 'Nessun dato utente trovato nel foglio' };
     }
     
-    const passwordHash = generatePasswordHash(password);
+    var passwordHash = generatePasswordHash(password);
     
-    // Cerca utente
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
       
-      const userIdInSheet = row[COLUMNS.USER_ID];
-      const passwordPlainInSheet = row[COLUMNS.PASSWORD];
-      const passwordHashInSheet = row[COLUMNS.PASSWORD_HASH];
-      const isActive = row[COLUMNS.ATTIVO];
+      var userIdInSheet = row[COLUMNS.USER_ID];
+      var passwordPlainInSheet = row[COLUMNS.PASSWORD];
+      var passwordHashInSheet = row[COLUMNS.PASSWORD_HASH];
+      var isActive = row[COLUMNS.ATTIVO];
       
       if (userIdInSheet === userId && isActive === 'Si' && userIdInSheet !== '') {
         Logger.debug('Utente trovato e attivo, verificando password...');
         
-        let passwordValid = false;
-        let authMethod = '';
+        var passwordValid = false;
+        var authMethod = '';
         
-        // PRIORITÀ 1: Hash sicuro
         if (passwordHashInSheet && passwordHashInSheet !== '') {
           Logger.debug('Verificando con password hash (SICURO)...');
           passwordValid = (passwordHashInSheet === passwordHash);
           authMethod = 'hash';
         } 
-        // FALLBACK: Password plain
         else if (passwordPlainInSheet && passwordPlainInSheet !== '') {
           Logger.warn('FALLBACK: Verificando con password plain text...');
           passwordValid = (passwordPlainInSheet === password);
           authMethod = 'plain_fallback';
           
-          // AUTO-MIGRAZIONE: Genera hash al volo
           if (passwordValid) {
             Logger.info('AUTO-MIGRAZIONE: Generando hash per questo utente...');
             try {
@@ -276,13 +235,12 @@ function authenticateUser(userId, password) {
         if (passwordValid) {
           Logger.auth('Autenticazione riuscita con metodo:', authMethod, 'per utente:', userId);
           
-          const sessionToken = generateSessionToken(userId);
-          const userName = row[COLUMNS.NOME];
+          var sessionToken = generateSessionToken(userId);
+          var userName = row[COLUMNS.NOME];
           
-          // Leggi ore dal foglio individuale
-          const oreData = getUserHoursFromSheet(userName);
+          var oreData = getUserHoursFromSheet(userName);
           
-          const userData = {
+          var userData = {
             idUtente: row[COLUMNS.ID_UTENTE],
             userId: row[COLUMNS.USER_ID],
             name: row[COLUMNS.NOME],
@@ -329,7 +287,82 @@ function authenticateUser(userId, password) {
   }
 }
 
-// ===== SALVATAGGIO ORE LAVORATE =====
+// AGGIORNAMENTO CANTIERE
+function updateCantiereHours(cantiereId, oreAggiunte, dipendente) {
+  if (!dipendente) dipendente = null;
+  
+  try {
+    Logger.save('Aggiornando cantiere ' + cantiereId + ' con +' + oreAggiunte + ' ore');
+    
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var cantieriSheet = spreadsheet.getSheetByName('Cantieri');
+    
+    if (!cantieriSheet) {
+      Logger.error('Foglio "Cantieri" non trovato');
+      return { success: false, message: 'Foglio Cantieri non trovato' };
+    }
+    
+    var data = cantieriSheet.getDataRange().getValues();
+    
+    if (data.length < 2) {
+      Logger.error('Nessun dato trovato nel foglio Cantieri');
+      return { success: false, message: 'Nessun cantiere trovato' };
+    }
+    
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      var cantiereIdInSheet = row[0];
+      
+      if (cantiereIdInSheet === cantiereId) {
+        var oreAttuali = parseFloat(row[6]) || 0;
+        var nuovoTotale = oreAttuali + oreAggiunte;
+        
+        var dataAggiornamento = new Date();
+        
+        var inserimentiAttuali = parseInt(row[9]) || 0;
+        var nuovoContatore = inserimentiAttuali + 1;
+        
+        cantieriSheet.getRange(i + 1, 7).setValue(nuovoTotale);
+        cantieriSheet.getRange(i + 1, 8).setValue(dataAggiornamento);
+        
+        if (dipendente) {
+          cantieriSheet.getRange(i + 1, 9).setValue(dipendente);
+        }
+        
+        cantieriSheet.getRange(i + 1, 10).setValue(nuovoContatore);
+        cantieriSheet.getRange(i + 1, 8).setNumberFormat('dd/mm/yyyy hh:mm');
+        
+        Logger.save('Cantiere aggiornato: ' + cantiereId);
+        
+        return {
+          success: true,
+          cantiereId: cantiereId,
+          oreAttuali: oreAttuali,
+          oreAggiunte: oreAggiunte,
+          nuovoTotale: nuovoTotale,
+          dataAggiornamento: dataAggiornamento,
+          ultimoDipendente: dipendente,
+          numeroInserimenti: nuovoContatore
+        };
+      }
+    }
+    
+    Logger.warn('Cantiere ' + cantiereId + ' non trovato nel foglio Cantieri');
+    return { 
+      success: false, 
+      message: 'Cantiere ' + cantiereId + ' non trovato' 
+    };
+    
+  } catch (error) {
+    Logger.critical('Errore aggiornamento ore cantiere:', error);
+    return { 
+      success: false, 
+      message: 'Errore aggiornamento ore cantiere: ' + error.toString() 
+    };
+  }
+}
+
+// SALVATAGGIO ORE
 function saveWorkEntry(sessionToken, workData) {
   if (!validateSessionToken(sessionToken)) {
     return { success: false, message: 'Token di sessione non valido' };
@@ -342,12 +375,12 @@ function saveWorkEntry(sessionToken, workData) {
       return { success: false, message: 'Dati lavoro mancanti o non validi' };
     }
     
-    // Estrazione ore robusta
-    let oreValue = null;
-    const orePossibili = ['ore', 'hours', 'oreLavorate'];
+    var oreValue = null;
+    var orePossibili = ['ore', 'hours', 'oreLavorate'];
     
-    for (const prop of orePossibili) {
-      const val = workData[prop];
+    for (var p = 0; p < orePossibili.length; p++) {
+      var prop = orePossibili[p];
+      var val = workData[prop];
       if (workData.hasOwnProperty(prop) && val !== null && val !== undefined) {
         oreValue = val;
         break;
@@ -355,47 +388,51 @@ function saveWorkEntry(sessionToken, workData) {
     }
     
     if (oreValue === null) {
-      for (const [key, value] of Object.entries(workData)) {
-        const numValue = parseFloat(value);
-        if (!isNaN(numValue) && numValue > 0 && numValue <= 24) {
-          oreValue = numValue;
-          break;
+      for (var key in workData) {
+        if (workData.hasOwnProperty(key)) {
+          var value = workData[key];
+          var numValue = parseFloat(value);
+          if (!isNaN(numValue) && numValue > 0 && numValue <= 24) {
+            oreValue = numValue;
+            break;
+          }
         }
       }
     }
     
-    const oreString = String(oreValue).trim();
-    const oreLavorate = parseFloat(oreString);
+    var oreString = String(oreValue).trim ? String(oreValue).trim() : String(oreValue);
+    var oreLavorate = parseFloat(oreString);
     
     if (isNaN(oreLavorate) || oreLavorate < 0 || oreLavorate > 24) {
       return { 
         success: false, 
-        message: `Valore ore non valido: "${oreValue}" → ${oreLavorate} (deve essere 0-24)` 
+        message: 'Valore ore non valido: "' + oreValue + '" (deve essere 0-24)' 
       };
     }
     
-    // Validazione altri campi
-    const campiRichiesti = {
+    var campiRichiesti = {
       data: workData.data || workData.workDate || workData.date,
       cantiereId: workData.cantiereId || workData.cantiere,
       lavori: workData.lavori || workData.lavoriEseguiti || workData.descrizione
     };
     
-    for (const [campo, valore] of Object.entries(campiRichiesti)) {
-      if (!valore || String(valore).trim() === '') {
-        return { success: false, message: `Campo richiesto mancante: ${campo}` };
+    for (var campo in campiRichiesti) {
+      if (campiRichiesti.hasOwnProperty(campo)) {
+        var valore = campiRichiesti[campo];
+        if (!valore || String(valore).trim() === '') {
+          return { success: false, message: 'Campo richiesto mancante: ' + campo };
+        }
       }
     }
     
-    const userId = sessionToken.split('_')[0];
+    var userId = sessionToken.split('_')[0];
     
-    // Ottieni nome utente
-    const userSheet = getWorksheet();
-    const userData = userSheet.getDataRange().getValues();
-    let userName = '';
+    var userSheet = getWorksheet();
+    var userData = userSheet.getDataRange().getValues();
+    var userName = '';
     
-    for (let i = 1; i < userData.length; i++) {
-      const row = userData[i];
+    for (var i = 1; i < userData.length; i++) {
+      var row = userData[i];
       if (row[COLUMNS.USER_ID] === userId) {
         userName = row[COLUMNS.NOME];
         break;
@@ -408,10 +445,9 @@ function saveWorkEntry(sessionToken, workData) {
     
     Logger.debug('Utente identificato:', userName);
     
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     
-    // Cerca foglio dell'utente
-    let userWorkSheet;
+    var userWorkSheet;
     try {
       userWorkSheet = spreadsheet.getSheetByName(userName);
       Logger.debug('Foglio utente trovato:', userName);
@@ -419,68 +455,67 @@ function saveWorkEntry(sessionToken, workData) {
       Logger.error('Foglio non trovato per:', userName);
       return { 
         success: false, 
-        message: `Foglio "${userName}" non esistente. Crealo manualmente o contatta l'amministratore.` 
+        message: 'Foglio "' + userName + '" non esistente. Crealo manualmente.' 
       };
     }
     
-    // 🛡️ PROTEZIONE RIGHE SICURE (≥5)
     Logger.debug('Applicando protezione righe sicure...');
     
-    const totalRows = userWorkSheet.getLastRow();
-    let newRow = 5; // Partenza sicura dalla riga 5
-    const maxSearchRows = Math.max(totalRows + 100, 1000);
+    var totalRows = userWorkSheet.getLastRow();
+    var newRow = 5;
+    var maxSearchRows = Math.max(totalRows + 100, 1000);
     
-    let foundEmptyRow = false;
+    var foundEmptyRow = false;
     
-    // Cerca prima riga vuota dalla 5 in poi
-    for (let row = 5; row <= maxSearchRows; row++) {
+    for (var row = 5; row <= maxSearchRows; row++) {
       try {
-        const checkRange = userWorkSheet.getRange(row, 1, 1, 5).getValues()[0];
-        const isEmpty = checkRange.every(cell => 
-          cell === '' || cell === null || cell === undefined
-        );
+        var checkRange = userWorkSheet.getRange(row, 1, 1, 5).getValues()[0];
+        var isEmpty = true;
+        for (var c = 0; c < checkRange.length; c++) {
+          var cell = checkRange[c];
+          if (cell !== '' && cell !== null && cell !== undefined) {
+            isEmpty = false;
+            break;
+          }
+        }
         
         if (isEmpty) {
           newRow = row;
           foundEmptyRow = true;
-          Logger.debug(`Riga sicura trovata: ${newRow}`);
+          Logger.debug('Riga sicura trovata: ' + newRow);
           break;
         }
       } catch (e) {
         newRow = row;
         foundEmptyRow = true;
-        Logger.debug(`Uso fine dati, riga: ${newRow}`);
+        Logger.debug('Uso fine dati, riga: ' + newRow);
         break;
       }
     }
     
-    // Fallback garantito
     if (!foundEmptyRow) {
       newRow = Math.max(totalRows + 1, 5);
-      Logger.debug(`Fallback: Aggiungendo alla fine, riga ${newRow}`);
+      Logger.debug('Fallback: Aggiungendo alla fine, riga ' + newRow);
     }
     
-    // Controllo finale di sicurezza
     if (newRow < 5) {
-      Logger.critical(`BLOCCO SICUREZZA: riga ${newRow} < 5`);
+      Logger.critical('BLOCCO SICUREZZA: riga ' + newRow + ' < 5');
       return {
         success: false,
-        message: `ERRORE SICUREZZA: Tentativo scrittura riga ${newRow} (minimo riga 5)`
+        message: 'ERRORE SICUREZZA: Tentativo scrittura riga ' + newRow + ' (minimo riga 5)'
       };
     }
     
-    // Preparazione dati
-    const dataLavoro = new Date(campiRichiesti.data);
-    const note = workData.note || workData.notes || '';
+    var dataLavoro = new Date(campiRichiesti.data);
+    var note = workData.note || workData.notes || '';
     
-    // Ottieni nome cantiere
-    let nomeCantiere = 'Lavoro registrato via dashboard';
+    var nomeCantiere = 'Lavoro registrato via dashboard';
     try {
-      const cantieriSheet = spreadsheet.getSheetByName('Cantieri');
-      const cantieriData = cantieriSheet.getDataRange().getValues();
+      var cantieriSheet = spreadsheet.getSheetByName('Cantieri');
+      var cantieriData = cantieriSheet.getDataRange().getValues();
       
-      for (let i = 1; i < cantieriData.length; i++) {
-        const row = cantieriData[i];
+      for (var i = 1; i < cantieriData.length; i++) {
+        var row = cantieriData[i];
         if (row[0] === campiRichiesti.cantiereId) {
           nomeCantiere = row[1] || nomeCantiere;
           break;
@@ -490,9 +525,8 @@ function saveWorkEntry(sessionToken, workData) {
       Logger.warn('Impossibile ottenere nome cantiere:', e.message);
     }
     
-    Logger.save('Salvando in riga sicura:', newRow, 'ore:', oreLavorate);
+    Logger.save('Salvando in riga sicura: ' + newRow + ' ore: ' + oreLavorate);
     
-    // SALVATAGGIO SICURO
     userWorkSheet.getRange(newRow, 1, 1, 5).setValues([
       [
         dataLavoro,
@@ -503,15 +537,22 @@ function saveWorkEntry(sessionToken, workData) {
       ]
     ]);
     
-    // Formattazione
     userWorkSheet.getRange(newRow, 1).setNumberFormat('dd/mm/yyyy');
     userWorkSheet.getRange(newRow, 4).setNumberFormat('#,##0.0');
+    
+    Logger.save('Ore salvate nel foglio dipendente, aggiornando cantiere...');
+    
+    var cantiereUpdateResult = updateCantiereHours(campiRichiesti.cantiereId, oreLavorate, userName);
+    
+    if (!cantiereUpdateResult.success) {
+      Logger.warn('Aggiornamento cantiere fallito:', cantiereUpdateResult.message);
+    }
     
     Logger.save('Salvataggio completato con successo');
     
     return {
       success: true,
-      message: 'Dati salvati con successo in riga sicura.',
+      message: 'Dati salvati con successo. Ore cantiere aggiornate.',
       data: {
         riga: newRow,
         utente: userName,
@@ -519,6 +560,13 @@ function saveWorkEntry(sessionToken, workData) {
         cantiere: campiRichiesti.cantiereId,
         nomeCantiere: nomeCantiere,
         ore: oreLavorate,
+        cantiereUpdate: cantiereUpdateResult.success ? {
+          oreAttuali: cantiereUpdateResult.oreAttuali,
+          oreAggiunte: cantiereUpdateResult.oreAggiunte,
+          nuovoTotale: cantiereUpdateResult.nuovoTotale
+        } : { 
+          error: cantiereUpdateResult.message 
+        },
         safeRowProtection: true,
         containerBound: true,
         timestamp: new Date().toISOString(),
@@ -535,28 +583,26 @@ function saveWorkEntry(sessionToken, workData) {
   }
 }
 
-// ===== GET CANTIERI =====
+// GET CANTIERI
 function getCantieri(sessionToken) {
   if (!validateSessionToken(sessionToken)) {
     return { success: false, message: 'Token di sessione non valido' };
   }
   
   try {
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    const cantieriSheet = spreadsheet.getSheetByName('Cantieri');
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var cantieriSheet = spreadsheet.getSheetByName('Cantieri');
     
     if (!cantieriSheet) {
       return { success: false, message: 'Foglio "Cantieri" non trovato' };
     }
     
-    const data = cantieriSheet.getDataRange().getValues();
-    const cantieri = [];
+    var data = cantieriSheet.getDataRange().getValues();
+    var cantieri = [];
     
-    // Salta header (riga 1)
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
       
-      // Solo cantieri aperti
       if (row[3] === 'Aperto' || row[3] === 'aperto') {
         cantieri.push({
           id: row[0],
@@ -570,7 +616,7 @@ function getCantieri(sessionToken) {
     return {
       success: true,
       data: cantieri,
-      message: `${cantieri.length} cantieri attivi trovati`
+      message: cantieri.length + ' cantieri attivi trovati'
     };
     
   } catch (error) {
@@ -582,22 +628,22 @@ function getCantieri(sessionToken) {
   }
 }
 
-// ===== GET USER INFO AGGIORNATA =====
+// GET USER INFO
 function getUserInfo(sessionToken) {
   if (!validateSessionToken(sessionToken)) {
     return { success: false, message: 'Token di sessione non valido' };
   }
   
   try {
-    const userId = sessionToken.split('_')[0];
-    const userSheet = getWorksheet();
-    const userData = userSheet.getDataRange().getValues();
+    var userId = sessionToken.split('_')[0];
+    var userSheet = getWorksheet();
+    var userData = userSheet.getDataRange().getValues();
     
-    for (let i = 1; i < userData.length; i++) {
-      const row = userData[i];
+    for (var i = 1; i < userData.length; i++) {
+      var row = userData[i];
       if (row[COLUMNS.USER_ID] === userId) {
-        const userName = row[COLUMNS.NOME];
-        const oreData = getUserHoursFromSheet(userName);
+        var userName = row[COLUMNS.NOME];
+        var oreData = getUserHoursFromSheet(userName);
         
         return {
           success: true,
@@ -621,11 +667,119 @@ function getUserInfo(sessionToken) {
   }
 }
 
-// ===== UTILITÀ =====
+// GET MONTHLY WORK DATA
+function getMonthlyWorkData(sessionToken, year, month) {
+  if (!validateSessionToken(sessionToken)) {
+    return { success: false, message: 'Token di sessione non valido' };
+  }
+  
+  try {
+    var userId = sessionToken.split('_')[0];
+    
+    var userSheet = getWorksheet();
+    var userData = userSheet.getDataRange().getValues();
+    var userName = '';
+    
+    for (var i = 1; i < userData.length; i++) {
+      var row = userData[i];
+      if (row[COLUMNS.USER_ID] === userId) {
+        userName = row[COLUMNS.NOME];
+        break;
+      }
+    }
+    
+    if (!userName) {
+      return { success: false, message: 'Utente non trovato' };
+    }
+    
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var userWorkSheet;
+    
+    try {
+      userWorkSheet = spreadsheet.getSheetByName(userName);
+    } catch (e) {
+      return { success: false, message: 'Foglio utente non trovato: ' + userName };
+    }
+    
+    var lastRow = userWorkSheet.getLastRow();
+    if (lastRow < 5) {
+      return {
+        success: true,
+        data: {
+          year: year,
+          month: month,
+          userName: userName,
+          workDays: {}
+        },
+        message: 'Nessun dato trovato per questo mese'
+      };
+    }
+    
+    var workData = userWorkSheet.getRange(5, 1, lastRow - 4, 5).getValues();
+    var monthlyData = {};
+    
+    for (var i = 0; i < workData.length; i++) {
+      var row = workData[i];
+      var dateCell = row[0];
+      var cantiereId = row[1];
+      var cantiereName = row[2];
+      var ore = row[3];
+      var note = row[4];
+      
+      if (!dateCell || ore === '' || ore === null || ore === undefined) continue;
+      
+      var workDate = new Date(dateCell);
+      
+      if (isNaN(workDate.getTime())) continue;
+      
+      if (workDate.getFullYear() === year && workDate.getMonth() === month - 1) {
+        var day = workDate.getDate();
+        
+        if (!monthlyData[day]) {
+          monthlyData[day] = {
+            totalHours: 0,
+            entries: []
+          };
+        }
+        
+        var oreNumber = parseFloat(ore) || 0;
+        monthlyData[day].totalHours += oreNumber;
+        monthlyData[day].entries.push({
+          cantiere: cantiereName || cantiereId || 'N/A',
+          ore: oreNumber,
+          note: note || '',
+          data: Utilities.formatDate(workDate, Session.getScriptTimeZone(), 'dd/MM/yyyy')
+        });
+      }
+    }
+    
+    return {
+      success: true,
+      data: {
+        year: year,
+        month: month,
+        userName: userName,
+        workDays: monthlyData,
+        totalDaysWorked: Object.keys(monthlyData).length
+      },
+      message: 'Dati calendario per ' + month + '/' + year + ' caricati con successo'
+    };
+    
+  } catch (error) {
+    Logger.critical('Errore in getMonthlyWorkData:', error);
+    return {
+      success: false,
+      message: 'Errore nel caricamento dati calendario: ' + error.toString(),
+      error: error.toString()
+    };
+  }
+}
+
+// UTILITÀ
 function generateSessionToken(userId) {
-  const timestamp = new Date().getTime();
-  const random = Math.random().toString(36).substring(2);
-  return `${userId}_${timestamp}_${random}`;
+  var timestamp = new Date().getTime();
+  var random = Math.random().toString(36).substring(2);
+  return userId + '_' + timestamp + '_' + random;
 }
 
 function validateSessionToken(sessionToken) {
@@ -639,21 +793,21 @@ function validateSessionToken(sessionToken) {
     return false;
   }
   
-  const parts = sessionToken.split('_');
+  var parts = sessionToken.split('_');
   if (parts.length < 3) {
     Logger.warn('Formato token non valido:', sessionToken);
     return false;
   }
   
-  const timestamp = parseInt(parts[1]);
+  var timestamp = parseInt(parts[1]);
   if (isNaN(timestamp)) {
     Logger.warn('Timestamp token non valido');
     return false;
   }
   
-  const now = new Date().getTime();
-  const tokenAge = now - timestamp;
-  const maxAge = 24 * 60 * 60 * 1000; // 24 ore
+  var now = new Date().getTime();
+  var tokenAge = now - timestamp;
+  var maxAge = 24 * 60 * 60 * 1000; // 24 ore
   
   if (tokenAge > maxAge) {
     Logger.warn('Token scaduto (più di 24 ore)');
@@ -664,11 +818,11 @@ function validateSessionToken(sessionToken) {
   return true;
 }
 
-// ===== PING SYSTEM =====
+// PING SYSTEM
 function handlePing() {
   return { 
     success: true, 
-    message: 'Sistema operativo - Container-bound con CORS', 
+    message: 'Sistema operativo - Container-bound con CORS + Calendario', 
     timestamp: new Date().toISOString(),
     version: SYSTEM_INFO.version,
     build: SYSTEM_INFO.build,
@@ -680,18 +834,17 @@ function handlePing() {
   };
 }
 
-// ===== ENTRY POINT GET CON CORS =====
+// ENTRY POINT GET
 function doGet(e) {
   try {
-    const action = e.parameter.action;
+    var action = e.parameter.action;
     Logger.debug('Richiesta GET ricevuta:', action);
     
-    // Gestione preflight OPTIONS
     if (action === 'options') {
       return createCORSResponse({ success: true, message: 'CORS preflight OK' });
     }
     
-    let result;
+    var result;
     
     switch (action) {
       case 'ping':
@@ -703,12 +856,23 @@ function doGet(e) {
         break;
         
       case 'saveWorkEntry':
-        const workData = JSON.parse(e.parameter.workData || '{}');
+        var workData = JSON.parse(e.parameter.workData || '{}');
         result = saveWorkEntry(e.parameter.sessionToken, workData);
         break;
         
       case 'getCantieri':
         result = getCantieri(e.parameter.sessionToken);
+        break;
+        
+      case 'getMonthlyWorkData':
+        var yearParam = e.parameter.year;
+        var monthParam = e.parameter.month;
+        var sessionParam = e.parameter.sessionToken;
+  
+        var year = parseInt(yearParam) || new Date().getFullYear();
+        var month = parseInt(monthParam) || new Date().getMonth() + 1;
+  
+        result = getMonthlyWorkData(sessionParam, year, month);
         break;
         
       case 'getUserInfo':
@@ -719,11 +883,10 @@ function doGet(e) {
         result = {
           success: false,
           message: 'Azione non riconosciuta: ' + action,
-          availableActions: ['ping', 'authenticate', 'saveWorkEntry', 'getCantieri', 'getUserInfo']
+          availableActions: ['ping', 'authenticate', 'saveWorkEntry', 'getCantieri', 'getUserInfo', 'getMonthlyWorkData']
         };
     }
     
-    // ✅ SEMPRE CON HEADER CORS
     return createCORSResponse(result);
     
   } catch (error) {
@@ -738,16 +901,15 @@ function doGet(e) {
   }
 }
 
-// ===== ENTRY POINT POST CON CORS =====
+// ENTRY POINT POST
 function doPost(e) {
   try {
-    // Parsing dati POST
-    let params = {};
+    var params = {};
     
     if (e.postData && e.postData.contents) {
       try {
-        const postParams = new URLSearchParams(e.postData.contents);
-        const dataParam = postParams.get('data');
+        var postParams = new URLSearchParams(e.postData.contents);
+        var dataParam = postParams.get('data');
         
         if (dataParam) {
           params = JSON.parse(dataParam);
@@ -762,7 +924,7 @@ function doPost(e) {
     
     Logger.debug('POST richiesta ricevuta:', params.action);
     
-    let result;
+    var result;
     
     switch (params.action) {
       case 'ping':
@@ -774,8 +936,8 @@ function doPost(e) {
         break;
         
       case 'saveWorkEntry':
-        const workData = params.workData || {};
-        result = saveWorkEntry(params.sessionToken, workData);
+        var workDataPost = params.workData || {};
+        result = saveWorkEntry(params.sessionToken, workDataPost);
         break;
         
       case 'getCantieri':
@@ -785,16 +947,26 @@ function doPost(e) {
       case 'getUserInfo':
         result = getUserInfo(params.sessionToken);
         break;
+      
+      case 'getMonthlyWorkData':
+        var yearParamPost = params.year;
+        var monthParamPost = params.month;
+        var sessionParamPost = params.sessionToken;
+  
+        var yearPost = parseInt(yearParamPost) || new Date().getFullYear();
+        var monthPost = parseInt(monthParamPost) || new Date().getMonth() + 1;
+  
+        result = getMonthlyWorkData(sessionParamPost, yearPost, monthPost);
+        break;
         
       default:
         result = {
           success: false,
           message: 'Azione non riconosciuta: ' + params.action,
-          availableActions: ['ping', 'authenticate', 'saveWorkEntry', 'getCantieri', 'getUserInfo']
+          availableActions: ['ping', 'authenticate', 'saveWorkEntry', 'getCantieri', 'getUserInfo', 'getMonthlyWorkData']
         };
     }
     
-    // ✅ SEMPRE CON HEADER CORS
     return createCORSResponse(result);
     
   } catch (error) {
@@ -809,359 +981,138 @@ function doPost(e) {
   }
 }
 
-// ===== FUNZIONI DI TEST =====
-
-/**
- * Test configurazione sistema completo
- */
+// FUNZIONI DI TEST
 function testConfiguration() {
-  console.log('=== TEST CONFIGURAZIONE SISTEMA V3.4 ===');
+  console.log('=== TEST CONFIGURAZIONE SISTEMA V3.5 ===');
   
   try {
-    // Test 1: Verifica Spreadsheet
-    console.log('✅ Spreadsheet ID:', SPREADSHEET_ID);
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    console.log('✅ Spreadsheet Nome:', spreadsheet.getName());
+    console.log('Spreadsheet ID:', SPREADSHEET_ID);
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    console.log('Spreadsheet Nome:', spreadsheet.getName());
     
-    // Test 2: Verifica fogli necessari
-    const requiredSheets = ['Utenti', 'Cantieri'];
-    const availableSheets = spreadsheet.getSheets().map(s => s.getName());
-    console.log('📋 Fogli disponibili:', availableSheets);
+    var requiredSheets = ['Utenti', 'Cantieri'];
+    var availableSheets = [];
+    var sheets = spreadsheet.getSheets();
+    for (var i = 0; i < sheets.length; i++) {
+      availableSheets.push(sheets[i].getName());
+    }
+    console.log('Fogli disponibili:', availableSheets);
     
-    requiredSheets.forEach(sheetName => {
-      if (availableSheets.includes(sheetName)) {
-        console.log(`✅ Foglio "${sheetName}" trovato`);
+    for (var i = 0; i < requiredSheets.length; i++) {
+      var sheetName = requiredSheets[i];
+      if (availableSheets.indexOf(sheetName) !== -1) {
+        console.log('✅ Foglio "' + sheetName + '" trovato');
       } else {
-        console.log(`❌ Foglio "${sheetName}" MANCANTE!`);
+        console.log('❌ Foglio "' + sheetName + '" MANCANTE!');
       }
-    });
+    }
     
-    // Test 3: Struttura foglio Utenti
     try {
-      const userSheet = spreadsheet.getSheetByName('Utenti');
-      const headers = userSheet.getRange(1, 1, 1, 9).getValues()[0];
-      console.log('📊 Headers foglio Utenti:', headers);
+      var userSheet = spreadsheet.getSheetByName('Utenti');
+      var headers = userSheet.getRange(1, 1, 1, 9).getValues()[0];
+      console.log('Headers foglio Utenti:', headers);
       
-      const userCount = userSheet.getLastRow() - 1;
-      console.log(`👥 Numero utenti configurati: ${userCount}`);
+      var userCount = userSheet.getLastRow() - 1;
+      console.log('Numero utenti configurati: ' + userCount);
       
       if (userCount > 0) {
-        const primaRiga = userSheet.getRange(2, 1, 1, 9).getValues()[0];
-        console.log('👤 Primo utente - Username:', primaRiga[5]);
-        console.log('🔐 Primo utente - Password presente:', primaRiga[6] ? 'Si' : 'No');
-        console.log('🔐 Primo utente - Hash presente:', primaRiga[7] ? 'Si' : 'No');
+        var primaRiga = userSheet.getRange(2, 1, 1, 9).getValues()[0];
+        console.log('Primo utente - Username:', primaRiga[5]);
+        console.log('Primo utente - Password presente:', primaRiga[6] ? 'Si' : 'No');
+        console.log('Primo utente - Hash presente:', primaRiga[7] ? 'Si' : 'No');
       }
       
     } catch (e) {
-      console.log('❌ Errore lettura foglio Utenti:', e.message);
+      console.log('Errore lettura foglio Utenti:', e.message);
     }
     
-    // Test 4: Struttura foglio Cantieri
     try {
-      const cantieriSheet = spreadsheet.getSheetByName('Cantieri');
-      const cantieriHeaders = cantieriSheet.getRange(1, 1, 1, 4).getValues()[0];
-      console.log('🏗️ Headers foglio Cantieri:', cantieriHeaders);
+      var cantieriSheet = spreadsheet.getSheetByName('Cantieri');
+      var cantieriHeaders = cantieriSheet.getRange(1, 1, 1, 4).getValues()[0];
+      console.log('Headers foglio Cantieri:', cantieriHeaders);
       
-      const cantieriCount = cantieriSheet.getLastRow() - 1;
-      console.log(`🏗️ Numero cantieri configurati: ${cantieriCount}`);
-      
-      if (cantieriCount > 0) {
-        const primoCantiere = cantieriSheet.getRange(2, 1, 1, 4).getValues()[0];
-        console.log('🏗️ Primo cantiere:', primoCantiere);
-      }
+      var cantieriCount = cantieriSheet.getLastRow() - 1;
+      console.log('Numero cantieri configurati: ' + cantieriCount);
       
     } catch (e) {
-      console.log('❌ Errore lettura foglio Cantieri:', e.message);
+      console.log('Errore lettura foglio Cantieri:', e.message);
     }
     
-    // Test 5: Test ping
-    const pingResult = handlePing();
-    console.log('🔄 Test ping:', pingResult);
+    var pingResult = handlePing();
+    console.log('Test ping:', pingResult);
     
-    // Test 6: Test CORS
-    console.log('🌐 Test CORS headers...');
-    const corsResponse = createCORSResponse({ test: true });
-    console.log('✅ CORS Response creata correttamente');
-    
-    console.log('\n=== RISULTATO CONFIGURAZIONE ===');
-    console.log('🎯 Se tutti i test sono ✅, il sistema è pronto!');
-    console.log('🚀 Procedi con il deploy come Web App');
-    console.log('📝 URL da usare nella webapp: [URL del deploy]/exec');
+    console.log('=== RISULTATO CONFIGURAZIONE ===');
+    console.log('Se tutti i test sono ✅, il sistema è pronto!');
     
   } catch (error) {
-    console.log('❌ ERRORE CRITICO:', error.toString());
-    console.log('💡 Verifica che questo script sia nel foglio corretto');
+    console.log('ERRORE CRITICO:', error.toString());
   }
 }
 
-/**
- * Test autenticazione con dati di esempio
- */
 function testAuthentication() {
   console.log('=== TEST AUTENTICAZIONE ===');
   
-  // 🔧 MODIFICA QUESTI VALORI CON I TUOI DATI
-  const testUserId = 'mario.rossi';        // Username dal foglio Utenti
-  const testPassword = 'nuovapassword123'; // Password dal foglio Utenti
+  var testUserId = 'test';
+  var testPassword = 'test';
   
-  console.log('🔐 Testando autenticazione per:', testUserId);
+  console.log('Testando autenticazione per:', testUserId);
   
   try {
-    const authResult = authenticateUser(testUserId, testPassword);
-    console.log('📊 Risultato completo:', authResult);
+    var authResult = authenticateUser(testUserId, testPassword);
+    console.log('Risultato:', authResult);
     
     if (authResult.success) {
       console.log('✅ Autenticazione riuscita!');
-      console.log('👤 Nome utente:', authResult.data.name);
-      console.log('📧 Email:', authResult.data.email);
-      console.log('🔑 Session token:', authResult.sessionToken);
-      console.log('🔐 Metodo auth:', authResult.systemInfo.authMethod);
-      console.log('⏰ Ore mese corrente:', authResult.data.oreMese);
+      console.log('Nome utente:', authResult.data.name);
+      console.log('Session token:', authResult.sessionToken);
     } else {
       console.log('❌ Autenticazione fallita:', authResult.message);
-      console.log('💡 Verifica username e password nel foglio Utenti');
     }
     
   } catch (error) {
-    console.log('❌ Errore test autenticazione:', error.toString());
+    console.log('Errore test autenticazione:', error.toString());
   }
 }
 
-/**
- * Test salvataggio ore
- */
-function testSaveWorkEntry() {
-  console.log('=== TEST SALVATAGGIO ORE ===');
+function testGetMonthlyWorkData() {
+  console.log('=== TEST CALENDARIO ===');
   
-  // Prima autentica per ottenere un token
-  const testUserId = 'mario.rossi';
-  const testPassword = 'nuovapassword123';
+  var testUserId = 'test';
+  var testYear = 2025;
+  var testMonth = 9;
   
   try {
-    console.log('🔐 Autenticazione per test...');
-    const authResult = authenticateUser(testUserId, testPassword);
+    var testToken = generateSessionToken(testUserId);
+    console.log('Token generato:', testToken);
     
-    if (!authResult.success) {
-      console.log('❌ Impossibile autenticare per test:', authResult.message);
-      return;
-    }
+    var result = getMonthlyWorkData(testToken, testYear, testMonth);
+    console.log('Risultato calendario:', result);
     
-    const sessionToken = authResult.sessionToken;
-    console.log('✅ Token ottenuto per test');
-    
-    // Dati di test per salvataggio
-    const testWorkData = {
-      data: new Date().toISOString().split('T')[0], // Data di oggi
-      cantiereId: 'C001', // Deve esistere nel foglio Cantieri
-      ore: 8.5,
-      note: 'Test salvataggio da script - ' + new Date().toLocaleString()
-    };
-    
-    console.log('💾 Testando salvataggio con dati:', testWorkData);
-    
-    const saveResult = saveWorkEntry(sessionToken, testWorkData);
-    console.log('📊 Risultato salvataggio:', saveResult);
-    
-    if (saveResult.success) {
-      console.log('✅ Salvataggio riuscito!');
-      console.log('📍 Riga salvata:', saveResult.data.riga);
-      console.log('👤 Utente:', saveResult.data.utente);
-      console.log('⏰ Ore:', saveResult.data.ore);
+    if (result.success) {
+      console.log('✅ Test calendario riuscito!');
+      console.log('Utente:', result.data.userName);
+      console.log('Giorni lavorati:', result.data.totalDaysWorked);
     } else {
-      console.log('❌ Salvataggio fallito:', saveResult.message);
+      console.log('❌ Test calendario fallito:', result.message);
     }
     
   } catch (error) {
-    console.log('❌ Errore test salvataggio:', error.toString());
+    console.log('Errore test calendario:', error.toString());
   }
 }
 
-/**
- * Test caricamento cantieri
- */
-function testGetCantieri() {
-  console.log('=== TEST CARICAMENTO CANTIERI ===');
-  
-  // Usa token di test per questo test
-  const testToken = 'test_token';
-  
-  try {
-    const cantieriResult = getCantieri(testToken);
-    console.log('📊 Risultato cantieri:', cantieriResult);
-    
-    if (cantieriResult.success) {
-      console.log('✅ Cantieri caricati con successo!');
-      console.log('🏗️ Numero cantieri attivi:', cantieriResult.data.length);
-      
-      cantieriResult.data.forEach((cantiere, index) => {
-        console.log(`${index + 1}. ${cantiere.id} - ${cantiere.nome}`);
-      });
-    } else {
-      console.log('❌ Errore caricamento cantieri:', cantieriResult.message);
-    }
-    
-  } catch (error) {
-    console.log('❌ Errore test cantieri:', error.toString());
-  }
-}
-
-/**
- * Genera hash per una password specifica
- */
-function generateHashForPassword() {
-  console.log('=== GENERATORE HASH PASSWORD ===');
-  
-  // 🔧 MODIFICA QUESTA PASSWORD
-  const password = 'nuovapassword123';
-  
-  const hash = generatePasswordHash(password);
-  console.log('🔐 Password:', password);
-  console.log('🔐 Hash generato:', hash);
-  console.log('💡 Copia questo hash nella colonna H del foglio Utenti');
-  
-  // Test verifica hash
-  const testHash = generatePasswordHash(password);
-  const isValid = (hash === testHash);
-  console.log('✅ Verifica hash:', isValid ? 'VALIDO' : 'ERRORE');
-}
-
-/**
- * Test completo del sistema
- */
 function testCompleteSystem() {
-  console.log('🚀 AVVIO TEST COMPLETO SISTEMA V3.4');
-  console.log('=====================================');
+  console.log('🚀 AVVIO TEST COMPLETO SISTEMA V3.5');
+  console.log('===================================');
   
-  // Test 1: Configurazione
   console.log('\n1️⃣ TEST CONFIGURAZIONE:');
   testConfiguration();
   
-  // Test 2: Cantieri
-  console.log('\n2️⃣ TEST CANTIERI:');
-  testGetCantieri();
-  
-  // Test 3: Autenticazione
-  console.log('\n3️⃣ TEST AUTENTICAZIONE:');
+  console.log('\n2️⃣ TEST AUTENTICAZIONE:');
   testAuthentication();
   
-  // Test 4: Salvataggio (solo se autenticazione ok)
-  console.log('\n4️⃣ TEST SALVATAGGIO:');
-  console.log('💡 Esegui testSaveWorkEntry() separatamente se necessario');
+  console.log('\n3️⃣ TEST CALENDARIO:');
+  testGetMonthlyWorkData();
   
   console.log('\n🏁 TEST COMPLETO TERMINATO');
-  console.log('=====================================');
 }
-
-/**
- * Diagnostica avanzata del sistema
- */
-function diagnosticaAvanzata() {
-  console.log('=== DIAGNOSTICA AVANZATA SISTEMA ===');
-  
-  try {
-    // Info spreadsheet
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    console.log('📊 Spreadsheet Info:');
-    console.log('  - ID:', ss.getId());
-    console.log('  - Nome:', ss.getName());
-    console.log('  - URL:', ss.getUrl());
-    console.log('  - Proprietario:', ss.getOwner().getEmail());
-    
-    // Info fogli
-    console.log('\n📋 Analisi Fogli:');
-    ss.getSheets().forEach((sheet, index) => {
-      console.log(`  ${index + 1}. "${sheet.getName()}" - ${sheet.getLastRow()} righe, ${sheet.getLastColumn()} colonne`);
-    });
-    
-    // Info sistema
-    console.log('\n⚙️ Info Sistema:');
-    console.log('  - Versione:', SYSTEM_INFO.version);
-    console.log('  - Build:', SYSTEM_INFO.build);
-    console.log('  - Modalità:', SYSTEM_INFO.mode);
-    console.log('  - Features:', SYSTEM_INFO.features.join(', '));
-    
-    // Info configurazione
-    console.log('\n🔧 Configurazione Produzione:');
-    console.log('  - Debug Mode:', PRODUCTION_CONFIG.DEBUG_MODE);
-    console.log('  - Log Level:', PRODUCTION_CONFIG.LOG_LEVEL);
-    console.log('  - Log Auth:', PRODUCTION_CONFIG.LOG_AUTH);
-    
-    // Test permessi
-    console.log('\n🔐 Test Permessi:');
-    try {
-      const testRange = ss.getActiveSheet().getRange('A1');
-      console.log('  - Lettura fogli: ✅');
-      
-      // Test scrittura (non invasivo)
-      const originalValue = testRange.getValue();
-      testRange.setValue(originalValue); // Rimette lo stesso valore
-      console.log('  - Scrittura fogli: ✅');
-      
-    } catch (e) {
-      console.log('  - Errore permessi:', e.message);
-    }
-    
-    console.log('\n✅ Diagnostica completata');
-    
-  } catch (error) {
-    console.log('❌ Errore diagnostica:', error.toString());
-  }
-}
-
-// ===== INIZIALIZZAZIONE E LOG =====
-if (PRODUCTION_CONFIG.DEBUG_MODE) {
-  Logger.info('🚀 Sistema Gestione Ore V3.4 Container-bound inizializzato');
-  Logger.info('📋 Spreadsheet ID:', SPREADSHEET_ID);
-  Logger.info('🔧 Modalità:', SYSTEM_INFO.mode);
-  Logger.info('💡 Esegui testConfiguration() per verificare il setup');
-}
-
-/*
-================================================================================
-🎯 CHECKLIST POST-INSTALLAZIONE
-
-✅ PASSO 1 - VERIFICA SCRIPT:
-   1. Esegui testConfiguration() per verificare tutto
-   2. Se ci sono errori ❌, risolvi prima di procedere
-
-✅ PASSO 2 - TEST FUNZIONALITÀ:
-   1. Esegui testAuthentication() per verificare login
-   2. Modifica username/password nella funzione se necessario
-   3. Esegui testGetCantieri() per verificare cantieri
-
-✅ PASSO 3 - DEPLOY WEB APP:
-   1. Deploy → Nuova distribuzione
-   2. Tipo: "Applicazione web"
-   3. Descrizione: "Sistema Gestione Ore V3.4"
-   4. Esegui come: "Me"
-   5. Chi ha accesso: "Chiunque"
-   6. Distribuisci
-
-✅ PASSO 4 - TEST URL:
-   1. Copia l'URL della distribuzione
-   2. Testalo aggiungendo ?action=ping
-   3. Dovresti vedere JSON con success: true e cors: true
-
-✅ PASSO 5 - AGGIORNA WEBAPP:
-   1. Incolla l'URL nella config.js della webapp
-   2. Testa il login dalla webapp
-   3. Verifica che non ci siano più errori CORS
-
-🚨 TROUBLESHOOTING:
-- Errore "Permission denied" → Riautorizza lo script
-- Errore "Sheet not found" → Verifica nomi fogli (Utenti, Cantieri)
-- CORS ancora presente → Controlla che l'URL sia quello giusto
-- Login fallisce → Verifica credenziali con testAuthentication()
-
-📞 SUPPORTO:
-Se hai problemi:
-1. Esegui diagnosticaAvanzata()
-2. Condividi i log della console
-3. Verifica che tutti i test siano ✅
-
-🎉 SISTEMA PRONTO!
-Una volta completati tutti i passi, il sistema dovrebbe funzionare perfettamente
-con la tua webapp su Vercel!
-
-================================================================================
-*/
