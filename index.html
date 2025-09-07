@@ -672,6 +672,28 @@
             elements.successMessage.style.display = 'block';
         }
 
+        function showSecurityInfo(authMethod) {
+            hideAllMessages();
+            let message = '';
+            
+            switch(authMethod) {
+                case 'hash':
+                    message = '🔒 Autenticazione sicura completata!';
+                    break;
+                case 'plain_migrated':
+                    message = '🔄 Password migrata automaticamente in hash sicuro!';
+                    break;
+                case 'plain_fallback':
+                    message = '⚠️ Login in modalità compatibilità';
+                    break;
+                default:
+                    message = '🔒 Autenticazione completata con successo';
+            }
+            
+            elements.securityMessage.textContent = message;
+            elements.securityMessage.style.display = 'block';
+        }
+
         function hideAllMessages() {
             elements.errorMessage.style.display = 'none';
             elements.successMessage.style.display = 'none';
