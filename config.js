@@ -1,4 +1,4 @@
-// Configurazione Sistema Gestione Ore V3.5 - PRODUCTION MODE - CORS FIXED
+// Configurazione Sistema Gestione Ore V2.2 - PRODUCTION MODE - CORS FIXED
 const CONFIG = {
     // 🔧 PROXY VERCEL - URL RELATIVO (CORS gestito)
     APPS_SCRIPT_URL: '/api/proxy',
@@ -6,10 +6,10 @@ const CONFIG = {
     // 🔧 MODALITÀ PRODUZIONE
     PRODUCTION_MODE: true,  // 🚀 CAMBIA A TRUE PER PRODUZIONE
     
-    // Versioning V3.5
+    // Versioning V2.2
     VERSION: {
-        frontend: '3.5.0',
-        buildDate: '2025-07-04',
+        frontend: '2.2.0',
+        buildDate: '2025-09-07',
         description: 'Dashboard semplificata - UI pulita e focalizzata'
     },
     
@@ -20,15 +20,15 @@ const CONFIG = {
         ADMIN: 'admin.html'
     },
     
-    // Impostazioni UI V3.5 - Layout Semplificato
+    // Impostazioni UI V2.2 - Layout Semplificato
     UI: {
         NOTIFICATION_DURATION: 4000,
         LOADING_MIN_TIME: 1000,
         AUTO_LOGOUT_TIME: 30 * 60 * 1000, // 30 minuti
         SHOW_AUTH_METHOD: false, // 🔧 NASCOSTO IN PRODUZIONE
         SHOW_DEBUG_INFO: false,   // 🔧 NASCOSTO IN PRODUZIONE
-        SHOW_SECURITY_STATUS: false, // 🆕 V3.5 - Box sicurezza rimosso
-        SHOW_DERIVED_STATS: false   // 🆕 V3.5 - Statistiche derivate rimosse
+        SHOW_SECURITY_STATUS: false, // 🆕 V2.2 - Box sicurezza rimosso
+        SHOW_DERIVED_STATS: false   // 🆕 V2.2 - Statistiche derivate rimosse
     },
     
     // Validazione
@@ -49,7 +49,7 @@ const CONFIG = {
         LOG_AUTH_ATTEMPTS: false  // 🔧 PRIVACY IN PRODUZIONE
     },
     
-    // 🆕 CONFIGURAZIONE LOGGING FRONTEND V3.5
+    // 🆕 CONFIGURAZIONE LOGGING FRONTEND V2.2
     LOGGING: {
         CONSOLE_LOGS: false,      // 🔧 DISABILITA CONSOLE.LOG IN PRODUZIONE
         ERROR_LOGS: true,         // Mantieni log errori per troubleshooting
@@ -105,7 +105,7 @@ const ProductionLogger = {
     }
 };
 
-// Funzioni di utilità comuni V3.5 - PRODUCTION OPTIMIZED + CORS FIXED
+// Funzioni di utilità comuni V2.2 - PRODUCTION OPTIMIZED + CORS FIXED
 const Utils = {
     // ✅ Gestione chiamate API FIXED per URL relativi
     async callAPI(params) {
@@ -163,7 +163,7 @@ const Utils = {
         }
     },
     
-    // Gestione sessione V3.5 - Production
+    // Gestione sessione V2.2 - Production
     getSession() {
         return {
             user: JSON.parse(sessionStorage.getItem('currentUser') || 'null'),
@@ -198,7 +198,7 @@ const Utils = {
         window.location.href = CONFIG.PAGES.DASHBOARD;
     },
     
-    // Notifiche V3.5 ottimizzate
+    // Notifiche V2.2 ottimizzate
     showNotification(message, type = 'success', duration = null) {
         let notification = document.getElementById('notification');
         
@@ -215,7 +215,7 @@ const Utils = {
             error: '❌',
             warning: '⚠️',
             info: 'ℹ️',
-            security: '🔐'
+            security: '🔒'
         };
         
         const icon = icons[type] || icons.info;
@@ -248,7 +248,7 @@ const Utils = {
         return new Date(date).toLocaleDateString('it-IT');
     },
     
-    // Validatori V3.5
+    // Validatori V2.2
     validateHours(hours) {
         const h = parseFloat(hours);
         return !isNaN(h) && h >= CONFIG.VALIDATION.MIN_HOURS && h <= CONFIG.VALIDATION.MAX_HOURS_PER_DAY;
@@ -262,7 +262,7 @@ const Utils = {
         return password && password.length >= CONFIG.VALIDATION.MIN_PASSWORD_LENGTH;
     },
     
-    // Auto-logout per sicurezza V3.5
+    // Auto-logout per sicurezza V2.2
     setupAutoLogout() {
         if (!CONFIG.SECURITY.SESSION_TIMEOUT) return;
         
@@ -285,18 +285,15 @@ const Utils = {
         ProductionLogger.log('Auto-logout configurato per', CONFIG.UI.AUTO_LOGOUT_TIME / 60000, 'minuti');
     },
     
-    // ✅ Funzione sicurezza ottimizzata per produzione V3.5
+    // ✅ Funzione sicurezza ottimizzata per produzione V2.2
     showSecurityStatus(authMethod, hashSupport) {
-        // V3.5: Security status box rimosso completamente
+        // V2.2: Security status box rimosso completamente
         if (!CONFIG.UI.SHOW_SECURITY_STATUS) {
             return;
         }
         
-        // In produzione mostra solo notifiche essenziali
+        // In produzione non mostra nessun messaggio di sicurezza
         if (CONFIG.PRODUCTION_MODE) {
-            if (authMethod === 'plain_migrated') {
-                this.showNotification('Password aggiornata con successo', 'success', 3000);
-            }
             return;
         }
         
@@ -304,7 +301,7 @@ const Utils = {
         if (!CONFIG.UI.SHOW_AUTH_METHOD) return;
         
         const securityLevel = authMethod === 'hash' ? 'SICURO' : 'COMPATIBILITÀ';
-        const securityIcon = authMethod === 'hash' ? '🔐' : '⚠️';
+        const securityIcon = authMethod === 'hash' ? '🔒' : '⚠️';
         
         ProductionLogger.auth(`${securityIcon} Sicurezza: ${securityLevel} (Metodo: ${authMethod})`);
         
@@ -353,7 +350,7 @@ const Utils = {
     }
 };
 
-// Protezione accesso pagine V3.5 - Production
+// Protezione accesso pagine V2.2 - Production
 const PageGuard = {
     requireLogin() {
         if (!Utils.isLoggedIn()) {
@@ -373,11 +370,11 @@ const PageGuard = {
     }
 };
 
-// ===== INIZIALIZZAZIONE SISTEMA PRODUCTION V3.5 =====
+// ===== INIZIALIZZAZIONE SISTEMA PRODUCTION V2.2 =====
 function initializeSystem() {
     if (CONFIG.PRODUCTION_MODE) {
         // Produzione: Log minimo
-        ProductionLogger.log('Sistema Gestione Ore V3.5 - Modalità Produzione (UI Semplificata)');
+        ProductionLogger.log('Sistema Gestione Ore V2.2 - Modalità Produzione (UI Semplificata)');
         
         // Rimuovi informazioni debug dal DOM
         removeDebugElements();
@@ -387,11 +384,11 @@ function initializeSystem() {
         
     } else {
         // Sviluppo: Log completo
-        ProductionLogger.log('🚀 Sistema Gestione Ore inizializzato V3.5 - Modalità Sviluppo');
+        ProductionLogger.log('🚀 Sistema Gestione Ore inizializzato V2.2 - Modalità Sviluppo');
         ProductionLogger.log('📋 Configurazione:', CONFIG);
         ProductionLogger.log('🎨 UI: Layout Semplificato');
         ProductionLogger.log('🔐 Hash Support:', CONFIG.SECURITY.HASH_ENABLED);
-        ProductionLogger.log('🔐 Sessione attiva:', Utils.isLoggedIn());
+        ProductionLogger.log('🔑 Sessione attiva:', Utils.isLoggedIn());
     }
 }
 
@@ -427,8 +424,8 @@ function setupGlobalErrorHandling() {
 }
 
 // ===== COMPATIBILITÀ API =====
-// Mantieni le funzioni originali per compatibilità
-const Logger = ProductionLogger; // Alias per compatibilità
+// Mantieni le funzioni originali per compatibilità 
+const Logger = ProductionLogger; // Alias per compatibilità 
 
 // Export per uso globale
 window.CONFIG = CONFIG;
