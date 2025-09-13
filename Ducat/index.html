@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema Gestione Ore V2.2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background elements */
+        .bg-decoration {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .bg-decoration:nth-child(1) {
+            width: 200px;
+            height: 200px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .bg-decoration:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            top: 70%;
+            right: 20%;
+            animation-delay: 2s;
+        }
+
+        .bg-decoration:nth-child(3) {
+            width: 100px;
+            height: 100px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .login-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                margin: 0;
+                padding: 40px 30px;
+                border-radius: 20px;
+                max-width: 100%;
+                width: calc(100% - 20px);
+            }
+        }
+
+        .version-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .version-badge {
+                top: 10px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 10px;
+            }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                width: 80px;
+                height: 80px;
+                font-size: 28px;
+            }
+        }
+
+        h1 {
+            color: #333;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 28px;
+            }
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 40px;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .subtitle {
+                font-size: 14px;
+                margin-bottom: 30px;
+            }
+        }
+
+        .form-section {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .form-section:hover {
+            background: rgba(102, 126, 234, 0.08);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .form-section {
+                padding: 25px;
+                margin-bottom: 25px;
+            }
+        }
+
+        .section-title {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .section-title {
+                font-size: 16px;
+                margin-bottom: 20px;
+                gap: 10px;
+            }
+        }
+
+        .icon {
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 18px 24px;
+            border: 2px solid #e1e5e9;
+            border-radius: 15px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 1);
+        }
+
+        input::placeholder {
+            color: #aaa;
+            font-weight: 400;
+        }
+
+        @media (max-width: 768px) {
+            input {
+                padding: 16px 20px;
+                font-size: 16px; /* Prevent zoom on iOS */
+            }
+        }
+
+        .login-section {
+            text-align: center;
+            padding: 35px 30px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .login-section {
+                padding: 30px 25px;
+                margin-bottom: 25px;
+            }
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
+        }
+
+        .login-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-btn:disabled:hover {
+            transform: none;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .login-btn {
+                padding: 18px;
+                font-size: 16px;
+                letter-spacing: 1px;
+            }
+        }
+
+        .message-container {
+            margin-bottom: 25px;
+        }
+
+        .error-message, .success-message, .security-message {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+            font-weight: 500;
+        }
+
+        .error-message {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border-left-color: #dc3545;
+        }
+
+        .success-message {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            border-left-color: #28a745;
+        }
+
+        .security-message {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border-left-color: #667eea;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .footer p {
+            color: #888;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .footer .company-name {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .footer {
+                margin-top: 25px;
+                padding-top: 20px;
+            }
+            
+            .footer p {
+                font-size: 12px;
+            }
+        }
+
+        /* Notification system matching dashboard */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: all 0.3s ease;
+            max-width: 350px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            color: #212529;
+        }
+
+        .notification.security {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        @media (max-width: 768px) {
+            .notification {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                max-width: none;
+                transform: translateY(-100px);
+                border-radius: 10px;
+                padding: 12px 20px;
+            }
+            
+            .notification.show {
+                transform: translateY(0);
+            }
+        }
+
+        /* Fast mode indicator */
+        .fast-indicator {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            z-index: 1000;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        @media (max-width: 768px) {
+            .fast-indicator {
+                padding: 4px 8px;
+                font-size: 9px;
+            }
+        }
+
+        /* Form validation styles */
+        .form-validation {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1) !important;
+        }
+
+        .validation-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 8px;
+            display: none;
+            font-weight: 500;
+        }
+
+        /* Enhanced focus states */
+        input:focus + .validation-message {
+            display: none;
+        }
+
+        /* Smooth transitions for all interactive elements */
+        button, input, .form-section {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
+    
+    <div class="version-badge" id="versionBadge">v2.2 Fast ⚡</div>
+    <div class="fast-indicator">⚡ Fast Mode</div>
+    
+    <div class="login-container">
+        <div class="logo-section">
+            <div class="logo">📋</div>
+            <h1>Ore Lavoro</h1>
+            <p class="subtitle">Gestione Ore lavorate V2.2</p>
+        </div>
+
+        <div class="message-container">
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+            <div id="securityMessage" class="security-message"></div>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-section">
+                <div class="section-title">
+                    <span class="icon">👤</span>
+                    Credenziali di Accesso
+                </div>
+                
+                <div class="form-group">
+                    <label for="userId">Username</label>
+                    <input type="text" id="userId" name="userId" required 
+                           placeholder="Inserisci il tuo username" autocomplete="username">
+                    <div class="validation-message">Username richiesto</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Inserisci la tua password" autocomplete="current-password">
+                    <div class="validation-message">Password richiesta</div>
+                </div>
+            </div>
+
+            <div class="login-section">
+                <button type="submit" class="login-btn" id="loginBtn">
+                    Accedi
+                </button>
+            </div>
+        </form>
+
+        <div class="footer">
+            <p>&copy; 2025 <span class="company-name">Sistema Gestione Ore V2.2</span></p>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script src="config.js"></script>
+    <script>
+        'use strict';
+
+        // Cache elementi DOM
+        const elements = {
+            userId: document.getElementById('userId'),
+            password: document.getElementById('password'),
+            loginBtn: document.getElementById('loginBtn'),
+            loginForm: document.getElementById('loginForm'),
+            errorMessage: document.getElementById('errorMessage'),
+            successMessage: document.getElementById('successMessage'),
+            securityMessage: document.getElementById('securityMessage')
+        };
+
+        // ⚡ AUTENTICAZIONE VELOCE V2.2 - COMPLETAMENTE SILENZIOSA
+        async function authenticateUser(userId, password) {
+            console.log('⚡ Autenticazione veloce V2.2:', userId);
+            
+            try {
+                const result = await Utils.callAPI({
+                    action: 'authenticate',
+                    userId: userId,
+                    password: password
+                });
+                
+                console.log('⚡ Risultato autenticazione V2.2:', result.success ? 'SUCCESS' : 'FAILED');
+                
+                // BLOCCA qualsiasi chiamata a showSecurityStatus
+                if (result.success && result.systemInfo) {
+                    // Cancella l'authMethod per evitare messaggi
+                    delete result.systemInfo.authMethod;
+                }
+                
+                return result;
+                
+            } catch (error) {
+                console.error('❌ Errore autenticazione:', error);
+                throw new Error('Errore di autenticazione: ' + error.message);
+            }
+        }
+
+        // Funzioni di validazione
+        function validateField(field) {
+            const value = field.value.trim();
+            const isValid = value.length > 0;
+            
+            if (!isValid) {
+                field.classList.add('form-validation');
+                const validationMsg = field.parentElement.querySelector('.validation-message');
+                if (validationMsg) validationMsg.style.display = 'block';
+                return false;
+            } else {
+                clearValidation(field);
+                return true;
+            }
+        }
+
+        function clearValidation(field) {
+            field.classList.remove('form-validation');
+            const validationMsg = field.parentElement.querySelector('.validation-message');
+            if (validationMsg) validationMsg.style.display = 'none';
+        }
+
+        function showError(message) {
+            hideAllMessages();
+            elements.errorMessage.textContent = message;
+            elements.errorMessage.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            hideAllMessages();
+            elements.successMessage.textContent = message;
+            elements.successMessage.style.display = 'block';
+        }
+
+        function showSecurityInfo(authMethod) {
+            hideAllMessages();
+            let message = '';
+            
+            switch(authMethod) {
+                case 'hash':
+                    message = '🔒 Autenticazione sicura completata!';
+                    break;
+                case 'plain_migrated':
+                    message = '🔄 Password migrata automaticamente in hash sicuro!';
+                    break;
+                case 'plain_fallback':
+                    message = '⚠️ Login in modalità compatibilità';
+                    break;
+                default:
+                    message = '🔒 Autenticazione completata con successo';
+            }
+            
+            elements.securityMessage.textContent = message;
+            elements.securityMessage.style.display = 'block';
+        }
+
+        function hideAllMessages() {
+            elements.errorMessage.style.display = 'none';
+            elements.successMessage.style.display = 'none';
+            elements.securityMessage.style.display = 'none';
+        }
+
+        // Setup form validation
+        function setupFormValidation() {
+            // Validazione real-time
+            elements.userId.addEventListener('blur', () => validateField(elements.userId));
+            elements.password.addEventListener('blur', () => validateField(elements.password));
+            
+            // Clear validation on input
+            elements.userId.addEventListener('input', () => clearValidation(elements.userId));
+            elements.password.addEventListener('input', () => clearValidation(elements.password));
+        }
+
+        // ⚡ EVENT LISTENER OTTIMIZZATO
+        elements.loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userId = elements.userId.value.trim();
+            const password = elements.password.value.trim();
+
+            // Reset messaggi
+            hideAllMessages();
+
+            // Validazione client-side
+            let isValid = true;
+            if (!validateField(elements.userId)) isValid = false;
+            if (!validateField(elements.password)) isValid = false;
+
+            if (!isValid) {
+                showError('Per favore completa tutti i campi richiesti');
+                return;
+            }
+
+            // Validazione password
+            if (!Utils.validatePassword(password)) {
+                showError(`Password deve essere almeno ${CONFIG.VALIDATION.MIN_PASSWORD_LENGTH} caratteri`);
+                return;
+            }
+
+            // ⚡ LOADING STATE VELOCE
+            elements.loginBtn.disabled = true;
+            elements.loginBtn.innerHTML = '<span class="loading"></span>Accesso in corso...';
+
+            try {
+                const user = await authenticateUser(userId, password);
+                
+                if (user && user.success) {
+                    // ⚡ SUCCESS VELOCE
+                    showSuccess(`Benvenuto ${user.data.name}!`);
+                    
+                    // Mostra info sicurezza se disponibile
+                    if (user.systemInfo && user.systemInfo.authMethod) {
+                        setTimeout(() => {
+                            showSecurityInfo(user.systemInfo.authMethod);
+                        }, 1500);
+                    }
+                    
+                    console.log('⚡ Login successful');
+                    
+                    // Salva sessione
+                    Utils.setSession(user.data, user.sessionToken);
+                    
+                    // ⚡ REDIRECT IMMEDIATO
+                    setTimeout(() => {
+                        console.log('⚡ Redirect alla dashboard...');
+                        window.location.href = CONFIG.PAGES.DASHBOARD;
+                    }, 2000);
+                   
+                } else {
+                    showError(user.message || 'Credenziali non valide');
+                }
+            } catch (error) {
+                showError('Errore durante l\'autenticazione: ' + error.message);
+                console.error('❌ Login error:', error);
+            } finally {
+                elements.loginBtn.disabled = false;
+                elements.loginBtn.innerHTML = 'Accedi';
+            }
+        });
+
+        // ⚡ SETUP VELOCE AL CARICAMENTO
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('⚡ Sistema Login V2.2 avviato');
+            
+            // Se già loggato, redirect immediato
+            if (PageGuard.redirectIfLoggedIn()) {
+                return;
+            }
+            
+            // Setup validazione form
+            setupFormValidation();
+            
+            // ✅ CONNECTION TEST DISABILITATO PER PERFORMANCE
+            console.log('⚡ Connection test disabilitato - modalità veloce attiva');
+            console.log('⚡ Form login pronto per l\'uso');
+            
+            // Focus automatico sul campo username
+            elements.userId.focus();
+        });
+
+        // ⚡ ENTER KEY OPTIMIZATION
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !elements.loginBtn.disabled) {
+                e.preventDefault();
+                elements.loginForm.dispatchEvent(new Event('submit'));
+            }
+            
+            // ESC per clear dei messaggi
+            if (e.key === 'Escape') {
+                hideAllMessages();
+            }
+        });
+
+        // Mostra notifica usando il sistema della dashboard
+        function showNotification(message, type = 'info', duration = 5000) {
+            if (Utils && Utils.showNotification) {
+                Utils.showNotification(message, type, duration);
+            } else {
+                console.log(`${type.toUpperCase()}: ${message}`);
+            }
+        }
+    </script>
+</body>
+</html>
