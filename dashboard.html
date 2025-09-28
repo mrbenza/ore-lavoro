@@ -1113,31 +1113,39 @@
                     document.body.innerHTML = '<div style="text-align: center; padding: 50px; color: red;"><h1>Errore</h1><p>Dipendenze mancanti. Ricarica la pagina.</p></div>';
                     return;
                 }
-
                 cacheElements();
-
                 if (!PageGuard.requireLogin()) return;
-
                 Utils.setupAutoLogout();
-
                 const session = Utils.getSession();
                 if (!session?.user || !session?.token) {
                     Utils.redirectToLogin();
                     return;
                 }
-
                 currentUser = session.user;
                 sessionToken = session.token;
-
+                
+                // ===== CONTROLLO ADMIN E REDIRECT =====
+                try {
+                    if (await Utils.validateAdmin()) {
+                        Utils.showNotification('Accesso admin rilevato, reindirizzamento al pannello amministratore...', 'info');
+                        setTimeout(() => {
+                            window.location.href = CONFIG.PAGES.ADMIN;
+                        }, 500);
+                        return; // Interrompe il caricamento della dashboard
+                    }
+                } catch (error) {
+                    console.log('Errore controllo admin (non critico):', error);
+                    // Continua con dashboard normale
+                }
+                // ===== FINE CONTROLLO ADMIN =====
+                
                 await initializeApp();
                 startAutoRefresh();
-
             } catch (error) {
                 console.error('Errore inizializzazione:', error);
                 showNotification('Errore durante l\'inizializzazione', 'error');
             }
         });
-
         // Inizializzazione app
         async function initializeApp() {
             loadUserData();
