@@ -363,9 +363,10 @@ const Utils = {
             
             const result = await this.callAPI({
                 action: 'validateAdmin',
-                sessionToken: sessionData.token
+                sessionToken: sessionData.token  // Assicurati che sia questo il nome
             });
             
+            console.log('API validateAdmin response:', result); // Debug
             return result && result.success;
             
         } catch (error) {
