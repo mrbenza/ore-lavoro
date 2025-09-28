@@ -131,6 +131,346 @@ const Utils = {
             } else {
                 targetUrl.searchParams.append(key, String(value));
             }
+************************************************************
+            // ===== FUNZIONI ADMIN =====
+        
+        /**
+         * Valida se l'utente corrente ha accesso admin
+         */
+        validateAdmin: async function() {
+            try {
+                const sessionData = this.getSession();
+                if (!sessionData || !sessionData.token) {
+                    return false;
+                }
+                
+                const result = await this.callAPI({
+                    action: 'validateAdmin',
+                    sessionToken: sessionData.token
+                });
+                
+                return result && result.success;
+                
+            } catch (error) {
+                console.error('Errore validazione admin:', error);
+                return false;
+            }
+        },
+    
+        /**
+         * Controlla accesso admin e reindirizza se necessario
+         */
+        checkAdminAccess: async function() {
+            const isAdmin = await this.validateAdmin();
+            
+            if (!isAdmin) {
+                this.showNotification('Accesso negato. Solo gli amministratori possono accedere a questa pagina.', 'error');
+                
+                setTimeout(() => {
+                    window.location.href = CONFIG.PAGES.DASHBOARD;
+                }, 2000);
+                
+                return false;
+            }
+            
+            return true;
+        },
+    
+        /**
+         * Carica overview cantieri per admin
+         */
+        loadCantieriOverview: async function(modalita = 'totali') {
+            try {
+                const sessionData = this.getSession();
+                const result = await this.callAPI({
+                    action: 'getCantieriOverview',
+                    sessionToken: sessionData.token,
+                    modalita: modalita
+                });
+                
+                if (result && result.success) {
+                    return result.data || [];
+                } else {
+                    throw new Error(result?.message || 'Errore caricamento cantieri');
+                }
+                
+            } catch (error) {
+                this.showNotification('Errore caricamento cantieri: ' + error.message, 'error');
+                throw error;
+            }
+        },
+    
+        /**
+         * Carica lista dipendenti per admin
+         */
+        loadDipendentiList: async function() {
+            try {
+                const sessionData = this.getSession();
+                const result = await this.callAPI({
+                    action: 'getDipendentiList',
+                    sessionToken: sessionData.token
+                });
+                
+                if (result && result.success) {
+                    return result.data || [];
+                } else {
+                    throw new Error(result?.message || 'Errore caricamento dipendenti');
+                }
+                
+            } catch (error) {
+                this.showNotification('Errore caricamento dipendenti: ' + error.message, 'error');
+                throw error;
+            }
+        },
+    
+        /**
+         * Carica timeline dipendente per admin
+         */
+        loadDipendenteTimeline: async function(userId, timeframe = '30days') {
+            try {
+                const sessionData = this.getSession();
+                const result = await this.callAPI({
+                    action: 'getDipendenteTimeline',
+                    sessionToken: sessionData.token,
+                    userId: userId,
+                    timeframe: timeframe
+                });
+                
+                if (result && result.success) {
+                    return result.data || {};
+                } else {
+                    throw new Error(result?.message || 'Errore caricamento timeline');
+                }
+                
+            } catch (error) {
+                this.showNotification('Errore caricamento timeline: ' + error.message, 'error');
+                throw error;
+            }
+        },
+    
+        /**
+         * Invalida cache admin
+         */
+        invalidateAdminCache: async function(cacheType = 'all') {
+            try {
+                const sessionData = this.getSession();
+                const result = await this.callAPI({
+                    action: 'invalidateCache',
+                    sessionToken: sessionData.token,
+                    cacheType: cacheType
+                });
+                
+                return result && result.success;
+                
+            } catch (error) {
+                console.error('Errore invalidazione cache:', error);
+                return false;
+            }
+        },
+    
+        // ===== FORMATTERS ADMIN =====
+        
+        formatOre: function(ore) {
+            if (!ore || ore === 0) return '0h';
+            return ore.toFixed(1) + 'h';
+        },
+    
+        formatDataAdmin: function(data) {
+            if (!data) return 'N/A';
+            
+            const date = new Date(data);
+            if (isNaN(date.getTime())) return 'N/A';
+            
+            return date.toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        },
+    
+        truncateText: function(testo, maxLength = 25) {
+            if (!testo) return '';
+            if (testo.length <= maxLength) return testo;
+            return testo.substring(0, maxLength - 3) + '...';
+        },
+    
+        getStatoBadgeClass: function(stato) {
+            switch (stato?.toLowerCase()) {
+                case 'aperto':
+                    return 'badge-success';
+                case 'chiuso':
+                    return 'badge-secondary';
+                case 'sospeso':
+                    return 'badge-warning';
+                default:
+                    return 'badge-info';
+            }
+        },
+    
+        // ===== GESTIONE GRAFICI =====
+        
+        prepareChartData: function(timelineData, timeframe) {
+            try {
+                if (!timelineData || !timelineData.timeline) {
+                    return {
+                        labels: [],
+                        datasets: [{
+                            label: 'Ore Lavorate',
+                            data: [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.1
+                        }]
+                    };
+                }
+                
+                const labels = timelineData.timeline.map(item => item.periodo);
+                const data = timelineData.timeline.map(item => item.ore || 0);
+                
+                return {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ore Lavorate',
+                        data: data,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1,
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                };
+                
+            } catch (error) {
+                console.error('Errore preparazione dati grafico:', error);
+                return { labels: [], datasets: [] };
+            }
+        },
+    
+        getChartOptions: function(isMobile = false) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: isMobile ? 10 : 15,
+                            font: { size: isMobile ? 10 : 12 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#3b82f6',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return `Ore: ${context.parsed.y.toFixed(1)}h`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { 
+                            color: 'rgba(0, 0, 0, 0.1)' 
+                        },
+                        ticks: { 
+                            font: { size: isMobile ? 9 : 10 },
+                            callback: function(value) {
+                                return value.toFixed(1) + 'h';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { 
+                            font: { size: isMobile ? 9 : 10 },
+                            maxRotation: isMobile ? 45 : 0
+                        }
+                    }
+                }
+            };
+        },
+    
+        // ===== UTILITY MOBILE =====
+        
+        isMobile: function() {
+            return window.innerWidth < 768;
+        },
+    
+        handleResponsiveResize: function(callback) {
+            let resizeTimer;
+            
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    if (callback && typeof callback === 'function') {
+                        callback(this.isMobile());
+                    }
+                }, 250);
+            });
+        },
+    
+        setupAutoRefresh: function(refreshCallback, interval = 300000) {
+            if (!refreshCallback || typeof refreshCallback !== 'function') {
+                console.error('Callback refresh non valido');
+                return null;
+            }
+            
+            return setInterval(async () => {
+                try {
+                    console.log('Auto-refresh dati admin...');
+                    await refreshCallback();
+                } catch (error) {
+                    console.error('Errore auto-refresh:', error);
+                }
+            }, interval);
+        },
+    
+        stopAutoRefresh: function(intervalId) {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        },
+    
+        showNoDataState: function(container, message = 'Nessun dato disponibile') {
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div class="no-data-state">
+                    <div class="no-data-icon">📊</div>
+                    <h3>Nessun Dato</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+        },
+    
+        adminLog: function(message, data = null) {
+            if (CONFIG.PRODUCTION_MODE === false) {
+                console.log(`[ADMIN UI] ${message}`, data || '');
+            }
+        },
+    
+        logAdminPerformance: function(operation, startTime) {
+            if (CONFIG.PRODUCTION_MODE === false) {
+                const duration = Date.now() - startTime;
+                console.log(`[ADMIN UI PERF] ${operation}: ${duration}ms`);
+            }
+        }
++++++++++++++++++++++++++
+        
         });
         
         ProductionLogger.debug('URL finale:', targetUrl.toString());
@@ -470,407 +810,3 @@ const ADMIN_CONFIG = {
     CHART_HEIGHT_DESKTOP: 300
 };
 
-// ============================ UTILS ADMIN FRONTEND ============================
-
-const Utils = Utils || {};
-
-/**
- * Valida se l'utente corrente ha accesso admin
- */
-Utils.validateAdmin = async function() {
-    try {
-        const sessionData = this.getSession();
-        if (!sessionData || !sessionData.sessionToken) {
-            return false;
-        }
-        
-        const result = await this.callAPI({
-            action: 'validateAdmin',
-            sessionToken: sessionData.sessionToken
-        });
-        
-        return result && result.success;
-        
-    } catch (error) {
-        console.error('Errore validazione admin:', error);
-        return false;
-    }
-};
-
-/**
- * Controlla accesso admin e reindirizza se necessario
- */
-Utils.checkAdminAccess = async function() {
-    const isAdmin = await this.validateAdmin();
-    
-    if (!isAdmin) {
-        this.showNotification('Accesso negato. Solo gli amministratori possono accedere a questa pagina.', 'error');
-        
-        setTimeout(() => {
-            window.location.href = CONFIG.PAGES.DASHBOARD;
-        }, 2000);
-        
-        return false;
-    }
-    
-    return true;
-};
-
-/**
- * Carica overview cantieri per admin
- */
-Utils.loadCantieriOverview = async function(modalita = 'totali') {
-    try {
-        this.showLoading('Caricamento cantieri...');
-        
-        const sessionData = this.getSession();
-        const result = await this.callAPI({
-            action: 'getCantieriOverview',
-            sessionToken: sessionData.sessionToken,
-            modalita: modalita
-        });
-        
-        this.hideLoading();
-        
-        if (result && result.success) {
-            return result.data || [];
-        } else {
-            throw new Error(result?.message || 'Errore caricamento cantieri');
-        }
-        
-    } catch (error) {
-        this.hideLoading();
-        this.showNotification('Errore caricamento cantieri: ' + error.message, 'error');
-        throw error;
-    }
-};
-
-/**
- * Carica lista dipendenti per admin
- */
-Utils.loadDipendentiList = async function() {
-    try {
-        this.showLoading('Caricamento dipendenti...');
-        
-        const sessionData = this.getSession();
-        const result = await this.callAPI({
-            action: 'getDipendentiList',
-            sessionToken: sessionData.sessionToken
-        });
-        
-        this.hideLoading();
-        
-        if (result && result.success) {
-            return result.data || [];
-        } else {
-            throw new Error(result?.message || 'Errore caricamento dipendenti');
-        }
-        
-    } catch (error) {
-        this.hideLoading();
-        this.showNotification('Errore caricamento dipendenti: ' + error.message, 'error');
-        throw error;
-    }
-};
-
-/**
- * Carica timeline dipendente per admin
- */
-Utils.loadDipendenteTimeline = async function(userId, timeframe = '30days') {
-    try {
-        this.showLoading('Caricamento timeline...');
-        
-        const sessionData = this.getSession();
-        const result = await this.callAPI({
-            action: 'getDipendenteTimeline',
-            sessionToken: sessionData.sessionToken,
-            userId: userId,
-            timeframe: timeframe
-        });
-        
-        this.hideLoading();
-        
-        if (result && result.success) {
-            return result.data || {};
-        } else {
-            throw new Error(result?.message || 'Errore caricamento timeline');
-        }
-        
-    } catch (error) {
-        this.hideLoading();
-        this.showNotification('Errore caricamento timeline: ' + error.message, 'error');
-        throw error;
-    }
-};
-
-/**
- * Invalida cache admin
- */
-Utils.invalidateAdminCache = async function(cacheType = 'all') {
-    try {
-        const sessionData = this.getSession();
-        const result = await this.callAPI({
-            action: 'invalidateCache',
-            sessionToken: sessionData.sessionToken,
-            cacheType: cacheType
-        });
-        
-        return result && result.success;
-        
-    } catch (error) {
-        console.error('Errore invalidazione cache:', error);
-        return false;
-    }
-};
-
-// ============================ FORMATTERS ADMIN ============================
-
-/**
- * Formatta ore per visualizzazione
- */
-Utils.formatOre = function(ore) {
-    if (!ore || ore === 0) return '0h';
-    return ore.toFixed(1) + 'h';
-};
-
-/**
- * Formatta data per visualizzazione admin
- */
-Utils.formatDataAdmin = function(data) {
-    if (!data) return 'N/A';
-    
-    const date = new Date(data);
-    if (isNaN(date.getTime())) return 'N/A';
-    
-    return date.toLocaleDateString('it-IT', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
-};
-
-/**
- * Tronca testo per mobile
- */
-Utils.truncateText = function(testo, maxLength = 25) {
-    if (!testo) return '';
-    if (testo.length <= maxLength) return testo;
-    return testo.substring(0, maxLength - 3) + '...';
-};
-
-/**
- * Badge classe per stato cantiere
- */
-Utils.getStatoBadgeClass = function(stato) {
-    switch (stato?.toLowerCase()) {
-        case 'aperto':
-            return 'badge-success';
-        case 'chiuso':
-            return 'badge-secondary';
-        case 'sospeso':
-            return 'badge-warning';
-        default:
-            return 'badge-info';
-    }
-};
-
-// ============================ GESTIONE GRAFICI ============================
-
-/**
- * Prepara dati per Chart.js timeline
- */
-Utils.prepareChartData = function(timelineData, timeframe) {
-    try {
-        if (!timelineData || !timelineData.timeline) {
-            return {
-                labels: [],
-                datasets: [{
-                    label: 'Ore Lavorate',
-                    data: [],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.1
-                }]
-            };
-        }
-        
-        const labels = timelineData.timeline.map(item => item.periodo);
-        const data = timelineData.timeline.map(item => item.ore || 0);
-        
-        return {
-            labels: labels,
-            datasets: [{
-                label: 'Ore Lavorate',
-                data: data,
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.1,
-                pointBackgroundColor: '#3b82f6',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 2,
-                pointRadius: 4
-            }]
-        };
-        
-    } catch (error) {
-        console.error('Errore preparazione dati grafico:', error);
-        return { labels: [], datasets: [] };
-    }
-};
-
-/**
- * Configurazione Chart.js responsive
- */
-Utils.getChartOptions = function(isMobile = false) {
-    return {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-            intersect: false,
-            mode: 'index'
-        },
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    usePointStyle: true,
-                    padding: isMobile ? 10 : 15,
-                    font: { size: isMobile ? 10 : 12 }
-                }
-            },
-            tooltip: {
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                titleColor: '#fff',
-                bodyColor: '#fff',
-                borderColor: '#3b82f6',
-                borderWidth: 1,
-                callbacks: {
-                    label: function(context) {
-                        return `Ore: ${context.parsed.y.toFixed(1)}h`;
-                    }
-                }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: { 
-                    color: 'rgba(0, 0, 0, 0.1)' 
-                },
-                ticks: { 
-                    font: { size: isMobile ? 9 : 10 },
-                    callback: function(value) {
-                        return value.toFixed(1) + 'h';
-                    }
-                }
-            },
-            x: {
-                grid: { display: false },
-                ticks: { 
-                    font: { size: isMobile ? 9 : 10 },
-                    maxRotation: isMobile ? 45 : 0
-                }
-            }
-        }
-    };
-};
-
-// ============================ UTILITY MOBILE ============================
-
-/**
- * Verifica se siamo su mobile
- */
-Utils.isMobile = function() {
-    return window.innerWidth < ADMIN_CONFIG.MOBILE_BREAKPOINT;
-};
-
-/**
- * Gestisce resize responsivo
- */
-Utils.handleResponsiveResize = function(callback) {
-    let resizeTimer;
-    
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-            if (callback && typeof callback === 'function') {
-                callback(this.isMobile());
-            }
-        }, 250);
-    });
-};
-
-/**
- * Setup auto-refresh per admin
- */
-Utils.setupAutoRefresh = function(refreshCallback, interval = ADMIN_CONFIG.AUTO_REFRESH_INTERVAL) {
-    if (!refreshCallback || typeof refreshCallback !== 'function') {
-        console.error('Callback refresh non valido');
-        return null;
-    }
-    
-    return setInterval(async () => {
-        try {
-            console.log('Auto-refresh dati admin...');
-            await refreshCallback();
-        } catch (error) {
-            console.error('Errore auto-refresh:', error);
-        }
-    }, interval);
-};
-
-/**
- * Ferma auto-refresh
- */
-Utils.stopAutoRefresh = function(intervalId) {
-    if (intervalId) {
-        clearInterval(intervalId);
-    }
-};
-
-// ============================ GESTIONE STATI UI ============================
-
-/**
- * Mostra stato "nessun dato"
- */
-Utils.showNoDataState = function(container, message = 'Nessun dato disponibile') {
-    if (!container) return;
-    
-    container.innerHTML = `
-        <div class="no-data-state">
-            <div class="no-data-icon">📊</div>
-            <h3>Nessun Dato</h3>
-            <p>${message}</p>
-        </div>
-    `;
-};
-
-// ============================ DEBUG ADMIN ============================
-
-/**
- * Log specifico per admin panel
- */
-Utils.adminLog = function(message, data = null) {
-    if (CONFIG.PRODUCTION_MODE === false) {
-        console.log(`[ADMIN UI] ${message}`, data || '');
-    }
-};
-
-/**
- * Log performance per operazioni admin
- */
-Utils.logAdminPerformance = function(operation, startTime) {
-    if (CONFIG.PRODUCTION_MODE === false) {
-        const duration = Date.now() - startTime;
-        console.log(`[ADMIN UI PERF] ${operation}: ${duration}ms`);
-    }
-};
-
-// ============================ AGGIORNA PAGES ESISTENTI ============================
-
-// Aggiungi la pagina admin alle tue PAGES esistenti
-if (typeof CONFIG !== 'undefined' && CONFIG.PAGES) {
-    CONFIG.PAGES.ADMIN = ADMIN_CONFIG.ADMIN_PAGE;
-}
