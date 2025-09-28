@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   }
 
   // 🔧 AGGIORNA CON IL TUO URL GOOGLE APPS SCRIPT
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWenT-EwL6B3YsKcveDnuSC8UMdj-d8AMRNO4xYJ2FtC-ENEP7b9LqVbHRt_CCoQknGw/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzpBMqnvwivhJJlN0nbFfkQ9gilNh0otSFeCO2eHgZbKewH7aBMyLQOo2zn7t1CL-j4RQ/exec';
 
   try {
     let requestData;
