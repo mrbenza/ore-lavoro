@@ -887,7 +887,11 @@
         }
 
         function logout() {
-            Utils.logout();
+            Utils.clearSession();
+            Utils.showNotification('Disconnessione effettuata', 'info');
+            setTimeout(() => {
+                Utils.redirectToLogin();
+            }, 1000);
         }
 
         // ============================ AUTO-REFRESH ============================
