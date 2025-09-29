@@ -762,6 +762,7 @@
                     // Carica TUTTI i dati dell'anno corrente (timeframe più ampio)
                     const result = await Utils.loadDipendenteTimeline(userId, 'year');
                     
+                    // result È GIÀ result.data dal config.js
                     if (!result || !result.timeline) {
                         throw new Error('Dati timeline non disponibili');
                     }
@@ -769,7 +770,7 @@
                     // Salva in cache i dati RAW completi
                     timelineDataCache[userId] = {
                         rawTimeline: result.timeline,
-                        rawData: result
+                        fullData: result
                     };
                     
                     hideLoading();
