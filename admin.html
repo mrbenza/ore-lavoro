@@ -593,6 +593,14 @@
         </section>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="admin-loading-overlay" style="display: none;">
+        <div class="admin-loading-content">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 15px; color: #6b7280;">Caricamento dati...</p>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="config.js"></script>
     <script>
@@ -604,6 +612,9 @@
         let currentUserId = null;
         let timelineChart = null;
         let autoRefreshInterval = null;
+        
+        // CACHE GLOBALE PER TIMELINE - mantiene i dati completi dell'anno
+        let timelineDataCache = {};
 
         // ============================ INIZIALIZZAZIONE ============================
         document.addEventListener('DOMContentLoaded', async function() {
@@ -665,10 +676,13 @@
             
             // Selezione dipendente
             document.getElementById('dipendentiSelect').addEventListener('change', async function() {
-                currentUserId = this.value;
-                if (currentUserId) {
-                    await loadDipendenteTimeline();
+                const newUserId = this.value;
+                
+                if (newUserId) {
+                    currentUserId = newUserId;
+                    await loadDipendenteTimeline(currentUserId, currentTimeframe);
                 } else {
+                    currentUserId = null;
                     clearTimelineChart();
                 }
             });
@@ -685,7 +699,7 @@
                     // Update timeframe and reload
                     currentTimeframe = this.dataset.timeframe;
                     if (currentUserId) {
-                        await loadDipendenteTimeline();
+                        await loadDipendenteTimeline(currentUserId, currentTimeframe);
                     }
                 });
             });
@@ -736,24 +750,132 @@
             }
         }
 
-        async function loadDipendenteTimeline() {
-            if (!currentUserId) return;
-            
-            const startTime = Date.now();
-            
+        // ============================ GESTIONE TIMELINE CON CACHE ============================
+        async function loadDipendenteTimeline(userId, timeframe) {
             try {
-                Utils.adminLog('Loading timeline for user:', currentUserId, 'timeframe:', currentTimeframe);
+                Utils.adminLog('Loading timeline for user:', userId, 'timeframe:', timeframe);
                 
-                const timelineData = await Utils.loadDipendenteTimeline(currentUserId, currentTimeframe);
-                renderTimelineChart(timelineData);
-                renderStats(timelineData);
+                // Se non abbiamo i dati cached per questo utente, caricali
+                if (!timelineDataCache[userId]) {
+                    showLoading();
+                    
+                    // Carica TUTTI i dati dell'anno corrente (timeframe più ampio)
+                    const result = await Utils.loadDipendenteTimeline(userId, 'year');
+                    
+                    if (!result || !result.timeline) {
+                        throw new Error('Dati timeline non disponibili');
+                    }
+                    
+                    // Salva in cache i dati RAW completi
+                    timelineDataCache[userId] = {
+                        rawTimeline: result.timeline,
+                        rawData: result
+                    };
+                    
+                    hideLoading();
+                    Utils.adminLog('Timeline data cached for user:', userId);
+                }
                 
-                Utils.logAdminPerformance('loadDipendenteTimeline', startTime);
+                // Filtra i dati cached in base al timeframe selezionato
+                const filteredData = filterTimelineByTimeframe(
+                    timelineDataCache[userId].rawTimeline, 
+                    timeframe
+                );
+                
+                // Prepara i dati per il grafico e le stats
+                const processedData = processFilteredTimeline(filteredData, timeframe);
+                
+                // Aggiorna UI
+                updateTimelineChart(processedData, timeframe);
+                updateStats(processedData);
+                
+                Utils.adminLog('Timeline updated successfully');
                 
             } catch (error) {
                 console.error('Errore caricamento timeline:', error);
                 showTimelineError();
+                hideLoading();
             }
+        }
+
+        // ============================ FILTRO TIMELINE ============================
+        function filterTimelineByTimeframe(timelineData, timeframe) {
+            const oggi = new Date();
+            let dataInizio, dataFine;
+            
+            switch (timeframe) {
+                case '30days':
+                    dataInizio = new Date(oggi);
+                    dataInizio.setDate(oggi.getDate() - 30);
+                    dataFine = oggi;
+                    break;
+                    
+                case 'lastMonth':
+                    // Primo giorno del mese precedente
+                    dataInizio = new Date(oggi.getFullYear(), oggi.getMonth() - 1, 1);
+                    // Ultimo giorno del mese precedente
+                    dataFine = new Date(oggi.getFullYear(), oggi.getMonth(), 0);
+                    break;
+                    
+                case 'year':
+                    // Primo giorno dell'anno corrente
+                    dataInizio = new Date(oggi.getFullYear(), 0, 1);
+                    dataFine = oggi;
+                    break;
+                    
+                default:
+                    // Default: ultimi 30 giorni
+                    dataInizio = new Date(oggi);
+                    dataInizio.setDate(oggi.getDate() - 30);
+                    dataFine = oggi;
+            }
+            
+            return filterByDateRange(timelineData, dataInizio, dataFine);
+        }
+
+        function filterByDateRange(timelineData, dataInizio, dataFine) {
+            if (!Array.isArray(timelineData)) {
+                console.error('Timeline data is not an array:', timelineData);
+                return [];
+            }
+            
+            return timelineData.filter(entry => {
+                if (!entry || !entry.data) return false;
+                
+                const entryDate = new Date(entry.data);
+                return entryDate >= dataInizio && entryDate <= dataFine;
+            });
+        }
+
+        // ============================ PROCESSING DATI FILTRATI ============================
+        function processFilteredTimeline(filteredData, timeframe) {
+            // Calcola statistiche sui dati filtrati
+            let totaleOre = 0;
+            const cantieriSet = new Set();
+            const giorniMap = new Map();
+            
+            filteredData.forEach(entry => {
+                if (entry.ore) {
+                    totaleOre += parseFloat(entry.ore) || 0;
+                }
+                if (entry.cantiereId) {
+                    cantieriSet.add(entry.cantiereId);
+                }
+                if (entry.data) {
+                    giorniMap.set(entry.data, true);
+                }
+            });
+            
+            const giornateLavorate = giorniMap.size;
+            const cantieriCoinvolti = Array.from(cantieriSet);
+            
+            return {
+                timeline: filteredData,
+                totaleOre: totaleOre,
+                giornateLavorate: giornateLavorate,
+                cantieriCoinvolti: cantieriCoinvolti,
+                mediaGiornaliera: giornateLavorate > 0 ? (totaleOre / giornateLavorate) : 0
+            };
         }
 
         // ============================ RENDERING UI ============================
@@ -761,7 +883,12 @@
             const grid = document.getElementById('cantieriGrid');
             
             if (!cantieri || cantieri.length === 0) {
-                Utils.showNoDataState(grid, 'Nessun cantiere trovato');
+                grid.innerHTML = `
+                    <div class="no-data-state">
+                        <div class="no-data-icon"><i class="fas fa-building"></i></div>
+                        <p>Nessun cantiere trovato</p>
+                    </div>
+                `;
                 return;
             }
             
@@ -774,157 +901,3 @@
                         ${Utils.formatOre(cantiere.oreTotali)}
                     </div>
                     <div class="cantiere-meta">
-                        <span class="stato-badge ${Utils.getStatoBadgeClass(cantiere.stato)}">
-                            ${cantiere.stato}
-                        </span>
-                        <span>${Utils.formatDataAdmin(cantiere.ultimoAggiornamento)}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderDipendentiSelect(dipendenti) {
-            const select = document.getElementById('dipendentiSelect');
-            
-            if (!dipendenti || dipendenti.length === 0) {
-                select.innerHTML = '<option value="">Nessun dipendente trovato</option>';
-                return;
-            }
-            
-            select.innerHTML = `
-                <option value="">Seleziona un dipendente...</option>
-                ${dipendenti.map(dip => `
-                    <option value="${dip.userId}">${dip.nome} (${dip.ruolo})</option>
-                `).join('')}
-            `;
-        }
-
-        function renderTimelineChart(timelineData) {
-            const ctx = document.getElementById('timelineChart').getContext('2d');
-            
-            // Distruggi chart esistente
-            if (timelineChart) {
-                timelineChart.destroy();
-            }
-            
-            const isMobile = Utils.isMobile();
-            const chartData = Utils.prepareChartData(timelineData, currentTimeframe);
-            const chartOptions = Utils.getChartOptions(isMobile);
-            
-            timelineChart = new Chart(ctx, {
-                type: 'line',
-                data: chartData,
-                options: chartOptions
-            });
-        }
-
-        function renderStats(timelineData) {
-            const container = document.getElementById('statsContainer');
-            
-            container.innerHTML = `
-                <div class="stat-card">
-                    <span class="stat-value">${Utils.formatOre(timelineData.totaleOre)}</span>
-                    <span class="stat-label">Ore Totali</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-value">${timelineData.giornateLavorate}</span>
-                    <span class="stat-label">Giorni Lavorati</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-value">${timelineData.cantieriCoinvolti.length}</span>
-                    <span class="stat-label">Cantieri</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-value">${timelineData.giornateLavorate > 0 ? (timelineData.totaleOre / timelineData.giornateLavorate).toFixed(1) : '0'}h</span>
-                    <span class="stat-label">Media/Giorno</span>
-                </div>
-            `;
-        }
-
-        // ============================ GESTIONE ERRORI ============================
-        function showCantieriError() {
-            const grid = document.getElementById('cantieriGrid');
-            Utils.showNoDataState(grid, 'Errore caricamento cantieri. Riprova.');
-        }
-
-        function showDipendentiError() {
-            const select = document.getElementById('dipendentiSelect');
-            select.innerHTML = '<option value="">Errore caricamento dipendenti</option>';
-        }
-
-        function showTimelineError() {
-            clearTimelineChart();
-            const container = document.getElementById('statsContainer');
-            Utils.showNoDataState(container, 'Errore caricamento timeline');
-        }
-
-        function clearTimelineChart() {
-            if (timelineChart) {
-                timelineChart.destroy();
-                timelineChart = null;
-            }
-            document.getElementById('statsContainer').innerHTML = '';
-        }
-
-        // ============================ AZIONI ============================
-        async function refreshCantieri() {
-            await Utils.invalidateAdminCache('cantieri');
-            await loadCantieri();
-            Utils.showNotification('Cantieri aggiornati', 'success', 2000);
-        }
-
-        async function refreshDipendenti() {
-            await Utils.invalidateAdminCache('dipendenti');
-            await loadDipendenti();
-            if (currentUserId) {
-                await loadDipendenteTimeline();
-            }
-            Utils.showNotification('Dipendenti aggiornati', 'success', 2000);
-        }
-
-        function showCantiereDetails(cantiereId) {
-            Utils.showNotification(`Dettagli cantiere ${cantiereId} - Funzione in sviluppo`, 'info');
-        }
-
-        function logout() {
-            Utils.clearSession();
-            Utils.showNotification('Disconnessione effettuata', 'info');
-            setTimeout(() => {
-                Utils.redirectToLogin();
-            }, 1000);
-        }
-
-        // ============================ AUTO-REFRESH ============================
-        function setupAutoRefresh() {
-            // Auto-refresh ogni 5 minuti
-            autoRefreshInterval = Utils.setupAutoRefresh(async () => {
-                await loadCantieri();
-                if (currentUserId) {
-                    await loadDipendenteTimeline();
-                }
-            }, 300000);
-        }
-
-        // ============================ RESPONSIVE ============================
-        function handleLayoutChange(isMobile) {
-            Utils.adminLog('Layout change - mobile:', isMobile);
-            
-            // Riadatta grafico se esiste
-            if (timelineChart) {
-                timelineChart.options = Utils.getChartOptions(isMobile);
-                timelineChart.update();
-            }
-        }
-
-        // ============================ CLEANUP ============================
-        window.addEventListener('beforeunload', function() {
-            if (autoRefreshInterval) {
-                Utils.stopAutoRefresh(autoRefreshInterval);
-            }
-            if (timelineChart) {
-                timelineChart.destroy();
-            }
-        });
-    </script>
-</body>
-</html>
