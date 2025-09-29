@@ -332,7 +332,7 @@
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
-            margin: 20px auto;
+            margin: 0 auto;
         }
         
         @keyframes spin {
@@ -556,6 +556,8 @@
                     document.querySelectorAll('.toggle-option').forEach(o => o.classList.remove('active'));
                     this.classList.add('active');
                     currentCantieriMode = this.dataset.mode;
+                    
+                    showCantieriLoader();
                     await loadCantieri();
                 });
             });
@@ -580,6 +582,18 @@
             await Promise.all([loadCantieri(), loadDipendenti()]);
         }
 
+        function showCantieriLoader() {
+            const grid = document.getElementById('cantieriGrid');
+            grid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 15px; color: #6b7280; font-weight: 500;">
+                        Caricamento cantieri ${currentCantieriMode === 'mese' ? 'mese corrente' : 'totali'}...
+                    </p>
+                </div>
+            `;
+        }
+
         async function loadCantieri() {
             const t0 = Date.now();
             try {
@@ -591,9 +605,6 @@
                     return;
                 }
 
-                // Mostra loader durante il caricamento
-                showCantieriLoader();
-                
                 const data = await Utils.loadCantieriOverview(currentCantieriMode);
                 cantieriCache[currentCantieriMode] = data;
                 console.log(`[ADMIN] Dal server in ${Date.now() - t0}ms (${data.length} cantieri)`);
@@ -602,18 +613,6 @@
                 console.error('[ADMIN] Errore cantieri:', error);
                 showError('cantieriGrid', 'Errore caricamento cantieri');
             }
-        }
-
-        function showCantieriLoader() {
-            const grid = document.getElementById('cantieriGrid');
-            grid.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                    <div class="loading-spinner"></div>
-                    <p style="margin-top: 15px; color: #6b7280; font-weight: 500;">
-                        Caricamento cantieri ${currentCantieriMode === 'mese' ? 'mese corrente' : 'totali'}...
-                    </p>
-                </div>
-            `;
         }
 
         async function loadDipendenti() {
@@ -689,23 +688,14 @@
             document.getElementById('statsContainer').innerHTML = '';
         }
 
-        function showCantieriLoader() {
-            const grid = document.getElementById('cantieriGrid');
-            grid.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                    <div class="loading-spinner"></div>
-                    <p style="margin-top: 15px; color: #6b7280; font-weight: 500;">
-                        Caricamento cantieri ${currentCantieriMode === 'mese' ? 'mese corrente' : 'totali'}...
-                    </p>
-                </div>
-            `;
-        }
+        function showError(id, msg) {
             document.getElementById(id).innerHTML = `<div class="no-data-state"><div class="no-data-icon"><i class="fas fa-exclamation-triangle"></i></div><p>${msg}</p></div>`;
         }
 
         async function refreshCantieri() {
             cantieriCache = { totali: null, mese: null };
             await Utils.invalidateAdminCache('cantieri');
+            showCantieriLoader();
             await loadCantieri();
             Utils.showNotification('Cantieri aggiornati', 'success', 2000);
         }
