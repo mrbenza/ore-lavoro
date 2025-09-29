@@ -355,15 +355,21 @@ const Utils = {
      * Valida se l'utente corrente ha accesso admin
      */
     validateAdmin: async function() {
-        const sessionData = this.getSession();
-        const result = await this.callAPI({
-            action: 'validateAdmin',
-            sessionToken: sessionData.token,
-            userId: sessionData.user.userId  // Aggiungi questo
-        });
-    }
+        try {
+            const sessionData = this.getSession();
             
-            console.log('API validateAdmin response:', result); // Debug
+            if (!sessionData || !sessionData.token || !sessionData.user) {
+                console.error('Session data mancante');
+                return false;
+            }
+            
+            const result = await this.callAPI({
+                action: 'validateAdmin',
+                sessionToken: sessionData.token,
+                userId: sessionData.user.userId
+            });
+            
+            console.log('API validateAdmin response:', result);
             return result && result.success;
             
         } catch (error) {
@@ -371,7 +377,6 @@ const Utils = {
             return false;
         }
     },
-
     /**
      * Controlla accesso admin e reindirizza se necessario
      */
