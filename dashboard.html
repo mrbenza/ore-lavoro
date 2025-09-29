@@ -1136,10 +1136,10 @@
                     
                     if (isAdmin) {
                         console.log('Utente è admin, reindirizzamento...');
-                        Utils.showNotification('Accesso admin rilevato, reindirizzamento al pannello amministratore...', 'info');
+                        Utils.showNotification('Admin rilevato, reindirizzamento al pannello amministratore...', 'info');
                         setTimeout(() => {
                             window.location.href = CONFIG.PAGES.ADMIN;
-                        }, 2000);
+                        }, 500);
                         return;
                     } else {
                         console.log('Utente NON è admin, continua con dashboard normale');
