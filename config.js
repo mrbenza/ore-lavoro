@@ -355,17 +355,13 @@ const Utils = {
      * Valida se l'utente corrente ha accesso admin
      */
     validateAdmin: async function() {
-        try {
-            const sessionData = this.getSession();
-            if (!sessionData || !sessionData.token) {
-                return false;
-            }
-            
-            const result = await this.callAPI({
-                action: 'validateAdmin',
-                sessionToken: sessionData.token  // Assicurati che sia questo il nome
-            userId: sessionData.user.userId
-            });
+        const sessionData = this.getSession();
+        const result = await this.callAPI({
+            action: 'validateAdmin',
+            sessionToken: sessionData.token,
+            userId: sessionData.user.userId  // Aggiungi questo
+        });
+    }
             
             console.log('API validateAdmin response:', result); // Debug
             return result && result.success;
