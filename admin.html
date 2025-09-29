@@ -591,6 +591,9 @@
                     return;
                 }
 
+                // Mostra loader durante il caricamento
+                showCantieriLoader();
+                
                 const data = await Utils.loadCantieriOverview(currentCantieriMode);
                 cantieriCache[currentCantieriMode] = data;
                 console.log(`[ADMIN] Dal server in ${Date.now() - t0}ms (${data.length} cantieri)`);
@@ -599,6 +602,18 @@
                 console.error('[ADMIN] Errore cantieri:', error);
                 showError('cantieriGrid', 'Errore caricamento cantieri');
             }
+        }
+
+        function showCantieriLoader() {
+            const grid = document.getElementById('cantieriGrid');
+            grid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 15px; color: #6b7280; font-weight: 500;">
+                        Caricamento cantieri ${currentCantieriMode === 'mese' ? 'mese corrente' : 'totali'}...
+                    </p>
+                </div>
+            `;
         }
 
         async function loadDipendenti() {
@@ -674,7 +689,17 @@
             document.getElementById('statsContainer').innerHTML = '';
         }
 
-        function showError(id, msg) {
+        function showCantieriLoader() {
+            const grid = document.getElementById('cantieriGrid');
+            grid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 15px; color: #6b7280; font-weight: 500;">
+                        Caricamento cantieri ${currentCantieriMode === 'mese' ? 'mese corrente' : 'totali'}...
+                    </p>
+                </div>
+            `;
+        }
             document.getElementById(id).innerHTML = `<div class="no-data-state"><div class="no-data-icon"><i class="fas fa-exclamation-triangle"></i></div><p>${msg}</p></div>`;
         }
 
