@@ -522,6 +522,9 @@
         let timelineChart = null;
         let autoRefreshInterval = null;
         let cantieriCache = { totali: null, mese: null };
+        
+        // CACHE DIPENDENTI - mantiene dati completi per ogni dipendente
+        let dipendentiDataCache = {}; // { userId: { ...datiCompleti } }
 
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('[ADMIN] Inizializzazione...');
@@ -573,7 +576,14 @@
                     document.querySelectorAll('.timeframe-tab').forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
                     currentTimeframe = this.dataset.timeframe;
-                    if (currentUserId) await loadTimeline();
+                    if (currentUserId) {
+                        // Switch istantaneo se già in cache
+                        if (dipendentiDataCache[currentUserId]) {
+                            updateTimelineFromCache(currentUserId, currentTimeframe);
+                        } else {
+                            await loadTimeline();
+                        }
+                    }
                 });
             });
         }
@@ -629,14 +639,96 @@
 
         async function loadTimeline() {
             if (!currentUserId) return;
+            
+            const t0 = Date.now();
+            
             try {
+                console.log(`[ADMIN] Caricamento timeline per '${currentUserId}', timeframe: '${currentTimeframe}'`);
+                
+                // Se già in cache, usa quella
+                if (dipendentiDataCache[currentUserId]) {
+                    console.log(`[ADMIN] Timeline da cache in ${Date.now() - t0}ms`);
+                    updateTimelineFromCache(currentUserId, currentTimeframe);
+                    return;
+                }
+                
+                // Mostra loader
+                showTimelineLoader();
+                
+                // Carica dal server
                 const data = await Utils.loadDipendenteTimeline(currentUserId, currentTimeframe);
+                
+                // Salva in cache
+                dipendentiDataCache[currentUserId] = data;
+                console.log(`[ADMIN] Timeline dal server in ${Date.now() - t0}ms`);
+                
+                // Renderizza
                 renderChart(data);
                 renderStats(data);
+                
             } catch (error) {
                 console.error('[ADMIN] Errore timeline:', error);
                 clearChart();
+                showTimelineError();
             }
+        }
+        
+        function showTimelineLoader() {
+            const chartContainer = document.querySelector('.chart-container');
+            chartContainer.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 15px; color: #6b7280; font-weight: 500;">
+                        Caricamento dati dipendente...
+                    </p>
+                </div>
+            `;
+            
+            document.getElementById('statsContainer').innerHTML = '';
+        }
+        
+        function showTimelineError() {
+            const chartContainer = document.querySelector('.chart-container');
+            chartContainer.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                    <div class="no-data-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <p style="margin-top: 15px; color: #ef4444; font-weight: 500;">
+                        Errore caricamento timeline
+                    </p>
+                </div>
+            `;
+        }
+        
+        function updateTimelineFromCache(userId, timeframe) {
+            const cachedData = dipendentiDataCache[userId];
+            if (!cachedData) return;
+            
+            // Seleziona le ore in base al timeframe
+            let totaleOre;
+            switch (timeframe) {
+                case '30days':
+                    totaleOre = cachedData.oreMeseCorrente || 0;
+                    break;
+                case 'lastMonth':
+                    totaleOre = cachedData.oreMesePrecedente || 0;
+                    break;
+                case 'year':
+                    totaleOre = cachedData.oreAnnoCorrente || 0;
+                    break;
+                default:
+                    totaleOre = cachedData.totaleOre || 0;
+            }
+            
+            // Aggiorna dati visualizzati
+            const dataToRender = {
+                ...cachedData,
+                totaleOre: totaleOre
+            };
+            
+            renderChart(dataToRender);
+            renderStats(dataToRender);
+            
+            console.log(`[ADMIN] Switch timeframe istantaneo (da cache)`);
         }
 
         function renderCantieri(data) {
@@ -702,8 +794,19 @@
 
         async function refreshDipendenti() {
             await Utils.invalidateAdminCache('dipendenti');
+            
+            // Invalida anche cache locale dipendenti
+            if (currentUserId) {
+                delete dipendentiDataCache[currentUserId];
+            }
+            
             await loadDipendenti();
-            if (currentUserId) await loadTimeline();
+            
+            if (currentUserId) {
+                showTimelineLoader();
+                await loadTimeline();
+            }
+            
             Utils.showNotification('Dipendenti aggiornati', 'success', 2000);
         }
 
@@ -742,8 +845,21 @@
             meseCached: !!cantieriCache.mese,
             totaliCount: cantieriCache.totali?.length || 0,
             meseCount: cantieriCache.mese?.length || 0,
-            mode: currentCantieriMode
+            mode: currentCantieriMode,
+            dipendentiCached: Object.keys(dipendentiDataCache).length,
+            currentDipendente: currentUserId
         });
+        
+        // Funzione per invalidare cache specifica dipendente
+        window.clearDipendenteCache = (userId) => {
+            if (userId) {
+                delete dipendentiDataCache[userId];
+                console.log('[ADMIN] Cache invalidata per dipendente:', userId);
+            } else {
+                dipendentiDataCache = {};
+                console.log('[ADMIN] Cache dipendenti svuotata completamente');
+            }
+        };
     </script>
 </body>
 </html>
