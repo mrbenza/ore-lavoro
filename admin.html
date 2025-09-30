@@ -1,936 +1,682 @@
-// Configurazione Sistema Gestione Ore V2.2 - PRODUCTION MODE - CORS FIXED
-const CONFIG = {
-    // PROXY VERCEL - URL RELATIVO (CORS gestito)
-    APPS_SCRIPT_URL: '/api/proxy',
- 
-    // MODALITÀ PRODUZIONE
-    PRODUCTION_MODE: true,
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Sistema Gestione Ore</title>
     
-    // Versioning V2.2
-    VERSION: {
-        frontend: '2.2.0',
-        buildDate: '2025-09-07',
-        description: 'Dashboard semplificata - UI pulita e focalizzata'
-    },
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    // Pagine del sistema
-    PAGES: {
-        LOGIN: 'index.html',
-        DASHBOARD: 'dashboard.html',
-        ADMIN: 'admin.html'
-    },
-    
-    // Impostazioni UI V2.2 - Layout Semplificato
-    UI: {
-        NOTIFICATION_DURATION: 4000,
-        LOADING_MIN_TIME: 1000,
-        AUTO_LOGOUT_TIME: 30 * 60 * 1000, // 30 minuti
-        SHOW_AUTH_METHOD: false,
-        SHOW_DEBUG_INFO: false,
-        SHOW_SECURITY_STATUS: false,
-        SHOW_DERIVED_STATS: false
-    },
-    
-    // Validazione
-    VALIDATION: {
-        MAX_HOURS_PER_DAY: 24,
-        MIN_HOURS: 0,
-        MAX_WORK_DESCRIPTION: 500,
-        MAX_NOTES: 200,
-        MIN_PASSWORD_LENGTH: 4
-    },
-    
-    // Debug e sicurezza
-    DEBUG: false,
-    SECURITY: {
-        HASH_ENABLED: true,
-        AUTO_MIGRATION: true,
-        SESSION_TIMEOUT: true,
-        LOG_AUTH_ATTEMPTS: false
-    },
-    
-    // CONFIGURAZIONE LOGGING FRONTEND V2.2
-    LOGGING: {
-        CONSOLE_LOGS: false,
-        ERROR_LOGS: true,
-        AUTH_LOGS: false,
-        API_LOGS: false,
-        PERFORMANCE_LOGS: false
-    }
-};
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333; font-size: 14px; line-height: 1.5; }
+        
+        /* HEADER */
+        .admin-header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 20px; box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 100; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
+        .admin-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: #4f46e5; }
+        .admin-info { display: flex; align-items: center; gap: 15px; font-size: 13px; }
+        .user-badge { background: #4f46e5; color: white; padding: 5px 12px; border-radius: 20px; font-weight: 600; }
+        .logout-btn { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+        .logout-btn:hover { background: #dc2626; transform: translateY(-1px); }
+        
+        /* CONTAINER */
+        .admin-container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; gap: 25px; }
+        .admin-section { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 16px; padding: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); }
+        
+        /* SECTION HEADER */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .section-title { font-size: 20px; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 10px; }
+        .section-title i { color: #4f46e5; }
+        
+        /* CANTIERI */
+        .toggle-container { display: flex; background: #f3f4f6; border-radius: 12px; padding: 4px; }
+        .toggle-option { padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 12px; font-weight: 600; color: #6b7280; white-space: nowrap; }
+        .toggle-option.active { background: #4f46e5; color: white; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3); }
+        .cantieri-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 15px; }
+        .cantiere-card { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; transition: all 0.3s; cursor: pointer; position: relative; overflow: hidden; }
+        .cantiere-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border-color: #4f46e5; }
+        .cantiere-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #4f46e5, #7c3aed); }
+        .cantiere-nome { font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 6px; line-height: 1.3; }
+        .cantiere-ore { font-size: 20px; font-weight: 800; color: #059669; margin: 8px 0; }
+        .cantiere-ore .label { font-size: 10px; font-weight: 500; color: #6b7280; display: block; }
+        .cantiere-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #6b7280; gap: 6px; }
+        .stato-badge { padding: 3px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; text-transform: uppercase; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-secondary { background: #f3f4f6; color: #374151; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+        
+        /* DIPENDENTI */
+        .dipendenti-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .select-dipendente { flex: 1; min-width: 200px; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 14px; background: white; transition: all 0.3s; cursor: pointer; }
+        .select-dipendente:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .refresh-btn { background: #f3f4f6; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all 0.2s; color: #6b7280; }
+        .refresh-btn:hover { background: #e5e7eb; transform: rotate(180deg); }
+        
+        /* CALENDARIO - RIUTILIZZO STILE DASHBOARD */
+        .calendar-wrapper { margin: 20px 0; }
+        .calendar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px; background: #f8fafc; border-radius: 10px; }
+        .calendar-nav { display: flex; align-items: center; gap: 15px; }
+        .nav-btn { background: #4f46e5; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .nav-btn:hover { background: #4338ca; transform: translateY(-1px); }
+        .nav-btn:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+        .current-month { font-size: 16px; font-weight: 700; color: #1f2937; min-width: 150px; text-align: center; }
+        .today-btn { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+        .today-btn:hover { background: #059669; }
+        
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+        .calendar-day-header { text-align: center; font-weight: 700; font-size: 12px; color: #6b7280; padding: 10px 5px; background: #f1f5f9; border-radius: 8px; }
+        .calendar-day { aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 2px solid #e5e7eb; border-radius: 10px; cursor: pointer; transition: all 0.2s; position: relative; background: white; }
+        .calendar-day:hover { border-color: #4f46e5; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15); transform: translateY(-2px); }
+        .calendar-day.other-month { opacity: 0.3; background: #f9fafb; }
+        .calendar-day.today { border-color: #10b981; border-width: 3px; background: #ecfdf5; }
+        .calendar-day.has-work { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-color: #3b82f6; font-weight: 700; }
+        .day-number { font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 2px; }
+        .day-hours { font-size: 11px; font-weight: 700; color: #3b82f6; background: rgba(59, 130, 246, 0.1); padding: 2px 6px; border-radius: 4px; }
+        
+        /* TOTALI ORE */
+        .stats-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb; }
+        .stat-card { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: 800; color: #1f2937; display: block; }
+        .stat-label { font-size: 12px; color: #6b7280; font-weight: 600; margin-top: 5px; text-transform: uppercase; }
+        
+        /* LOADING E STATI */
+        .loading-spinner { border: 3px solid #f3f4f6; border-top: 3px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .no-data-state { text-align: center; padding: 40px 20px; color: #6b7280; }
+        .no-data-icon { font-size: 48px; margin-bottom: 15px; opacity: 0.5; }
+        .spinner-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; gap: 15px; }
+        .spinner-text { color: #6b7280; font-weight: 500; font-size: 14px; }
+        
+        /* ANIMAZIONI */
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-in { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        /* POPUP DETTAGLI GIORNO */
+        .day-details-popup { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; justify-content: center; align-items: center; padding: 20px; }
+        .day-details-popup.show { display: flex; }
+        .popup-content { background: white; border-radius: 20px; padding: 30px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
+        .popup-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e1e5e9; text-align: center; }
+        .popup-title { font-size: 20px; font-weight: 600; color: #333; margin-bottom: 8px; }
+        .popup-total-hours { font-size: 24px; font-weight: 700; color: #4f46e5; background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(124, 58, 237, 0.1)); padding: 8px 20px; border-radius: 20px; border: 2px solid rgba(79, 70, 229, 0.2); margin-top: 5px; }
+        .popup-close { display: none; }
+        .popup-ok-button { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; padding: 15px 40px; border-radius: 25px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; width: 100%; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); }
+        .popup-ok-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4); }
+        .popup-ok-button:active { transform: translateY(0); box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3); }
+        .work-entry { background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(124, 58, 237, 0.05)); border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #4f46e5; transition: all 0.3s ease; }
+        .work-entry:hover { background: rgba(79, 70, 229, 0.1); transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        .work-entry:last-child { margin-bottom: 0; }
+        .work-entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .work-cantiere { font-weight: 600; color: #1f2937; font-size: 16px; }
+        .work-hours-large { font-size: 20px; font-weight: 700; color: #4f46e5; }
+        .work-note { font-size: 14px; color: #6b7280; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-style: italic; }
+        
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .admin-header { padding: 12px 15px; }
+            .header-content { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .admin-info { width: 100%; justify-content: space-between; }
+            .admin-container { padding: 15px; gap: 20px; }
+            .admin-section { padding: 20px 15px; }
+            .section-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .toggle-container { width: 100%; }
+            .cantieri-grid { grid-template-columns: 1fr; }
+            .dipendenti-header { flex-direction: column; }
+            .select-dipendente { width: 100%; }
+            .calendar-day-header { font-size: 10px; padding: 8px 2px; }
+            .day-number { font-size: 12px; }
+            .day-hours { font-size: 9px; }
+            .stats-summary { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
 
-// ===== SISTEMA LOGGING =====
-const ProductionLogger = {
-    log: function(...args) {
-        if (CONFIG.LOGGING.CONSOLE_LOGS && !CONFIG.PRODUCTION_MODE) {
-            console.log('[APP]', ...args);
-        }
-    },
-    
-    error: function(...args) {
-        if (CONFIG.LOGGING.ERROR_LOGS) {
-            console.error('[ERROR]', ...args);
-        }
-    },
-    
-    warn: function(...args) {
-        if (CONFIG.LOGGING.ERROR_LOGS) {
-            console.warn('[WARN]', ...args);
-        }
-    },
-    
-    auth: function(...args) {
-        if (CONFIG.LOGGING.AUTH_LOGS && !CONFIG.PRODUCTION_MODE) {
-            console.log('[AUTH]', ...args);
-        }
-    },
-    
-    api: function(...args) {
-        if (CONFIG.LOGGING.API_CALLS && !CONFIG.PRODUCTION_MODE) {
-            console.log('[API]', ...args);
-        }
-    },
-    
-    performance: function(...args) {
-        if (CONFIG.LOGGING.PERFORMANCE_LOGS && !CONFIG.PRODUCTION_MODE) {
-            console.log('[PERF]', ...args);
-        }
-    },
-    
-    debug: function(...args) {
-        if (CONFIG.DEBUG && !CONFIG.PRODUCTION_MODE) {
-            console.log('[DEBUG]', ...args);
-        }
-    }
-};
+<body>
+    <header class="admin-header">
+        <div class="header-content">
+            <div class="admin-title"><i class="fas fa-user-shield"></i><span>Dashboard Amministratore</span></div>
+            <div class="admin-info">
+                <div class="user-badge"><i class="fas fa-user"></i><span id="adminName">Caricamento...</span></div>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Esci</button>
+            </div>
+        </div>
+    </header>
 
-// ===== FUNZIONI DI UTILITÀ =====
-const Utils = {
-    // Gestione chiamate API
-    async callAPI(params) {
-        ProductionLogger.api('API Call:', params.action);
-        
-        let targetUrl;
-        if (CONFIG.APPS_SCRIPT_URL.startsWith('http')) {
-            targetUrl = new URL(CONFIG.APPS_SCRIPT_URL);
-        } else {
-            targetUrl = new URL(CONFIG.APPS_SCRIPT_URL, window.location.origin);
-        }
-        
-        Object.keys(params).forEach(key => {
-            const value = params[key];
-            if (typeof value === 'object' && value !== null) {
-                ProductionLogger.debug(`Serializzando oggetto ${key}:`, value);
-                targetUrl.searchParams.append(key, JSON.stringify(value));
-            } else {
-                targetUrl.searchParams.append(key, String(value));
-            }
-        });
-        
-        ProductionLogger.debug('URL finale:', targetUrl.toString());
-        
-        try {
-            const response = await fetch(targetUrl.toString(), { method: 'GET' });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const text = await response.text();
-            const cleanText = text.replace(/^\)\]\}',?\s*/, '');
-            const result = JSON.parse(cleanText);
-            
-            ProductionLogger.api('API Response per:', params.action, result.success ? 'SUCCESS' : 'FAILED');
-            
-            if (!CONFIG.PRODUCTION_MODE && result.systemInfo) {
-                ProductionLogger.auth('Auth Method:', result.systemInfo.authMethod);
-                ProductionLogger.auth('Hash Support:', result.systemInfo.hashSupport);
-                ProductionLogger.auth('Backend Version:', result.systemInfo.version);
-            }
-            
-            return result;
-            
-        } catch (error) {
-            ProductionLogger.error('API Call failed per:', params.action, error.message);
-            throw error;
-        }
-    },
-    
-    // Gestione sessione
-    getSession() {
-        return {
-            user: JSON.parse(sessionStorage.getItem('currentUser') || 'null'),
-            token: sessionStorage.getItem('sessionToken')
-        };
-    },
-    
-    setSession(user, token) {
-        sessionStorage.setItem('currentUser', JSON.stringify(user));
-        sessionStorage.setItem('sessionToken', token);
-        ProductionLogger.auth('Sessione salvata per utente:', user.name);
-    },
-    
-    clearSession() {
-        sessionStorage.removeItem('currentUser');
-        sessionStorage.removeItem('sessionToken');
-        ProductionLogger.auth('Sessione cancellata');
-    },
-    
-    isLoggedIn() {
-        const session = this.getSession();
-        return session.user && session.token;
-    },
-    
-    // Reindirizzamenti
-    redirectToLogin() {
-        window.location.href = CONFIG.PAGES.LOGIN;
-    },
-    
-    redirectToDashboard() {
-        window.location.href = CONFIG.PAGES.DASHBOARD;
-    },
-    
-    // Notifiche ottimizzate
-    showNotification(message, type = 'success', duration = null) {
-        let notification = document.getElementById('notification');
-        
-        if (!notification) {
-            notification = document.createElement('div');
-            notification.id = 'notification';
-            notification.className = 'notification';
-            document.body.appendChild(notification);
-        }
-        
-        const icons = {
-            success: '✅',
-            error: '❌',
-            warning: '⚠️',
-            info: 'ℹ️',
-            security: '🔒'
-        };
-        
-        const icon = icons[type] || icons.info;
-        notification.innerHTML = `${icon} ${message}`;
-        notification.className = `notification ${type}`;
-        notification.classList.add('show');
-        
-        const notificationDuration = duration || CONFIG.UI.NOTIFICATION_DURATION;
-        
-        setTimeout(() => {
-            notification.classList.remove('show');
-        }, notificationDuration);
-        
-        if (type === 'error') {
-            ProductionLogger.error('Notification:', message);
-        }
-    },
-    
-    // Mostra messaggio fullscreen per eventi importanti
-    showFullscreenMessage(message, type = 'info', duration = 3000) {
-        const existing = document.querySelector('.fullscreen-message');
-        if (existing) existing.remove();
-        
-        const overlay = document.createElement('div');
-        overlay.className = `fullscreen-message ${type}`;
-        overlay.innerHTML = `
-            <div class="fullscreen-message-content">
-                <div class="fullscreen-message-icon">
-                    ${type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'admin' ? '👑' : 'ℹ'}
+    <div class="admin-container">
+        <!-- SEZIONE CANTIERI -->
+        <section class="admin-section fade-in">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-building"></i>Panoramica Cantieri</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="refresh-btn" onclick="refreshCantieri()" title="Aggiorna dati"><i class="fas fa-sync-alt"></i></button>
+                    <div class="toggle-container">
+                        <div class="toggle-option active" data-mode="totali">Totali Assoluti</div>
+                        <div class="toggle-option" data-mode="mese">Mese Corrente</div>
+                    </div>
                 </div>
-                <div class="fullscreen-message-text">${message}</div>
-                <div class="fullscreen-message-spinner"></div>
             </div>
-        `;
-        
-        if (!document.getElementById('fullscreen-message-styles')) {
-            const style = document.createElement('style');
-            style.id = 'fullscreen-message-styles';
-            style.textContent = `
-                .fullscreen-message {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.85);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 99999;
-                    animation: fadeIn 0.3s ease-in;
-                }
-                .fullscreen-message-content {
-                    background: white;
-                    padding: 40px 60px;
-                    border-radius: 20px;
-                    text-align: center;
-                    max-width: 500px;
-                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-                }
-                .fullscreen-message-icon {
-                    font-size: 64px;
-                    margin-bottom: 20px;
-                }
-                .fullscreen-message.admin .fullscreen-message-icon {
-                    animation: pulse 1.5s ease-in-out infinite;
-                }
-                .fullscreen-message-text {
-                    font-size: 20px;
-                    font-weight: 600;
-                    color: #1f2937;
-                    line-height: 1.5;
-                    margin-bottom: 25px;
-                }
-                .fullscreen-message-spinner {
-                    width: 40px;
-                    height: 40px;
-                    border: 4px solid #f3f4f6;
-                    border-top-color: #4f46e5;
-                    border-radius: 50%;
-                    animation: spin 1s linear infinite;
-                    margin: 0 auto;
-                }
-                @keyframes pulse {
-                    0%, 100% { transform: scale(1); opacity: 1; }
-                    50% { transform: scale(1.1); opacity: 0.8; }
-                }
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        
-        document.body.appendChild(overlay);
-        
-        if (duration > 0) {
-            setTimeout(() => overlay.remove(), duration);
-        }
-        
-        return overlay;
-    },
-    
-    // Formatters
-    formatCurrency(amount) {
-        return '€' + parseFloat(amount || 0).toFixed(2);
-    },
-    
-    formatHours(hours) {
-        return parseFloat(hours || 0).toFixed(1);
-    },
-    
-    formatDate(date) {
-        return new Date(date).toLocaleDateString('it-IT');
-    },
-    
-    // Validatori
-    validateHours(hours) {
-        const h = parseFloat(hours);
-        return !isNaN(h) && h >= CONFIG.VALIDATION.MIN_HOURS && h <= CONFIG.VALIDATION.MAX_HOURS_PER_DAY;
-    },
-    
-    validateRequired(value) {
-        return value && value.trim().length > 0;
-    },
-    
-    validatePassword(password) {
-        return password && password.length >= CONFIG.VALIDATION.MIN_PASSWORD_LENGTH;
-    },
-    
-    // Auto-logout
-    setupAutoLogout() {
-        if (!CONFIG.SECURITY.SESSION_TIMEOUT) return;
-        
-        let timeout;
-        
-        const resetTimeout = () => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                this.clearSession();
-                this.showNotification('Sessione scaduta per inattività', 'warning');
-                setTimeout(() => this.redirectToLogin(), 2000);
-            }, CONFIG.UI.AUTO_LOGOUT_TIME);
-        };
-        
-        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
-            document.addEventListener(event, resetTimeout, true);
-        });
-        
-        resetTimeout();
-        ProductionLogger.log('Auto-logout configurato per', CONFIG.UI.AUTO_LOGOUT_TIME / 60000, 'minuti');
-    },
-    
-    // Sicurezza
-    showSecurityStatus(authMethod, hashSupport) {
-        if (!CONFIG.UI.SHOW_SECURITY_STATUS) return;
-        if (CONFIG.PRODUCTION_MODE) return;
-        if (!CONFIG.UI.SHOW_AUTH_METHOD) return;
-        
-        const securityLevel = authMethod === 'hash' ? 'SICURO' : 'COMPATIBILITÀ';
-        const securityIcon = authMethod === 'hash' ? '🔒' : '⚠️';
-        
-        ProductionLogger.auth(`${securityIcon} Sicurezza: ${securityLevel} (Metodo: ${authMethod})`);
-        
-        if (authMethod === 'plain_migrated') {
-            this.showNotification('Password migrata automaticamente in hash sicuro!', 'security', 6000);
-        } else if (authMethod === 'plain_fallback') {
-            this.showNotification('Login in modalità compatibilità. Contatta admin per migrazione.', 'warning', 6000);
-        }
-    },
-    
-    // Performance monitoring
-    measurePerformance(operation, callback) {
-        if (!CONFIG.LOGGING.PERFORMANCE_LOGS || CONFIG.PRODUCTION_MODE) {
-            return callback();
-        }
-        
-        const start = performance.now();
-        const result = callback();
-        const end = performance.now();
-        
-        ProductionLogger.performance(`${operation} completato in ${(end - start).toFixed(2)}ms`);
-        return result;
-    },
-    
-    // Error reporting
-    reportError(error, context = '') {
-        const errorInfo = {
-            message: error.message,
-            stack: error.stack,
-            context: context,
-            timestamp: new Date().toISOString(),
-            userAgent: navigator.userAgent,
-            url: window.location.href,
-            version: CONFIG.VERSION.frontend
-        };
-        
-        ProductionLogger.error('Errore applicazione:', errorInfo);
-        
-        if (CONFIG.PRODUCTION_MODE) {
-            // Qui potresti inviare a un servizio di monitoring
-        }
-        
-        return errorInfo;
-    },
+            <div id="cantieriGrid" class="cantieri-grid">
+                <div class="spinner-container">
+                    <div class="loading-spinner"></div>
+                    <p class="spinner-text">Caricamento cantieri...</p>
+                </div>
+            </div>
+        </section>
 
-    // ===== FUNZIONI ADMIN =====
-    
-    // Valida se l'utente corrente ha accesso admin
-    validateAdmin: async function() {
-        try {
-            const sessionData = this.getSession();
+        <!-- SEZIONE CALENDARIO DIPENDENTI -->
+        <section class="admin-section fade-in">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-calendar-alt"></i>Calendario Dipendente</h2>
+            </div>
             
-            if (!sessionData || !sessionData.token || !sessionData.user) {
-                console.error('Session data mancante');
-                return false;
-            }
-            
-            const result = await this.callAPI({
-                action: 'validateAdmin',
-                sessionToken: sessionData.token,
-                userId: sessionData.user.userId
-            });
-            
-            console.log('API validateAdmin response:', result);
-            return result && result.success;
-            
-        } catch (error) {
-            console.error('Errore validazione admin:', error);
-            return false;
-        }
-    },
-    
-    // Controlla accesso admin e reindirizza se necessario (per admin.html)
-    checkAdminAccess: async function() {
-        const isAdmin = await this.validateAdmin();
-        
-        if (!isAdmin) {
-            this.showNotification('Accesso negato. Solo gli amministratori possono accedere a questa pagina.', 'error');
-            
-            setTimeout(() => {
-                window.location.href = CONFIG.PAGES.DASHBOARD;
-            }, 2000);
-            
-            return false;
-        }
-        
-        return true;
-    },
-    
-    // Controlla se l'utente è admin e reindirizza dalla dashboard normale
-    checkAdminRedirect: async function() {
-        try {
-            const isAdmin = await this.validateAdmin();
-            
-            if (isAdmin) {
-                console.log('Admin rilevato, reindirizzamento...');
-                
-                // Mostra messaggio fullscreen
-                this.showFullscreenMessage(
-                    'Accesso Amministratore rilevato!<br>Verrai reindirizzato al pannello di controllo...',
-                    'admin',
-                    0 // Non auto-chiude
-                );
-                
-                // Redirect dopo 2 secondi
-                setTimeout(() => {
-                    window.location.href = CONFIG.PAGES.ADMIN || 'admin.html';
-                }, 2000);
-                
-                return true;
-            }
-            
-            return false;
-        } catch (error) {
-            console.error('Errore controllo admin redirect:', error);
-            return false;
-        }
-    },
+            <div class="dipendenti-header">
+                <select class="select-dipendente" id="dipendentiSelect">
+                    <option value="">Seleziona un dipendente...</option>
+                </select>
+                <button class="refresh-btn" onclick="refreshDipendente()" title="Aggiorna calendario"><i class="fas fa-sync-alt"></i></button>
+            </div>
 
-    // Carica overview cantieri per admin
-    loadCantieriOverview: async function(modalita = 'totali') {
-        try {
-            const sessionData = this.getSession();
-            const result = await this.callAPI({
-                action: 'getCantieriOverview',
-                sessionToken: sessionData.token,
-                modalita: modalita
-            });
-            
-            if (result && result.success) {
-                return result.data || [];
-            } else {
-                throw new Error(result?.message || 'Errore caricamento cantieri');
-            }
-            
-        } catch (error) {
-            this.showNotification('Errore caricamento cantieri: ' + error.message, 'error');
-            throw error;
-        }
-    },
+            <div id="calendarSection" style="display: none;">
+                <div class="calendar-wrapper">
+                    <div class="calendar-controls">
+                        <div class="calendar-nav">
+                            <button class="nav-btn" id="prevMonthBtn" onclick="changeMonth(-1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="current-month" id="currentMonthDisplay">-</div>
+                            <button class="nav-btn" id="nextMonthBtn" onclick="changeMonth(1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <button class="today-btn" onclick="goToToday()">
+                            <i class="fas fa-calendar-day"></i> Oggi
+                        </button>
+                    </div>
+                    
+                    <div class="calendar-grid" id="calendarGrid">
+                        <div class="spinner-container" style="grid-column: 1 / -1;">
+                            <div class="loading-spinner"></div>
+                            <p class="spinner-text">Caricamento calendario...</p>
+                        </div>
+                    </div>
+                </div>
 
-    // Carica lista dipendenti per admin
-    loadDipendentiList: async function() {
-        try {
-            const sessionData = this.getSession();
-            const result = await this.callAPI({
-                action: 'getDipendentiList',
-                sessionToken: sessionData.token
-            });
-            
-            if (result && result.success) {
-                return result.data || [];
-            } else {
-                throw new Error(result?.message || 'Errore caricamento dipendenti');
-            }
-            
-        } catch (error) {
-            this.showNotification('Errore caricamento dipendenti: ' + error.message, 'error');
-            throw error;
-        }
-    },
+                <div class="stats-summary">
+                    <div class="stat-card">
+                        <span class="stat-value" id="oreMeseCorrente">-</span>
+                        <span class="stat-label">Ore Mese Corrente</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="oreMesePrecedente">-</span>
+                        <span class="stat-label">Ore Mese Precedente</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="oreAnnoCorrente">-</span>
+                        <span class="stat-label">Ore Anno Corrente</span>
+                    </div>
+                </div>
+            </div>
 
-    // Carica le informazioni ore di un altro utente (solo admin)
-    loadOtherUserInfo: async function(targetUserId) {
-        try {
-            const sessionData = this.getSession();
-            const result = await this.callAPI({
-                action: 'getOtherUserInfo',
-                sessionToken: sessionData.token,
-                targetUserId: targetUserId
-            });
-            
-            if (result && result.success) {
-                return result.data || {};
-            } else {
-                throw new Error(result?.message || 'Errore caricamento info utente');
-            }
-            
-        } catch (error) {
-            this.showNotification('Errore caricamento info utente: ' + error.message, 'error');
-            throw error;
-        }
-    },
+            <div id="noUserSelected" class="no-data-state">
+                <div class="no-data-icon"><i class="fas fa-user-clock"></i></div>
+                <p>Seleziona un dipendente per visualizzare il calendario</p>
+            </div>
+        </section>
+    </div>
 
-    // Carica i dati calendario mensile di un altro utente (solo admin)
-    loadOtherUserMonthlyData: async function(targetUserId, year, month) {
-        try {
-            const sessionData = this.getSession();
-            
-            ProductionLogger.debug('loadOtherUserMonthlyData:', {
-                targetUserId: targetUserId,
-                year: year,
-                month: month
-            });
-            
-            const result = await this.callAPI({
-                action: 'getOtherUserMonthlyData',
-                sessionToken: sessionData.token,
-                targetUserId: targetUserId,
-                year: String(year),
-                month: String(month)
-            });
-            
-            if (result && result.success) {
-                return result.data || {};
-            } else {
-                // Passa il messaggio originale del backend senza modificarlo
-                const errorMessage = result?.message || 'Errore caricamento dati calendario';
-                throw new Error(errorMessage);
-            }
-            
-        } catch (error) {
-            // Non mostrare notifica qui - lascia gestire all'interfaccia admin
-            // In questo modo il messaggio specifico (foglio mancante) arriva all'UI
-            throw error;
-        }
-    },
+                <!-- POPUP DETTAGLI GIORNO -->
+    <div class="day-details-popup" id="dayDetailsPopup">
+        <div class="popup-content">
+            <div class="popup-header">
+                <div class="popup-title" id="popupTitle">Dettagli Giorno</div>
+                <div class="popup-total-hours" id="popupTotalHours">0h totali</div>
+            </div>
+            <div id="popupContent">
+                <!-- Contenuto dinamico -->
+            </div>
+        </div>
+    </div>
 
-    // Carica timeline dipendente per admin (deprecata - usare loadOtherUserMonthlyData)
-    loadDipendenteTimeline: async function(userId, timeframe = '30days') {
-        try {
-            const sessionData = this.getSession();
-            const result = await this.callAPI({
-                action: 'getDipendenteTimeline',
-                sessionToken: sessionData.token,
-                userId: userId,
-                timeframe: timeframe
-            });
-            
-            if (result && result.success) {
-                return result.data || {};
-            } else {
-                throw new Error(result?.message || 'Errore caricamento timeline');
-            }
-            
-        } catch (error) {
-            this.showNotification('Errore caricamento timeline: ' + error.message, 'error');
-            throw error;
-        }
-    },
+    <script src="config.js"></script>
+    <script>
+        'use strict';
 
-    // Invalida cache admin
-    invalidateAdminCache: async function(cacheType = 'all') {
-        try {
-            const sessionData = this.getSession();
-            const result = await this.callAPI({
-                action: 'invalidateCache',
-                sessionToken: sessionData.token,
-                cacheType: cacheType
-            });
-            
-            return result && result.success;
-            
-        } catch (error) {
-            console.error('Errore invalidazione cache:', error);
-            return false;
-        }
-    },
+        // STATE
+        let currentCantieriMode = 'totali';
+        let currentUserId = null;
+        let currentUserName = null;
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth() + 1;
+        let calendarData = null;
+        let cantieriCache = { totali: null, mese: null };
+        let calendarCache = {}; // Cache per i calendari: { userId_year_month: data }
+        let autoRefreshInterval = null;
 
-    // ===== FORMATTERS ADMIN =====
-    
-    formatOre: function(ore) {
-        if (!ore || ore === 0) return '0h';
-        return ore.toFixed(1) + 'h';
-    },
-
-    formatDataAdmin: function(data) {
-        if (!data) return 'N/A';
-        
-        const date = new Date(data);
-        if (isNaN(date.getTime())) return 'N/A';
-        
-        return date.toLocaleDateString('it-IT', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-    },
-
-    truncateText: function(testo, maxLength = 25) {
-        if (!testo) return '';
-        if (testo.length <= maxLength) return testo;
-        return testo.substring(0, maxLength - 3) + '...';
-    },
-
-    getStatoBadgeClass: function(stato) {
-        switch (stato?.toLowerCase()) {
-            case 'aperto':
-                return 'badge-success';
-            case 'chiuso':
-                return 'badge-secondary';
-            case 'sospeso':
-                return 'badge-warning';
-            default:
-                return 'badge-info';
-        }
-    },
-
-    // ===== GESTIONE GRAFICI =====
-    
-    prepareChartData: function(timelineData, timeframe) {
-        try {
-            if (!timelineData || !timelineData.timeline) {
-                return {
-                    labels: [],
-                    datasets: [{
-                        label: 'Ore Lavorate',
-                        data: [],
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.1
-                    }]
-                };
-            }
-            
-            const labels = timelineData.timeline.map(item => item.periodo);
-            const data = timelineData.timeline.map(item => item.ore || 0);
-            
-            return {
-                labels: labels,
-                datasets: [{
-                    label: 'Ore Lavorate',
-                    data: data,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.1,
-                    pointBackgroundColor: '#3b82f6',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    pointRadius: 4
-                }]
-            };
-            
-        } catch (error) {
-            console.error('Errore preparazione dati grafico:', error);
-            return { labels: [], datasets: [] };
-        }
-    },
-
-    getChartOptions: function(isMobile = false) {
-        return {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            },
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        usePointStyle: true,
-                        padding: isMobile ? 10 : 15,
-                        font: { size: isMobile ? 10 : 12 }
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    titleColor: '#fff',
-                    bodyColor: '#fff',
-                    borderColor: '#3b82f6',
-                    borderWidth: 1,
-                    callbacks: {
-                        label: function(context) {
-                            return `Ore: ${context.parsed.y.toFixed(1)}h`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { 
-                        color: 'rgba(0, 0, 0, 0.1)' 
-                    },
-                    ticks: { 
-                        font: { size: isMobile ? 9 : 10 },
-                        callback: function(value) {
-                            return value.toFixed(1) + 'h';
-                        }
-                    }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { 
-                        font: { size: isMobile ? 9 : 10 },
-                        maxRotation: isMobile ? 45 : 0
-                    }
-                }
-            }
-        };
-    },
-
-    // ===== UTILITY MOBILE =====
-    
-    isMobile: function() {
-        return window.innerWidth < 768;
-    },
-
-    handleResponsiveResize: function(callback) {
-        let resizeTimer;
-        
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                if (callback && typeof callback === 'function') {
-                    callback(this.isMobile());
-                }
-            }, 250);
-        });
-    },
-
-    setupAutoRefresh: function(refreshCallback, interval = 300000) {
-        if (!refreshCallback || typeof refreshCallback !== 'function') {
-            console.error('Callback refresh non valido');
-            return null;
-        }
-        
-        return setInterval(async () => {
+        // INIT
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('[ADMIN] Inizializzazione...');
             try {
-                console.log('Auto-refresh dati admin...');
-                await refreshCallback();
+                const hasAccess = await Utils.checkAdminAccess();
+                if (!hasAccess) return;
+                
+                initUI();
+                setupListeners();
+                await loadInitialData();
+                setupAutoRefresh();
+                
+                console.log('[ADMIN] Dashboard pronta');
             } catch (error) {
-                console.error('Errore auto-refresh:', error);
-            }
-        }, interval);
-    },
-
-    stopAutoRefresh: function(intervalId) {
-        if (intervalId) {
-            clearInterval(intervalId);
-        }
-    },
-
-    showNoDataState: function(container, message = 'Nessun dato disponibile') {
-        if (!container) return;
-        
-        container.innerHTML = `
-            <div class="no-data-state">
-                <div class="no-data-icon">📊</div>
-                <h3>Nessun Dato</h3>
-                <p>${message}</p>
-            </div>
-        `;
-    },
-
-    adminLog: function(message, data = null) {
-        if (CONFIG.PRODUCTION_MODE === false) {
-            console.log(`[ADMIN UI] ${message}`, data || '');
-        }
-    },
-
-    logAdminPerformance: function(operation, startTime) {
-        if (CONFIG.PRODUCTION_MODE === false) {
-            const duration = Date.now() - startTime;
-            console.log(`[ADMIN UI PERF] ${operation}: ${duration}ms`);
-        }
-    }
-};
-
-// ===== PROTEZIONE ACCESSO PAGINE =====
-const PageGuard = {
-    requireLogin() {
-        if (!Utils.isLoggedIn()) {
-            Utils.showNotification('Accesso richiesto', 'error');
-            setTimeout(() => Utils.redirectToLogin(), 1500);
-            return false;
-        }
-        return true;
-    },
-    
-    redirectIfLoggedIn() {
-        if (Utils.isLoggedIn()) {
-            Utils.redirectToDashboard();
-            return true;
-        }
-        return false;
-    }
-};
-
-// ===== CONFIGURAZIONE ADMIN =====
-const ADMIN_CONFIG = {
-    ADMIN_PAGE: 'admin.html',
-    
-    TIMEFRAMES: {
-        THIRTY_DAYS: '30days',
-        LAST_MONTH: 'lastMonth',
-        CURRENT_YEAR: 'year'
-    },
-    
-    CANTIERI_MODES: {
-        MESE_CORRENTE: 'mese',
-        TOTALI_ASSOLUTI: 'totali'
-    },
-    
-    AUTO_REFRESH_INTERVAL: 1800000, // 30 minuti
-    MOBILE_BREAKPOINT: 768,
-    CHART_HEIGHT_MOBILE: 250,
-    CHART_HEIGHT_DESKTOP: 300
-};
-
-// ===== INIZIALIZZAZIONE SISTEMA =====
-function initializeSystem() {
-    if (CONFIG.PRODUCTION_MODE) {
-        ProductionLogger.log('Sistema Gestione Ore V2.2 - Modalità Produzione (UI Semplificata)');
-        removeDebugElements();
-        setupGlobalErrorHandling();
-    } else {
-        ProductionLogger.log('Sistema Gestione Ore inizializzato V2.2 - Modalità Sviluppo');
-        ProductionLogger.log('Configurazione:', CONFIG);
-        ProductionLogger.log('UI: Layout Semplificato');
-        ProductionLogger.log('Hash Support:', CONFIG.SECURITY.HASH_ENABLED);
-        ProductionLogger.log('Sessione attiva:', Utils.isLoggedIn());
-    }
-}
-
-function removeDebugElements() {
-    const debugSelectors = [
-        '.version-badge',
-        '.debug-info', 
-        '[data-debug]',
-        '.development-only'
-    ];
-    
-    debugSelectors.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach(el => {
-            if (CONFIG.PRODUCTION_MODE) {
-                el.style.display = 'none';
+                console.error('[ADMIN] Errore init:', error);
+                Utils.showNotification('Errore caricamento dashboard', 'error');
             }
         });
-    });
-}
 
-function setupGlobalErrorHandling() {
-    window.addEventListener('error', (event) => {
-        Utils.reportError(event.error, 'Global JavaScript Error');
-    });
-    
-    window.addEventListener('unhandledrejection', (event) => {
-        Utils.reportError(new Error(event.reason), 'Unhandled Promise Rejection');
-    });
-}
+        function initUI() {
+            const session = Utils.getSession();
+            if (session && session.user) {
+                document.getElementById('adminName').textContent = session.user.name;
+            }
+        }
 
-// ===== COMPATIBILITÀ API =====
-const Logger = ProductionLogger;
+        function setupListeners() {
+            // Toggle cantieri
+            document.querySelectorAll('.toggle-option').forEach(opt => {
+                opt.addEventListener('click', async function() {
+                    if (this.classList.contains('active')) return;
+                    document.querySelectorAll('.toggle-option').forEach(o => o.classList.remove('active'));
+                    this.classList.add('active');
+                    currentCantieriMode = this.dataset.mode;
+                    showCantieriLoader();
+                    await loadCantieri();
+                });
+            });
 
-// Export per uso globale
-window.CONFIG = CONFIG;
-window.Utils = Utils;
-window.PageGuard = PageGuard;
-window.Logger = ProductionLogger;
-window.ADMIN_CONFIG = ADMIN_CONFIG;
+            // Select dipendente
+            document.getElementById('dipendentiSelect').addEventListener('change', async function() {
+                const selectedOption = this.options[this.selectedIndex];
+                currentUserId = this.value;
+                currentUserName = selectedOption.dataset.name || null;
+                
+                if (currentUserId) {
+                    document.getElementById('noUserSelected').style.display = 'none';
+                    document.getElementById('calendarSection').style.display = 'block';
+                    
+                    // Reset al mese corrente
+                    const now = new Date();
+                    currentYear = now.getFullYear();
+                    currentMonth = now.getMonth() + 1;
+                    
+                    await loadCalendarData();
+                } else {
+                    document.getElementById('noUserSelected').style.display = 'block';
+                    document.getElementById('calendarSection').style.display = 'none';
+                }
+            });
+        }
 
-// Auto-inizializzazione
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeSystem);
-} else {
-    initializeSystem();
-}
+        async function loadInitialData() {
+            await Promise.all([
+                loadCantieri(),
+                loadDipendenti()
+            ]);
+        }
+
+        // ===== CANTIERI =====
+        function showCantieriLoader() {
+            document.getElementById('cantieriGrid').innerHTML = `
+                <div class="spinner-container" style="grid-column: 1 / -1;">
+                    <div class="loading-spinner"></div>
+                    <p class="spinner-text">Caricamento cantieri ${currentCantieriMode === 'mese' ? 'mese corrente' : 'totali'}...</p>
+                </div>
+            `;
+        }
+
+        async function loadCantieri() {
+            try {
+                console.log(`[ADMIN] Caricamento cantieri '${currentCantieriMode}'`);
+                
+                if (cantieriCache[currentCantieriMode]) {
+                    console.log('[ADMIN] Cantieri da cache');
+                    renderCantieri(cantieriCache[currentCantieriMode]);
+                    return;
+                }
+
+                const data = await Utils.loadCantieriOverview(currentCantieriMode);
+                cantieriCache[currentCantieriMode] = data;
+                console.log(`[ADMIN] Cantieri dal server: ${data.length}`);
+                renderCantieri(data);
+            } catch (error) {
+                console.error('[ADMIN] Errore cantieri:', error);
+                showError('cantieriGrid', 'Errore caricamento cantieri');
+            }
+        }
+
+        function renderCantieri(data) {
+            const grid = document.getElementById('cantieriGrid');
+            if (!data || !data.length) {
+                grid.innerHTML = '<div class="no-data-state" style="grid-column: 1 / -1;"><div class="no-data-icon"><i class="fas fa-building"></i></div><p>Nessun cantiere trovato</p></div>';
+                return;
+            }
+            grid.innerHTML = data.map(c => `
+                <div class="cantiere-card slide-in" onclick="showCantiereDetails('${c.id}')">
+                    <div class="cantiere-nome">${Utils.truncateText(c.nome, 35)}</div>
+                    <div class="cantiere-ore">
+                        <span class="label">Ore ${currentCantieriMode === 'mese' ? 'Mese' : 'Totali'}</span>
+                        ${Utils.formatOre(c.oreTotali)}
+                    </div>
+                    <div class="cantiere-meta">
+                        <span class="stato-badge ${getStatoBadgeClass(c.stato)}">${c.stato}</span>
+                        <span style="display: flex; align-items: center; gap: 4px;">
+                            <small style="color: #9ca3af;">Ultimo inserimento:</small>
+                            <i class="fas fa-clock"></i> 
+                            ${Utils.formatDataAdmin(c.ultimoAggiornamento)}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function getStatoBadgeClass(stato) {
+            switch (stato?.toLowerCase()) {
+                case 'aperto':
+                    return 'badge-success';
+                case 'chiuso':
+                    return 'badge-danger';
+                case 'sospeso':
+                    return 'badge-warning';
+                default:
+                    return 'badge-info';
+            }
+        }
+
+        async function refreshCantieri() {
+            cantieriCache = { totali: null, mese: null };
+            await Utils.invalidateAdminCache('cantieri');
+            showCantieriLoader();
+            await loadCantieri();
+            Utils.showNotification('Cantieri aggiornati', 'success', 2000);
+        }
+
+        function showCantiereDetails(id) {
+            Utils.showNotification(`Dettagli cantiere ${id} - In sviluppo`, 'info');
+        }
+
+        // ===== DIPENDENTI =====
+        async function loadDipendenti() {
+            try {
+                const data = await Utils.loadDipendentiList();
+                const sel = document.getElementById('dipendentiSelect');
+                sel.innerHTML = '<option value="">Seleziona dipendente...</option>' + 
+                    data.map(d => `<option value="${d.userId}" data-name="${d.nome}">${d.nome} (${d.ruolo})</option>`).join('');
+            } catch (error) {
+                console.error('[ADMIN] Errore dipendenti:', error);
+                document.getElementById('dipendentiSelect').innerHTML = '<option>Errore caricamento</option>';
+            }
+        }
+
+        async function refreshDipendente() {
+            if (!currentUserId) {
+                Utils.showNotification('Seleziona prima un dipendente', 'warning');
+                return;
+            }
+            
+            // Invalida cache per l'utente corrente
+            const cacheKey = `${currentUserId}_${currentYear}_${currentMonth}`;
+            delete calendarCache[cacheKey];
+            
+            await loadCalendarData();
+            Utils.showNotification('Calendario aggiornato', 'success', 2000);
+        }
+
+        // ===== CALENDARIO =====
+        async function loadCalendarData() {
+            if (!currentUserId) return;
+
+            const cacheKey = `${currentUserId}_${currentYear}_${currentMonth}`;
+            
+            // Controlla cache
+            if (calendarCache[cacheKey]) {
+                console.log('[ADMIN] Calendario da cache:', cacheKey);
+                calendarData = calendarCache[cacheKey];
+                renderCalendar();
+                await loadTotaliOre();
+                return;
+            }
+
+            showCalendarLoader();
+
+            try {
+                console.log(`[ADMIN] Caricamento calendario: ${currentUserName} - ${currentYear}/${currentMonth}`);
+                
+                const data = await Utils.loadOtherUserMonthlyData(
+                    currentUserId,
+                    currentYear,
+                    currentMonth
+                );
+
+                calendarData = data;
+                calendarCache[cacheKey] = data; // Salva in cache
+                renderCalendar();
+                await loadTotaliOre();
+            } catch (error) {
+                console.error('[ADMIN] Errore calendario:', error);
+                showCalendarError();
+            }
+        }
+
+        async function loadTotaliOre() {
+            try {
+                const data = await Utils.loadOtherUserInfo(currentUserId);
+
+                document.getElementById('oreMeseCorrente').textContent = Utils.formatOre(data.oreMese || 0);
+                document.getElementById('oreMesePrecedente').textContent = Utils.formatOre(data.oreMesePrecedente || 0);
+                document.getElementById('oreAnnoCorrente').textContent = Utils.formatOre(data.oreAnno || 0);
+            } catch (error) {
+                console.error('[ADMIN] Errore caricamento totali:', error);
+                document.getElementById('oreMeseCorrente').textContent = '-';
+                document.getElementById('oreMesePrecedente').textContent = '-';
+                document.getElementById('oreAnnoCorrente').textContent = '-';
+            }
+        }
+
+        function showCalendarLoader() {
+            document.getElementById('calendarGrid').innerHTML = `
+                <div class="spinner-container" style="grid-column: 1 / -1;">
+                    <div class="loading-spinner"></div>
+                    <p class="spinner-text">Caricamento calendario ${currentUserName}...</p>
+                </div>
+            `;
+        }
+
+        function showCalendarError() {
+            document.getElementById('calendarGrid').innerHTML = `
+                <div class="no-data-state" style="grid-column: 1 / -1;">
+                    <div class="no-data-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <p>Errore caricamento calendario</p>
+                </div>
+            `;
+        }
+
+        function renderCalendar() {
+            const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
+                               'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+            
+            document.getElementById('currentMonthDisplay').textContent = 
+                `${monthNames[currentMonth - 1]} ${currentYear}`;
+
+            const grid = document.getElementById('calendarGrid');
+            const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+            
+            let html = days.map(d => `<div class="calendar-day-header">${d}</div>`).join('');
+
+            const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+            const daysInPrevMonth = new Date(currentYear, currentMonth - 1, 0).getDate();
+
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === currentYear && (today.getMonth() + 1) === currentMonth;
+
+            // Giorni mese precedente
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = daysInPrevMonth - i;
+                html += `<div class="calendar-day other-month"><span class="day-number">${day}</span></div>`;
+            }
+
+            // Giorni mese corrente
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const workDay = calendarData?.workDays?.[dateStr];
+                const isToday = isCurrentMonth && day === today.getDate();
+                
+                let classes = 'calendar-day';
+                if (isToday) classes += ' today';
+                if (workDay) classes += ' has-work';
+                
+                let content = `<span class="day-number">${day}</span>`;
+                if (workDay && workDay.ore) {
+                    content += `<span class="day-hours">${workDay.ore}h</span>`;
+                }
+                
+                const onclickAttr = workDay ? `onclick="showDayDetails('${dateStr}')"` : '';
+                html += `<div class="${classes}" ${onclickAttr} data-date="${dateStr}">${content}</div>`;
+            }
+
+            // Giorni mese successivo
+            const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+            const remainingCells = totalCells - (firstDay + daysInMonth);
+            for (let day = 1; day <= remainingCells; day++) {
+                html += `<div class="calendar-day other-month"><span class="day-number">${day}</span></div>`;
+            }
+
+            grid.innerHTML = html;
+            updateNavigationButtons();
+        }
+
+        function updateNavigationButtons() {
+            const now = new Date();
+            const maxYear = now.getFullYear();
+            const maxMonth = now.getMonth() + 1;
+            
+            const isCurrentOrFuture = (currentYear > maxYear) || 
+                                     (currentYear === maxYear && currentMonth >= maxMonth);
+            
+            document.getElementById('nextMonthBtn').disabled = isCurrentOrFuture;
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            } else if (currentMonth < 1) {
+                currentMonth = 12;
+                currentYear--;
+            }
+            
+            loadCalendarData();
+        }
+
+        function goToToday() {
+            const now = new Date();
+            currentYear = now.getFullYear();
+            currentMonth = now.getMonth() + 1;
+            loadCalendarData();
+        }
+
+        function showDayDetails(dateStr) {
+            const workDay = calendarData?.workDays?.[dateStr];
+            if (!workDay) return;
+
+            const date = new Date(dateStr);
+            const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
+                               'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+            
+            const popupTitle = document.getElementById('popupTitle');
+            const popupTotalHours = document.getElementById('popupTotalHours');
+            const popupContent = document.getElementById('popupContent');
+            const popup = document.getElementById('dayDetailsPopup');
+
+            if (!popupTitle || !popupTotalHours || !popupContent || !popup) return;
+
+            popupTitle.textContent = `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+            popupTotalHours.textContent = `${workDay.ore}h totali`;
+
+            let html = `
+                <div class="work-entry">
+                    <div class="work-entry-header">
+                        <div class="work-cantiere">${workDay.cantiereName || workDay.cantiereId}</div>
+                        <div class="work-hours-large">${workDay.ore}h</div>
+                    </div>
+                    ${workDay.note && workDay.note.trim() ? `<div class="work-note">"${workDay.note}"</div>` : ''}
+                </div>
+            `;
+            
+            html += '<button class="popup-ok-button" onclick="closeDayDetails()">OK</button>';
+
+            popupContent.innerHTML = html;
+            popup.classList.add('show');
+        }
+
+        function closeDayDetails() {
+            const popup = document.getElementById('dayDetailsPopup');
+            if (popup) {
+                popup.classList.remove('show');
+            }
+        }
+
+        // ===== UTILITIES =====
+        function showError(id, msg) {
+            document.getElementById(id).innerHTML = `
+                <div class="no-data-state" style="grid-column: 1 / -1;">
+                    <div class="no-data-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <p>${msg}</p>
+                </div>
+            `;
+        }
+
+        function logout() {
+            Utils.clearSession();
+            Utils.showNotification('Disconnessione...', 'info');
+            setTimeout(() => Utils.redirectToLogin(), 1000);
+        }
+
+        function setupAutoRefresh() {
+            // Auto-refresh ogni 30 minuti
+            autoRefreshInterval = setInterval(async () => {
+                console.log('[ADMIN] Auto-refresh dati');
+                
+                // Refresh cantieri
+                cantieriCache = { totali: null, mese: null };
+                await loadCantieri();
+                
+                // Refresh calendario se utente selezionato
+                if (currentUserId) {
+                    await loadCalendarData();
+                }
+            }, 1800000); // 30 minuti
+        }
+
+        // Cleanup
+        window.addEventListener('beforeunload', () => {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+        });
+
+        // Debug helper
+        window.getAdminState = () => console.table({
+            cantieriMode: currentCantieriMode,
+            userId: currentUserId,
+            userName: currentUserName,
+            year: currentYear,
+            month: currentMonth,
+            hasCalendarData: !!calendarData,
+            totaliCached: !!cantieriCache.totali,
+            meseCached: !!cantieriCache.mese
+        });
+    </script>
+</body>
+</html>
