@@ -1125,29 +1125,8 @@
                 sessionToken = session.token;
                 
                 // ===== CONTROLLO ADMIN E REDIRECT =====
-                // ===== DEBUG CONTROLLO ADMIN =====
-                try {
-                    console.log('Controllo admin in corso...');
-                    const sessionData = Utils.getSession();
-                    console.log('Session data:', sessionData);
-                    
-                    const isAdmin = await Utils.validateAdmin();
-                    console.log('Risultato validateAdmin:', isAdmin);
-                    
-                    if (isAdmin) {
-                        console.log('Utente è admin, reindirizzamento...');
-                        Utils.showNotification('Admin rilevato, reindirizzamento al pannello amministratore...', 'info');
-                        setTimeout(() => {
-                            window.location.href = CONFIG.PAGES.ADMIN;
-                        }, 500);
-                        return;
-                    } else {
-                        console.log('Utente NON è admin, continua con dashboard normale');
-                    }
-                } catch (error) {
-                    console.error('Errore controllo admin:', error);
-                }
-                // ===== FINE DEBUG =====
+                const redirected = await Utils.checkAdminRedirect();
+                if (redirected) return;
                 // ===== FINE CONTROLLO ADMIN =====
                 
                 await initializeApp();
