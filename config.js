@@ -623,7 +623,61 @@ const Utils = {
             }
         };
     },
-
+    
+    /** Carica le informazioni ore di un altro utente (solo admin)  */
+    loadOtherUserInfo: async function(targetUserId) {
+        try {
+            const sessionData = this.getSession();
+            const result = await this.callAPI({
+                action: 'getOtherUserInfo',
+                sessionToken: sessionData.token,
+                targetUserId: targetUserId
+            });
+            
+            if (result && result.success) {
+                return result.data || {};
+            } else {
+                throw new Error(result?.message || 'Errore caricamento info utente');
+            }
+            
+        } catch (error) {
+            this.showNotification('Errore caricamento info utente: ' + error.message, 'error');
+            throw error;
+        }
+    },
+    
+    /**
+     * Carica i dati calendario mensile di un altro utente (solo admin)
+     */
+    loadOtherUserMonthlyData: async function(targetUserId, year, month) {
+        try {
+            const sessionData = this.getSession();
+            
+            ProductionLogger.debug('loadOtherUserMonthlyData:', {
+                targetUserId: targetUserId,
+                year: year,
+                month: month
+            });
+            
+            const result = await this.callAPI({
+                action: 'getOtherUserMonthlyData',
+                sessionToken: sessionData.token,
+                targetUserId: targetUserId,
+                year: String(year),
+                month: String(month)
+            });
+            
+            if (result && result.success) {
+                return result.data || {};
+            } else {
+                throw new Error(result?.message || 'Errore caricamento dati calendario');
+            }
+            
+        } catch (error) {
+            this.showNotification('Errore caricamento calendario: ' + error.message, 'error');
+            throw error;
+        }
+    },
     // ===== UTILITY MOBILE =====
     
     isMobile: function() {
