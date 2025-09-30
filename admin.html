@@ -96,9 +96,19 @@
         .slide-in { animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         
-        /* TOOLTIP */
-        .tooltip { position: absolute; background: rgba(0, 0, 0, 0.9); color: white; padding: 12px 16px; border-radius: 8px; font-size: 12px; z-index: 1000; pointer-events: none; white-space: nowrap; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
-        .tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent; }
+        /* POPUP DETTAGLI GIORNO */
+        .day-details-popup { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; justify-content: center; align-items: center; padding: 20px; }
+        .day-details-popup.show { display: flex; }
+        .popup-content { background: white; border-radius: 20px; padding: 30px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
+        .popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e1e5e9; }
+        .popup-title { font-size: 20px; font-weight: 600; color: #333; }
+        .popup-close { background: #ef4444; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .popup-close:hover { background: #dc2626; transform: scale(1.1); }
+        .work-entry { background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #4f46e5; }
+        .work-entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .work-cantiere { font-weight: 600; color: #1f2937; font-size: 16px; }
+        .work-hours-large { font-size: 20px; font-weight: 700; color: #4f46e5; }
+        .work-note { font-size: 14px; color: #6b7280; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; }
         
         /* RESPONSIVE */
         @media (max-width: 768px) {
@@ -211,6 +221,19 @@
                 <p>Seleziona un dipendente per visualizzare il calendario</p>
             </div>
         </section>
+    </div>
+
+    <!-- POPUP DETTAGLI GIORNO -->
+    <div class="day-details-popup" id="dayDetailsPopup">
+        <div class="popup-content">
+            <div class="popup-header">
+                <div class="popup-title" id="popupTitle">Dettagli Giorno</div>
+                <button class="popup-close" id="popupClose">×</button>
+            </div>
+            <div id="popupContent">
+                <!-- Contenuto dinamico -->
+            </div>
+        </div>
     </div>
 
     <script src="config.js"></script>
@@ -342,7 +365,11 @@
                     </div>
                     <div class="cantiere-meta">
                         <span class="stato-badge ${getStatoBadgeClass(c.stato)}">${c.stato}</span>
-                        <span><i class="fas fa-clock"></i> ${Utils.formatDataAdmin(c.ultimoAggiornamento)}</span>
+                        <span style="display: flex; align-items: center; gap: 4px;">
+                            <small style="color: #9ca3af;">Ultimo inserimento:</small>
+                            <i class="fas fa-clock"></i> 
+                            ${Utils.formatDataAdmin(c.ultimoAggiornamento)}
+                        </span>
                     </div>
                 </div>
             `).join('');
@@ -561,71 +588,36 @@
             if (!workDay) return;
 
             const date = new Date(dateStr);
-            const formattedDate = date.toLocaleDateString('it-IT', { 
-                weekday: 'long', 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
-            });
-
-            let message = `<strong>${formattedDate}</strong><br><br>`;
-            message += `<strong>Cantiere:</strong> ${workDay.cantiereName || workDay.cantiereId}<br>`;
-            message += `<strong>Ore:</strong> ${workDay.ore}h<br>`;
-            if (workDay.note && workDay.note.trim()) {
-                message += `<strong>Note:</strong> ${workDay.note}`;
-            }
-
-            // Rimuovi tooltip esistenti
-            const existing = document.querySelector('.tooltip');
-            if (existing) existing.remove();
-
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip';
-            tooltip.innerHTML = message;
-            document.body.appendChild(tooltip);
-
-            // Trova l'elemento cliccato
-            const dayElement = document.querySelector(`[data-date="${dateStr}"]`);
-            if (!dayElement) return;
-
-            const rect = dayElement.getBoundingClientRect();
-            const tooltipWidth = tooltip.offsetWidth;
-            const tooltipHeight = tooltip.offsetHeight;
-
-            // Posiziona sopra il giorno, centrato
-            let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
-            let top = rect.top - tooltipHeight - 10;
-
-            // Controlla se esce dallo schermo a sinistra
-            if (left < 10) left = 10;
-            // Controlla se esce dallo schermo a destra
-            if (left + tooltipWidth > window.innerWidth - 10) {
-                left = window.innerWidth - tooltipWidth - 10;
-            }
-            // Se troppo in alto, mostra sotto
-            if (top < 10) {
-                top = rect.bottom + 10;
-                tooltip.style.transform = 'none';
-            }
-
-            tooltip.style.left = left + 'px';
-            tooltip.style.top = top + 'px';
-
-            // Rimuovi al click ovunque o dopo 5 secondi
-            const removeTooltip = () => {
-                tooltip.remove();
-                document.removeEventListener('click', removeTooltip);
-            };
+            const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
+                               'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
             
-            setTimeout(() => {
-                document.addEventListener('click', removeTooltip);
-            }, 100);
-            
-            setTimeout(() => {
-                if (document.body.contains(tooltip)) {
-                    tooltip.remove();
-                }
-            }, 5000);
+            const popupTitle = document.getElementById('popupTitle');
+            const popupContent = document.getElementById('popupContent');
+            const popup = document.getElementById('dayDetailsPopup');
+
+            if (!popupTitle || !popupContent || !popup) return;
+
+            popupTitle.textContent = `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+
+            let html = `
+                <div class="work-entry">
+                    <div class="work-entry-header">
+                        <div class="work-cantiere">${workDay.cantiereName || workDay.cantiereId}</div>
+                        <div class="work-hours-large">${workDay.ore}h</div>
+                    </div>
+                    ${workDay.note && workDay.note.trim() ? `<div class="work-note">${workDay.note}</div>` : ''}
+                </div>
+            `;
+
+            popupContent.innerHTML = html;
+            popup.classList.add('show');
+        }
+
+        function closeDayDetails() {
+            const popup = document.getElementById('dayDetailsPopup');
+            if (popup) {
+                popup.classList.remove('show');
+            }
         }
 
         // ===== UTILITIES =====
