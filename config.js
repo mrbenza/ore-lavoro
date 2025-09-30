@@ -578,11 +578,14 @@ const Utils = {
             if (result && result.success) {
                 return result.data || {};
             } else {
-                throw new Error(result?.message || 'Errore caricamento dati calendario');
+                // Passa il messaggio originale del backend senza modificarlo
+                const errorMessage = result?.message || 'Errore caricamento dati calendario';
+                throw new Error(errorMessage);
             }
             
         } catch (error) {
-            this.showNotification('Errore caricamento calendario: ' + error.message, 'error');
+            // Non mostrare notifica qui - lascia gestire all'interfaccia admin
+            // In questo modo il messaggio specifico (foglio mancante) arriva all'UI
             throw error;
         }
     },
