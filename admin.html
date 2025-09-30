@@ -37,13 +37,13 @@
         .cantiere-card { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; transition: all 0.3s; cursor: pointer; position: relative; overflow: hidden; }
         .cantiere-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border-color: #4f46e5; }
         .cantiere-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #4f46e5, #7c3aed); }
-        .cantiere-id { font-size: 12px; font-weight: 700; color: #4f46e5; background: rgba(79, 70, 229, 0.1); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-bottom: 8px; }
         .cantiere-nome { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 8px; line-height: 1.3; }
         .cantiere-ore { font-size: 24px; font-weight: 800; color: #059669; margin: 10px 0; }
         .cantiere-ore .label { font-size: 12px; font-weight: 500; color: #6b7280; display: block; }
         .cantiere-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #6b7280; }
         .stato-badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
         .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
         .badge-warning { background: #fef3c7; color: #92400e; }
         .badge-secondary { background: #f3f4f6; color: #374151; }
         .badge-info { background: #dbeafe; color: #1e40af; }
@@ -225,6 +225,7 @@
         let currentMonth = new Date().getMonth() + 1;
         let calendarData = null;
         let cantieriCache = { totali: null, mese: null };
+        let calendarCache = {}; // Cache per i calendari: { userId_year_month: data }
         let autoRefreshInterval = null;
 
         // INIT
@@ -334,18 +335,30 @@
             }
             grid.innerHTML = data.map(c => `
                 <div class="cantiere-card slide-in" onclick="showCantiereDetails('${c.id}')">
-                    <div class="cantiere-id">${c.id}</div>
-                    <div class="cantiere-nome">${Utils.truncateText(c.nome, 30)}</div>
+                    <div class="cantiere-nome">${Utils.truncateText(c.nome, 35)}</div>
                     <div class="cantiere-ore">
                         <span class="label">Ore ${currentCantieriMode === 'mese' ? 'Mese' : 'Totali'}</span>
                         ${Utils.formatOre(c.oreTotali)}
                     </div>
                     <div class="cantiere-meta">
-                        <span class="stato-badge ${Utils.getStatoBadgeClass(c.stato)}">${c.stato}</span>
-                        <span>${Utils.formatDataAdmin(c.ultimoAggiornamento)}</span>
+                        <span class="stato-badge ${getStatoBadgeClass(c.stato)}">${c.stato}</span>
+                        <span><i class="fas fa-clock"></i> ${Utils.formatDataAdmin(c.ultimoAggiornamento)}</span>
                     </div>
                 </div>
             `).join('');
+        }
+        
+        function getStatoBadgeClass(stato) {
+            switch (stato?.toLowerCase()) {
+                case 'aperto':
+                    return 'badge-success';
+                case 'chiuso':
+                    return 'badge-danger';
+                case 'sospeso':
+                    return 'badge-warning';
+                default:
+                    return 'badge-info';
+            }
         }
 
         async function refreshCantieri() {
@@ -378,6 +391,11 @@
                 Utils.showNotification('Seleziona prima un dipendente', 'warning');
                 return;
             }
+            
+            // Invalida cache per l'utente corrente
+            const cacheKey = `${currentUserId}_${currentYear}_${currentMonth}`;
+            delete calendarCache[cacheKey];
+            
             await loadCalendarData();
             Utils.showNotification('Calendario aggiornato', 'success', 2000);
         }
@@ -385,6 +403,17 @@
         // ===== CALENDARIO =====
         async function loadCalendarData() {
             if (!currentUserId) return;
+
+            const cacheKey = `${currentUserId}_${currentYear}_${currentMonth}`;
+            
+            // Controlla cache
+            if (calendarCache[cacheKey]) {
+                console.log('[ADMIN] Calendario da cache:', cacheKey);
+                calendarData = calendarCache[cacheKey];
+                renderCalendar();
+                await loadTotaliOre();
+                return;
+            }
 
             showCalendarLoader();
 
@@ -398,6 +427,7 @@
                 );
 
                 calendarData = data;
+                calendarCache[cacheKey] = data; // Salva in cache
                 renderCalendar();
                 await loadTotaliOre();
             } catch (error) {
@@ -541,14 +571,10 @@
             let message = `<strong>${formattedDate}</strong><br><br>`;
             message += `<strong>Cantiere:</strong> ${workDay.cantiereName || workDay.cantiereId}<br>`;
             message += `<strong>Ore:</strong> ${workDay.ore}h<br>`;
-            if (workDay.note) {
+            if (workDay.note && workDay.note.trim()) {
                 message += `<strong>Note:</strong> ${workDay.note}`;
             }
 
-            showTooltip(event.target, message);
-        }
-
-        function showTooltip(element, message) {
             // Rimuovi tooltip esistenti
             const existing = document.querySelector('.tooltip');
             if (existing) existing.remove();
@@ -558,16 +584,48 @@
             tooltip.innerHTML = message;
             document.body.appendChild(tooltip);
 
-            const rect = element.getBoundingClientRect();
-            tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
-            tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
+            // Trova l'elemento cliccato
+            const dayElement = document.querySelector(`[data-date="${dateStr}"]`);
+            if (!dayElement) return;
 
-            // Rimuovi dopo 5 secondi o al click
-            setTimeout(() => tooltip.remove(), 5000);
-            document.addEventListener('click', function removeTooltip() {
+            const rect = dayElement.getBoundingClientRect();
+            const tooltipWidth = tooltip.offsetWidth;
+            const tooltipHeight = tooltip.offsetHeight;
+
+            // Posiziona sopra il giorno, centrato
+            let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+            let top = rect.top - tooltipHeight - 10;
+
+            // Controlla se esce dallo schermo a sinistra
+            if (left < 10) left = 10;
+            // Controlla se esce dallo schermo a destra
+            if (left + tooltipWidth > window.innerWidth - 10) {
+                left = window.innerWidth - tooltipWidth - 10;
+            }
+            // Se troppo in alto, mostra sotto
+            if (top < 10) {
+                top = rect.bottom + 10;
+                tooltip.style.transform = 'none';
+            }
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+
+            // Rimuovi al click ovunque o dopo 5 secondi
+            const removeTooltip = () => {
                 tooltip.remove();
                 document.removeEventListener('click', removeTooltip);
-            });
+            };
+            
+            setTimeout(() => {
+                document.addEventListener('click', removeTooltip);
+            }, 100);
+            
+            setTimeout(() => {
+                if (document.body.contains(tooltip)) {
+                    tooltip.remove();
+                }
+            }, 5000);
         }
 
         // ===== UTILITIES =====
