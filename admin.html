@@ -9,433 +9,69 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        
-        .admin-header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 15px 20px;
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .admin-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 18px;
-            font-weight: 700;
-            color: #4f46e5;
-        }
-        
-        .admin-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 13px;
-        }
-        
-        .user-badge {
-            background: #4f46e5;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-        
-        .logout-btn {
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        
-        .logout-btn:hover {
-            background: #dc2626;
-            transform: translateY(-1px);
-        }
-        
-        .admin-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            display: grid;
-            gap: 25px;
-        }
-        
-        .admin-section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .section-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1f2937;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .section-title i {
-            color: #4f46e5;
-        }
-        
-        .toggle-container {
-            display: flex;
-            background: #f3f4f6;
-            border-radius: 12px;
-            padding: 4px;
-        }
-        
-        .toggle-option {
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 12px;
-            font-weight: 600;
-            color: #6b7280;
-            white-space: nowrap;
-        }
-        
-        .toggle-option.active {
-            background: #4f46e5;
-            color: white;
-            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
-        }
-        
-        .cantieri-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .cantiere-card {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .cantiere-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            border-color: #4f46e5;
-        }
-        
-        .cantiere-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #4f46e5, #7c3aed);
-        }
-        
-        .cantiere-id {
-            font-size: 12px;
-            font-weight: 700;
-            color: #4f46e5;
-            background: rgba(79, 70, 229, 0.1);
-            padding: 4px 8px;
-            border-radius: 6px;
-            display: inline-block;
-            margin-bottom: 8px;
-        }
-        
-        .cantiere-nome {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 8px;
-            line-height: 1.3;
-        }
-        
-        .cantiere-ore {
-            font-size: 24px;
-            font-weight: 800;
-            color: #059669;
-            margin: 10px 0;
-        }
-        
-        .cantiere-ore .label {
-            font-size: 12px;
-            font-weight: 500;
-            color: #6b7280;
-            display: block;
-        }
-        
-        .cantiere-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #e5e7eb;
-            font-size: 11px;
-            color: #6b7280;
-        }
-        
-        .stato-badge {
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333; font-size: 14px; line-height: 1.5; }
+        .admin-header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 20px; box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 100; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
+        .admin-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: #4f46e5; }
+        .admin-info { display: flex; align-items: center; gap: 15px; font-size: 13px; }
+        .user-badge { background: #4f46e5; color: white; padding: 5px 12px; border-radius: 20px; font-weight: 600; }
+        .logout-btn { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+        .logout-btn:hover { background: #dc2626; transform: translateY(-1px); }
+        .admin-container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; gap: 25px; }
+        .admin-section { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 16px; padding: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .section-title { font-size: 20px; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 10px; }
+        .section-title i { color: #4f46e5; }
+        .toggle-container { display: flex; background: #f3f4f6; border-radius: 12px; padding: 4px; }
+        .toggle-option { padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 12px; font-weight: 600; color: #6b7280; white-space: nowrap; }
+        .toggle-option.active { background: #4f46e5; color: white; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3); }
+        .cantieri-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 15px; }
+        .cantiere-card { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; transition: all 0.3s; cursor: pointer; position: relative; overflow: hidden; }
+        .cantiere-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border-color: #4f46e5; }
+        .cantiere-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #4f46e5, #7c3aed); }
+        .cantiere-id { font-size: 12px; font-weight: 700; color: #4f46e5; background: rgba(79, 70, 229, 0.1); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-bottom: 8px; }
+        .cantiere-nome { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 8px; line-height: 1.3; }
+        .cantiere-ore { font-size: 24px; font-weight: 800; color: #059669; margin: 10px 0; }
+        .cantiere-ore .label { font-size: 12px; font-weight: 500; color: #6b7280; display: block; }
+        .cantiere-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #6b7280; }
+        .stato-badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
         .badge-success { background: #d1fae5; color: #065f46; }
         .badge-warning { background: #fef3c7; color: #92400e; }
         .badge-secondary { background: #f3f4f6; color: #374151; }
         .badge-info { background: #dbeafe; color: #1e40af; }
-        
-        .dipendenti-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .select-dipendente {
-            padding: 12px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 14px;
-            background: white;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-        
-        .select-dipendente:focus {
-            outline: none;
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-        
-        .timeframe-tabs {
-            display: flex;
-            background: #f3f4f6;
-            border-radius: 12px;
-            padding: 4px;
-            overflow-x: auto;
-        }
-        
-        .timeframe-tab {
-            flex: 1;
-            padding: 10px 12px;
-            text-align: center;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 12px;
-            font-weight: 600;
-            color: #6b7280;
-            white-space: nowrap;
-        }
-        
-        .timeframe-tab.active {
-            background: #4f46e5;
-            color: white;
-            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
-        }
-        
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin: 20px 0;
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-        }
-        
-        .stats-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .stat-card {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 24px;
-            font-weight: 800;
-            color: #1f2937;
-            display: block;
-        }
-        
-        .stat-label {
-            font-size: 11px;
-            color: #6b7280;
-            font-weight: 500;
-            margin-top: 4px;
-        }
-        
-        .loading-spinner {
-            border: 3px solid #f3f4f6;
-            border-top: 3px solid #4f46e5;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .no-data-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #6b7280;
-        }
-        
-        .no-data-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-        
-        .refresh-btn {
-            background: #f3f4f6;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #6b7280;
-        }
-        
-        .refresh-btn:hover {
-            background: #e5e7eb;
-            transform: rotate(180deg);
-        }
-        
-        .refresh-btn i {
-            font-size: 14px;
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .slide-in {
-            animation: slideIn 0.3s ease-out;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(-20px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
+        .dipendenti-controls { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        .select-dipendente { padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 14px; background: white; transition: all 0.3s; cursor: pointer; }
+        .select-dipendente:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .timeframe-tabs { display: flex; background: #f3f4f6; border-radius: 12px; padding: 4px; overflow-x: auto; }
+        .timeframe-tab { flex: 1; padding: 10px 12px; text-align: center; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 12px; font-weight: 600; color: #6b7280; white-space: nowrap; }
+        .timeframe-tab.active { background: #4f46e5; color: white; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3); }
+        .chart-container { position: relative; height: 300px; margin: 20px 0; background: white; border-radius: 12px; padding: 15px; }
+        .stats-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-top: 20px; }
+        .stat-card { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center; }
+        .stat-value { font-size: 24px; font-weight: 800; color: #1f2937; display: block; }
+        .stat-label { font-size: 11px; color: #6b7280; font-weight: 500; margin-top: 4px; }
+        .loading-spinner { border: 3px solid #f3f4f6; border-top: 3px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .no-data-state { text-align: center; padding: 40px 20px; color: #6b7280; }
+        .no-data-icon { font-size: 48px; margin-bottom: 15px; }
+        .refresh-btn { background: #f3f4f6; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all 0.2s; color: #6b7280; }
+        .refresh-btn:hover { background: #e5e7eb; transform: rotate(180deg); }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-in { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @media (max-width: 768px) {
-            .admin-header {
-                padding: 12px 15px;
-            }
-            
-            .header-content {
-                flex-direction: column;
-                gap: 10px;
-                align-items: flex-start;
-            }
-            
-            .admin-info {
-                width: 100%;
-                justify-content: space-between;
-            }
-            
-            .admin-container {
-                padding: 15px;
-                gap: 20px;
-            }
-            
-            .admin-section {
-                padding: 20px 15px;
-            }
-            
-            .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-            
-            .toggle-container,
-            .timeframe-tabs {
-                width: 100%;
-            }
-            
-            .cantieri-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .chart-container {
-                height: 250px;
-                padding: 10px;
-            }
-            
-            .stats-summary {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .admin-header { padding: 12px 15px; }
+            .header-content { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .admin-info { width: 100%; justify-content: space-between; }
+            .admin-container { padding: 15px; gap: 20px; }
+            .admin-section { padding: 20px 15px; }
+            .section-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .toggle-container, .timeframe-tabs { width: 100%; }
+            .cantieri-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 250px; padding: 10px; }
+            .stats-summary { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -443,18 +79,10 @@
 <body>
     <header class="admin-header">
         <div class="header-content">
-            <div class="admin-title">
-                <i class="fas fa-user-shield"></i>
-                <span>Dashboard Amministratore</span>
-            </div>
+            <div class="admin-title"><i class="fas fa-user-shield"></i><span>Dashboard Amministratore</span></div>
             <div class="admin-info">
-                <div class="user-badge">
-                    <i class="fas fa-user"></i>
-                    <span id="adminName">Caricamento...</span>
-                </div>
-                <button class="logout-btn" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Esci
-                </button>
+                <div class="user-badge"><i class="fas fa-user"></i><span id="adminName">Caricamento...</span></div>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Esci</button>
             </div>
         </div>
     </header>
@@ -462,52 +90,32 @@
     <div class="admin-container">
         <section class="admin-section fade-in">
             <div class="section-header">
-                <h2 class="section-title">
-                    <i class="fas fa-building"></i>
-                    Panoramica Cantieri
-                </h2>
+                <h2 class="section-title"><i class="fas fa-building"></i>Panoramica Cantieri</h2>
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <button class="refresh-btn" onclick="refreshCantieri()" title="Aggiorna dati">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
+                    <button class="refresh-btn" onclick="refreshCantieri()" title="Aggiorna dati"><i class="fas fa-sync-alt"></i></button>
                     <div class="toggle-container">
-                        <div class="toggle-option active" data-mode="totali">
-                            Totali Assoluti
-                        </div>
-                        <div class="toggle-option" data-mode="mese">
-                            Mese Corrente
-                        </div>
+                        <div class="toggle-option active" data-mode="totali">Totali Assoluti</div>
+                        <div class="toggle-option" data-mode="mese">Mese Corrente</div>
                     </div>
                 </div>
             </div>
-            <div id="cantieriGrid" class="cantieri-grid">
-                <div class="loading-spinner"></div>
-            </div>
+            <div id="cantieriGrid" class="cantieri-grid"><div class="loading-spinner"></div></div>
         </section>
 
         <section class="admin-section fade-in">
             <div class="section-header">
-                <h2 class="section-title">
-                    <i class="fas fa-users"></i>
-                    Timeline Dipendenti
-                </h2>
-                <button class="refresh-btn" onclick="refreshDipendenti()" title="Aggiorna dati">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
+                <h2 class="section-title"><i class="fas fa-users"></i>Timeline Dipendenti</h2>
+                <button class="refresh-btn" onclick="refreshDipendenti()" title="Aggiorna dati"><i class="fas fa-sync-alt"></i></button>
             </div>
             <div class="dipendenti-controls">
-                <select class="select-dipendente" id="dipendentiSelect">
-                    <option value="">Seleziona un dipendente...</option>
-                </select>
+                <select class="select-dipendente" id="dipendentiSelect"><option value="">Seleziona un dipendente...</option></select>
                 <div class="timeframe-tabs">
                     <div class="timeframe-tab active" data-timeframe="30days">Ultimi 30 Giorni</div>
                     <div class="timeframe-tab" data-timeframe="lastMonth">Mese Precedente</div>
                     <div class="timeframe-tab" data-timeframe="year">Anno Corrente</div>
                 </div>
             </div>
-            <div class="chart-container">
-                <canvas id="timelineChart"></canvas>
-            </div>
+            <div class="chart-container"><canvas id="timelineChart"></canvas></div>
             <div class="stats-summary" id="statsContainer"></div>
         </section>
     </div>
@@ -522,9 +130,7 @@
         let timelineChart = null;
         let autoRefreshInterval = null;
         let cantieriCache = { totali: null, mese: null };
-        
-        // CACHE DIPENDENTI - mantiene dati completi per ogni dipendente
-        let dipendentiDataCache = {}; // { userId: { ...datiCompleti } }
+        let dipendentiDataCache = {};
 
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('[ADMIN] Inizializzazione...');
@@ -559,7 +165,6 @@
                     document.querySelectorAll('.toggle-option').forEach(o => o.classList.remove('active'));
                     this.classList.add('active');
                     currentCantieriMode = this.dataset.mode;
-                    
                     showCantieriLoader();
                     await loadCantieri();
                 });
@@ -567,22 +172,22 @@
 
             document.getElementById('dipendentiSelect').addEventListener('change', async function() {
                 currentUserId = this.value;
-                currentUserId ? await loadTimeline() : clearChart();
+                if (currentUserId) {
+                    showTimelineLoader();
+                    await loadTimeline();
+                } else {
+                    clearChart();
+                }
             });
 
             document.querySelectorAll('.timeframe-tab').forEach(tab => {
-                tab.addEventListener('click', async function() {
+                tab.addEventListener('click', function() {
                     if (this.classList.contains('active')) return;
                     document.querySelectorAll('.timeframe-tab').forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
                     currentTimeframe = this.dataset.timeframe;
-                    if (currentUserId) {
-                        // Switch istantaneo se già in cache
-                        if (dipendentiDataCache[currentUserId]) {
-                            updateTimelineFromCache(currentUserId, currentTimeframe);
-                        } else {
-                            await loadTimeline();
-                        }
+                    if (currentUserId && dipendentiDataCache[currentUserId]) {
+                        updateTimelineFromCache(currentUserId, currentTimeframe);
                     }
                 });
             });
@@ -593,8 +198,7 @@
         }
 
         function showCantieriLoader() {
-            const grid = document.getElementById('cantieriGrid');
-            grid.innerHTML = `
+            document.getElementById('cantieriGrid').innerHTML = `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
                     <div class="loading-spinner"></div>
                     <p style="margin-top: 15px; color: #6b7280; font-weight: 500;">
@@ -637,109 +241,61 @@
             }
         }
 
+        function showTimelineLoader() {
+            if (timelineChart) {
+                timelineChart.destroy();
+                timelineChart = null;
+            }
+            
+            document.querySelector('.chart-container').innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 15px; color: #6b7280; font-weight: 500;">Caricamento dati dipendente...</p>
+                </div>
+            `;
+            document.getElementById('statsContainer').innerHTML = '';
+        }
+
         async function loadTimeline() {
             if (!currentUserId) return;
-            
             const t0 = Date.now();
             
             try {
-                console.log(`[ADMIN] Caricamento timeline per '${currentUserId}', timeframe: '${currentTimeframe}'`);
+                console.log(`[ADMIN] Caricamento timeline '${currentUserId}'`);
                 
-                // Se già in cache, usa quella
                 if (dipendentiDataCache[currentUserId]) {
-                    console.log(`[ADMIN] Timeline da cache in ${Date.now() - t0}ms`);
+                    console.log(`[ADMIN] Da cache in ${Date.now() - t0}ms`);
                     updateTimelineFromCache(currentUserId, currentTimeframe);
                     return;
                 }
                 
-                // Mostra loader
-                showTimelineLoader();
-                
-                // Carica dal server
                 const data = await Utils.loadDipendenteTimeline(currentUserId, currentTimeframe);
-                
-                // Salva in cache
                 dipendentiDataCache[currentUserId] = data;
-                console.log(`[ADMIN] Timeline dal server in ${Date.now() - t0}ms`);
+                console.log(`[ADMIN] Dal server in ${Date.now() - t0}ms`);
                 
-                // Renderizza
                 renderChart(data);
                 renderStats(data);
-                
             } catch (error) {
                 console.error('[ADMIN] Errore timeline:', error);
-                clearChart();
                 showTimelineError();
             }
         }
-        
-        function showTimelineLoader() {
-            // Distruggi chart esistente prima di sostituire l'HTML
-            if (timelineChart) {
-                timelineChart.destroy();
-                timelineChart = null;
-            }
-            
-            const chartContainer = document.querySelector('.chart-container');
-            chartContainer.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-                    <div class="loading-spinner"></div>
-                    <p style="margin-top: 15px; color: #6b7280; font-weight: 500;">
-                        Caricamento dati dipendente...
-                    </p>
-                </div>
-            `;
-            
-            document.getElementById('statsContainer').innerHTML = '';
-        }
-        
-        function showTimelineError() {
-            if (timelineChart) {
-                timelineChart.destroy();
-                timelineChart = null;
-            }
-            
-            const chartContainer = document.querySelector('.chart-container');
-            chartContainer.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-                    <div class="no-data-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                    <p style="margin-top: 15px; color: #ef4444; font-weight: 500;">
-                        Errore caricamento timeline
-                    </p>
-                </div>
-            `;
-        }
-        
+
         function updateTimelineFromCache(userId, timeframe) {
-            const cachedData = dipendentiDataCache[userId];
-            if (!cachedData) return;
+            const cached = dipendentiDataCache[userId];
+            if (!cached) return;
             
-            // Seleziona le ore in base al timeframe
             let totaleOre;
             switch (timeframe) {
-                case '30days':
-                    totaleOre = cachedData.oreMeseCorrente || 0;
-                    break;
-                case 'lastMonth':
-                    totaleOre = cachedData.oreMesePrecedente || 0;
-                    break;
-                case 'year':
-                    totaleOre = cachedData.oreAnnoCorrente || 0;
-                    break;
-                default:
-                    totaleOre = cachedData.totaleOre || 0;
+                case '30days': totaleOre = cached.oreMeseCorrente || cached.totaleOre || 0; break;
+                case 'lastMonth': totaleOre = cached.oreMesePrecedente || 0; break;
+                case 'year': totaleOre = cached.oreAnnoCorrente || 0; break;
+                default: totaleOre = cached.totaleOre || 0;
             }
             
-            // Aggiorna dati visualizzati
-            const dataToRender = {
-                ...cachedData,
-                totaleOre: totaleOre
-            };
-            
-            renderChart(dataToRender);
-            renderStats(dataToRender);
-            
-            console.log(`[ADMIN] Switch timeframe istantaneo (da cache)`);
+            renderChart({...cached, totaleOre});
+            renderStats({...cached, totaleOre});
+            console.log('[ADMIN] Switch timeframe istantaneo');
         }
 
         function renderCantieri(data) {
@@ -765,49 +321,39 @@
         }
 
         function renderChart(data) {
-            // Ricrea il canvas se non esiste
-            const chartContainer = document.querySelector('.chart-container');
-            if (!chartContainer.querySelector('#timelineChart')) {
-                chartContainer.innerHTML = '<canvas id="timelineChart"></canvas>';
+            const container = document.querySelector('.chart-container');
+            if (!container.querySelector('#timelineChart')) {
+                container.innerHTML = '<canvas id="timelineChart"></canvas>';
             }
             
-            const ctx = document.getElementById('timelineChart');
-            if (!ctx) {
-                console.error('[ADMIN] Canvas timeline non trovato');
-                return;
-            }
+            const canvas = document.getElementById('timelineChart');
+            if (!canvas) return;
             
-            // Distruggi chart esistente
             if (timelineChart) {
                 timelineChart.destroy();
                 timelineChart = null;
             }
             
-            // Gestione dati - potrebbe essere data.data o data direttamente
-            const chartData = Utils.prepareChartData(data?.data || data, currentTimeframe);
-            
-            timelineChart = new Chart(ctx.getContext('2d'), {
+            const actualData = data?.data || data;
+            timelineChart = new Chart(canvas.getContext('2d'), {
                 type: 'line',
-                data: chartData,
+                data: Utils.prepareChartData(actualData, currentTimeframe),
                 options: Utils.getChartOptions(Utils.isMobile())
             });
         }
 
         function renderStats(data) {
-            // Gestione struttura dati flessibile
             const actualData = data?.data || data;
             const totaleOre = actualData?.totaleOre || 0;
             const giornateLavorate = actualData?.giornateLavorate || 0;
             const cantieriCount = actualData?.cantieriCoinvolti?.length || 0;
-            const mediaGiorno = giornateLavorate > 0 ? (totaleOre / giornateLavorate).toFixed(1) : 0;
+            const media = giornateLavorate > 0 ? (totaleOre / giornateLavorate).toFixed(1) : 0;
             
             document.getElementById('statsContainer').innerHTML = `
                 <div class="stat-card"><span class="stat-value">${Utils.formatOre(totaleOre)}</span><span class="stat-label">Ore Totali</span></div>
                 <div class="stat-card"><span class="stat-value">${giornateLavorate}</span><span class="stat-label">Giorni</span></div>
                 <div class="stat-card"><span class="stat-value">${cantieriCount}</span><span class="stat-label">Cantieri</span></div>
-                <div class="stat-card"><span class="stat-value">${mediaGiorno}h</span><span class="stat-label">Media</span></div>
-            `;
-        }</span><span class="stat-label">Media</span></div>
+                <div class="stat-card"><span class="stat-value">${media}h</span><span class="stat-label">Media</span></div>
             `;
         }
 
@@ -816,7 +362,21 @@
                 timelineChart.destroy();
                 timelineChart = null;
             }
+            document.querySelector('.chart-container').innerHTML = '<canvas id="timelineChart"></canvas>';
             document.getElementById('statsContainer').innerHTML = '';
+        }
+
+        function showTimelineError() {
+            if (timelineChart) {
+                timelineChart.destroy();
+                timelineChart = null;
+            }
+            document.querySelector('.chart-container').innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                    <div class="no-data-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <p style="margin-top: 15px; color: #ef4444; font-weight: 500;">Errore caricamento timeline</p>
+                </div>
+            `;
         }
 
         function showError(id, msg) {
@@ -832,20 +392,13 @@
         }
 
         async function refreshDipendenti() {
+            if (currentUserId) delete dipendentiDataCache[currentUserId];
             await Utils.invalidateAdminCache('dipendenti');
-            
-            // Invalida anche cache locale dipendenti
-            if (currentUserId) {
-                delete dipendentiDataCache[currentUserId];
-            }
-            
             await loadDipendenti();
-            
             if (currentUserId) {
                 showTimelineLoader();
                 await loadTimeline();
             }
-            
             Utils.showNotification('Dipendenti aggiornati', 'success', 2000);
         }
 
@@ -863,7 +416,10 @@
             autoRefreshInterval = setInterval(async () => {
                 cantieriCache = { totali: null, mese: null };
                 await loadCantieri();
-                if (currentUserId) await loadTimeline();
+                if (currentUserId) {
+                    delete dipendentiDataCache[currentUserId];
+                    await loadTimeline();
+                }
             }, 300000);
         }
 
@@ -882,23 +438,10 @@
         window.getCacheInfo = () => console.table({
             totaliCached: !!cantieriCache.totali,
             meseCached: !!cantieriCache.mese,
-            totaliCount: cantieriCache.totali?.length || 0,
-            meseCount: cantieriCache.mese?.length || 0,
-            mode: currentCantieriMode,
             dipendentiCached: Object.keys(dipendentiDataCache).length,
-            currentDipendente: currentUserId
+            currentMode: currentCantieriMode,
+            currentUser: currentUserId
         });
-        
-        // Funzione per invalidare cache specifica dipendente
-        window.clearDipendenteCache = (userId) => {
-            if (userId) {
-                delete dipendentiDataCache[userId];
-                console.log('[ADMIN] Cache invalidata per dipendente:', userId);
-            } else {
-                dipendentiDataCache = {};
-                console.log('[ADMIN] Cache dipendenti svuotata completamente');
-            }
-        };
     </script>
 </body>
 </html>
