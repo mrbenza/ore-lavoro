@@ -100,15 +100,20 @@
         .day-details-popup { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; justify-content: center; align-items: center; padding: 20px; }
         .day-details-popup.show { display: flex; }
         .popup-content { background: white; border-radius: 20px; padding: 30px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
-        .popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e1e5e9; }
-        .popup-title { font-size: 20px; font-weight: 600; color: #333; }
-        .popup-close { background: #ef4444; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .popup-close:hover { background: #dc2626; transform: scale(1.1); }
-        .work-entry { background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #4f46e5; }
+        .popup-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e1e5e9; text-align: center; }
+        .popup-title { font-size: 20px; font-weight: 600; color: #333; margin-bottom: 8px; }
+        .popup-total-hours { font-size: 24px; font-weight: 700; color: #4f46e5; background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(124, 58, 237, 0.1)); padding: 8px 20px; border-radius: 20px; border: 2px solid rgba(79, 70, 229, 0.2); margin-top: 5px; }
+        .popup-close { display: none; }
+        .popup-ok-button { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; padding: 15px 40px; border-radius: 25px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; width: 100%; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); }
+        .popup-ok-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4); }
+        .popup-ok-button:active { transform: translateY(0); box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3); }
+        .work-entry { background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(124, 58, 237, 0.05)); border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #4f46e5; transition: all 0.3s ease; }
+        .work-entry:hover { background: rgba(79, 70, 229, 0.1); transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        .work-entry:last-child { margin-bottom: 0; }
         .work-entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .work-cantiere { font-weight: 600; color: #1f2937; font-size: 16px; }
         .work-hours-large { font-size: 20px; font-weight: 700; color: #4f46e5; }
-        .work-note { font-size: 14px; color: #6b7280; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; }
+        .work-note { font-size: 14px; color: #6b7280; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-style: italic; }
         
         /* RESPONSIVE */
         @media (max-width: 768px) {
@@ -223,12 +228,12 @@
         </section>
     </div>
 
-    <!-- POPUP DETTAGLI GIORNO -->
+                <!-- POPUP DETTAGLI GIORNO -->
     <div class="day-details-popup" id="dayDetailsPopup">
         <div class="popup-content">
             <div class="popup-header">
                 <div class="popup-title" id="popupTitle">Dettagli Giorno</div>
-                <button class="popup-close" id="popupClose">×</button>
+                <div class="popup-total-hours" id="popupTotalHours">0h totali</div>
             </div>
             <div id="popupContent">
                 <!-- Contenuto dinamico -->
@@ -592,12 +597,14 @@
                                'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
             
             const popupTitle = document.getElementById('popupTitle');
+            const popupTotalHours = document.getElementById('popupTotalHours');
             const popupContent = document.getElementById('popupContent');
             const popup = document.getElementById('dayDetailsPopup');
 
-            if (!popupTitle || !popupContent || !popup) return;
+            if (!popupTitle || !popupTotalHours || !popupContent || !popup) return;
 
             popupTitle.textContent = `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+            popupTotalHours.textContent = `${workDay.ore}h totali`;
 
             let html = `
                 <div class="work-entry">
@@ -605,9 +612,11 @@
                         <div class="work-cantiere">${workDay.cantiereName || workDay.cantiereId}</div>
                         <div class="work-hours-large">${workDay.ore}h</div>
                     </div>
-                    ${workDay.note && workDay.note.trim() ? `<div class="work-note">${workDay.note}</div>` : ''}
+                    ${workDay.note && workDay.note.trim() ? `<div class="work-note">"${workDay.note}"</div>` : ''}
                 </div>
             `;
+            
+            html += '<button class="popup-ok-button" onclick="closeDayDetails()">OK</button>';
 
             popupContent.innerHTML = html;
             popup.classList.add('show');
