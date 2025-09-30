@@ -674,6 +674,12 @@
         }
         
         function showTimelineLoader() {
+            // Distruggi chart esistente prima di sostituire l'HTML
+            if (timelineChart) {
+                timelineChart.destroy();
+                timelineChart = null;
+            }
+            
             const chartContainer = document.querySelector('.chart-container');
             chartContainer.innerHTML = `
                 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
@@ -688,6 +694,11 @@
         }
         
         function showTimelineError() {
+            if (timelineChart) {
+                timelineChart.destroy();
+                timelineChart = null;
+            }
+            
             const chartContainer = document.querySelector('.chart-container');
             chartContainer.innerHTML = `
                 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
@@ -754,21 +765,49 @@
         }
 
         function renderChart(data) {
-            const ctx = document.getElementById('timelineChart').getContext('2d');
-            if (timelineChart) timelineChart.destroy();
-            timelineChart = new Chart(ctx, {
+            // Ricrea il canvas se non esiste
+            const chartContainer = document.querySelector('.chart-container');
+            if (!chartContainer.querySelector('#timelineChart')) {
+                chartContainer.innerHTML = '<canvas id="timelineChart"></canvas>';
+            }
+            
+            const ctx = document.getElementById('timelineChart');
+            if (!ctx) {
+                console.error('[ADMIN] Canvas timeline non trovato');
+                return;
+            }
+            
+            // Distruggi chart esistente
+            if (timelineChart) {
+                timelineChart.destroy();
+                timelineChart = null;
+            }
+            
+            // Gestione dati - potrebbe essere data.data o data direttamente
+            const chartData = Utils.prepareChartData(data?.data || data, currentTimeframe);
+            
+            timelineChart = new Chart(ctx.getContext('2d'), {
                 type: 'line',
-                data: Utils.prepareChartData(data, currentTimeframe),
+                data: chartData,
                 options: Utils.getChartOptions(Utils.isMobile())
             });
         }
 
         function renderStats(data) {
+            // Gestione struttura dati flessibile
+            const actualData = data?.data || data;
+            const totaleOre = actualData?.totaleOre || 0;
+            const giornateLavorate = actualData?.giornateLavorate || 0;
+            const cantieriCount = actualData?.cantieriCoinvolti?.length || 0;
+            const mediaGiorno = giornateLavorate > 0 ? (totaleOre / giornateLavorate).toFixed(1) : 0;
+            
             document.getElementById('statsContainer').innerHTML = `
-                <div class="stat-card"><span class="stat-value">${Utils.formatOre(data.totaleOre || 0)}</span><span class="stat-label">Ore Totali</span></div>
-                <div class="stat-card"><span class="stat-value">${data.giornateLavorate || 0}</span><span class="stat-label">Giorni</span></div>
-                <div class="stat-card"><span class="stat-value">${data.cantieriCoinvolti?.length || 0}</span><span class="stat-label">Cantieri</span></div>
-                <div class="stat-card"><span class="stat-value">${data.giornateLavorate > 0 ? (data.totaleOre / data.giornateLavorate).toFixed(1) : 0}h</span><span class="stat-label">Media</span></div>
+                <div class="stat-card"><span class="stat-value">${Utils.formatOre(totaleOre)}</span><span class="stat-label">Ore Totali</span></div>
+                <div class="stat-card"><span class="stat-value">${giornateLavorate}</span><span class="stat-label">Giorni</span></div>
+                <div class="stat-card"><span class="stat-value">${cantieriCount}</span><span class="stat-label">Cantieri</span></div>
+                <div class="stat-card"><span class="stat-value">${mediaGiorno}h</span><span class="stat-label">Media</span></div>
+            `;
+        }</span><span class="stat-label">Media</span></div>
             `;
         }
 
