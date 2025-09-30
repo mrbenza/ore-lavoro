@@ -6,11 +6,12 @@
     <title>Admin Dashboard - Sistema Gestione Ore</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333; font-size: 14px; line-height: 1.5; }
+        
+        /* HEADER */
         .admin-header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 20px; box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 100; }
         .header-content { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
         .admin-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: #4f46e5; }
@@ -18,11 +19,17 @@
         .user-badge { background: #4f46e5; color: white; padding: 5px 12px; border-radius: 20px; font-weight: 600; }
         .logout-btn { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
         .logout-btn:hover { background: #dc2626; transform: translateY(-1px); }
+        
+        /* CONTAINER */
         .admin-container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; gap: 25px; }
         .admin-section { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 16px; padding: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); }
+        
+        /* SECTION HEADER */
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .section-title { font-size: 20px; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 10px; }
         .section-title i { color: #4f46e5; }
+        
+        /* CANTIERI */
         .toggle-container { display: flex; background: #f3f4f6; border-radius: 12px; padding: 4px; }
         .toggle-option { padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 12px; font-weight: 600; color: #6b7280; white-space: nowrap; }
         .toggle-option.active { background: #4f46e5; color: white; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3); }
@@ -40,27 +47,60 @@
         .badge-warning { background: #fef3c7; color: #92400e; }
         .badge-secondary { background: #f3f4f6; color: #374151; }
         .badge-info { background: #dbeafe; color: #1e40af; }
-        .dipendenti-controls { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
-        .select-dipendente { padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 14px; background: white; transition: all 0.3s; cursor: pointer; }
+        
+        /* DIPENDENTI */
+        .dipendenti-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .select-dipendente { flex: 1; min-width: 200px; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 14px; background: white; transition: all 0.3s; cursor: pointer; }
         .select-dipendente:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
-        .timeframe-tabs { display: flex; background: #f3f4f6; border-radius: 12px; padding: 4px; overflow-x: auto; }
-        .timeframe-tab { flex: 1; padding: 10px 12px; text-align: center; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 12px; font-weight: 600; color: #6b7280; white-space: nowrap; }
-        .timeframe-tab.active { background: #4f46e5; color: white; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3); }
-        .chart-container { position: relative; height: 300px; margin: 20px 0; background: white; border-radius: 12px; padding: 15px; }
-        .stats-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-top: 20px; }
+        .refresh-btn { background: #f3f4f6; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all 0.2s; color: #6b7280; }
+        .refresh-btn:hover { background: #e5e7eb; transform: rotate(180deg); }
+        
+        /* CALENDARIO - RIUTILIZZO STILE DASHBOARD */
+        .calendar-wrapper { margin: 20px 0; }
+        .calendar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px; background: #f8fafc; border-radius: 10px; }
+        .calendar-nav { display: flex; align-items: center; gap: 15px; }
+        .nav-btn { background: #4f46e5; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .nav-btn:hover { background: #4338ca; transform: translateY(-1px); }
+        .nav-btn:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+        .current-month { font-size: 16px; font-weight: 700; color: #1f2937; min-width: 150px; text-align: center; }
+        .today-btn { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+        .today-btn:hover { background: #059669; }
+        
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+        .calendar-day-header { text-align: center; font-weight: 700; font-size: 12px; color: #6b7280; padding: 10px 5px; background: #f1f5f9; border-radius: 8px; }
+        .calendar-day { aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 2px solid #e5e7eb; border-radius: 10px; cursor: pointer; transition: all 0.2s; position: relative; background: white; }
+        .calendar-day:hover { border-color: #4f46e5; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15); transform: translateY(-2px); }
+        .calendar-day.other-month { opacity: 0.3; background: #f9fafb; }
+        .calendar-day.today { border-color: #10b981; border-width: 3px; background: #ecfdf5; }
+        .calendar-day.has-work { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-color: #3b82f6; font-weight: 700; }
+        .day-number { font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 2px; }
+        .day-hours { font-size: 11px; font-weight: 700; color: #3b82f6; background: rgba(59, 130, 246, 0.1); padding: 2px 6px; border-radius: 4px; }
+        
+        /* TOTALI ORE */
+        .stats-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb; }
         .stat-card { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center; }
-        .stat-value { font-size: 24px; font-weight: 800; color: #1f2937; display: block; }
-        .stat-label { font-size: 11px; color: #6b7280; font-weight: 500; margin-top: 4px; }
+        .stat-value { font-size: 28px; font-weight: 800; color: #1f2937; display: block; }
+        .stat-label { font-size: 12px; color: #6b7280; font-weight: 600; margin-top: 5px; text-transform: uppercase; }
+        
+        /* LOADING E STATI */
         .loading-spinner { border: 3px solid #f3f4f6; border-top: 3px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .no-data-state { text-align: center; padding: 40px 20px; color: #6b7280; }
-        .no-data-icon { font-size: 48px; margin-bottom: 15px; }
-        .refresh-btn { background: #f3f4f6; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all 0.2s; color: #6b7280; }
-        .refresh-btn:hover { background: #e5e7eb; transform: rotate(180deg); }
+        .no-data-icon { font-size: 48px; margin-bottom: 15px; opacity: 0.5; }
+        .spinner-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; gap: 15px; }
+        .spinner-text { color: #6b7280; font-weight: 500; font-size: 14px; }
+        
+        /* ANIMAZIONI */
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .slide-in { animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        /* TOOLTIP */
+        .tooltip { position: absolute; background: rgba(0, 0, 0, 0.9); color: white; padding: 12px 16px; border-radius: 8px; font-size: 12px; z-index: 1000; pointer-events: none; white-space: nowrap; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+        .tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent; }
+        
+        /* RESPONSIVE */
         @media (max-width: 768px) {
             .admin-header { padding: 12px 15px; }
             .header-content { flex-direction: column; gap: 10px; align-items: flex-start; }
@@ -68,9 +108,13 @@
             .admin-container { padding: 15px; gap: 20px; }
             .admin-section { padding: 20px 15px; }
             .section-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .toggle-container, .timeframe-tabs { width: 100%; }
+            .toggle-container { width: 100%; }
             .cantieri-grid { grid-template-columns: 1fr; }
-            .chart-container { height: 250px; padding: 10px; }
+            .dipendenti-header { flex-direction: column; }
+            .select-dipendente { width: 100%; }
+            .calendar-day-header { font-size: 10px; padding: 8px 2px; }
+            .day-number { font-size: 12px; }
+            .day-hours { font-size: 9px; }
             .stats-summary { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
@@ -88,6 +132,7 @@
     </header>
 
     <div class="admin-container">
+        <!-- SEZIONE CANTIERI -->
         <section class="admin-section fade-in">
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-building"></i>Panoramica Cantieri</h2>
@@ -99,24 +144,72 @@
                     </div>
                 </div>
             </div>
-            <div id="cantieriGrid" class="cantieri-grid"><div class="loading-spinner"></div></div>
-        </section>
-
-        <section class="admin-section fade-in">
-            <div class="section-header">
-                <h2 class="section-title"><i class="fas fa-users"></i>Timeline Dipendenti</h2>
-                <button class="refresh-btn" onclick="refreshDipendenti()" title="Aggiorna dati"><i class="fas fa-sync-alt"></i></button>
-            </div>
-            <div class="dipendenti-controls">
-                <select class="select-dipendente" id="dipendentiSelect"><option value="">Seleziona un dipendente...</option></select>
-                <div class="timeframe-tabs">
-                    <div class="timeframe-tab active" data-timeframe="30days">Ultimi 30 Giorni</div>
-                    <div class="timeframe-tab" data-timeframe="lastMonth">Mese Precedente</div>
-                    <div class="timeframe-tab" data-timeframe="year">Anno Corrente</div>
+            <div id="cantieriGrid" class="cantieri-grid">
+                <div class="spinner-container">
+                    <div class="loading-spinner"></div>
+                    <p class="spinner-text">Caricamento cantieri...</p>
                 </div>
             </div>
-            <div class="chart-container"><canvas id="timelineChart"></canvas></div>
-            <div class="stats-summary" id="statsContainer"></div>
+        </section>
+
+        <!-- SEZIONE CALENDARIO DIPENDENTI -->
+        <section class="admin-section fade-in">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-calendar-alt"></i>Calendario Dipendente</h2>
+            </div>
+            
+            <div class="dipendenti-header">
+                <select class="select-dipendente" id="dipendentiSelect">
+                    <option value="">Seleziona un dipendente...</option>
+                </select>
+                <button class="refresh-btn" onclick="refreshDipendente()" title="Aggiorna calendario"><i class="fas fa-sync-alt"></i></button>
+            </div>
+
+            <div id="calendarSection" style="display: none;">
+                <div class="calendar-wrapper">
+                    <div class="calendar-controls">
+                        <div class="calendar-nav">
+                            <button class="nav-btn" id="prevMonthBtn" onclick="changeMonth(-1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="current-month" id="currentMonthDisplay">-</div>
+                            <button class="nav-btn" id="nextMonthBtn" onclick="changeMonth(1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <button class="today-btn" onclick="goToToday()">
+                            <i class="fas fa-calendar-day"></i> Oggi
+                        </button>
+                    </div>
+                    
+                    <div class="calendar-grid" id="calendarGrid">
+                        <div class="spinner-container" style="grid-column: 1 / -1;">
+                            <div class="loading-spinner"></div>
+                            <p class="spinner-text">Caricamento calendario...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-summary">
+                    <div class="stat-card">
+                        <span class="stat-value" id="oreMeseCorrente">-</span>
+                        <span class="stat-label">Ore Mese Corrente</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="oreMesePrecedente">-</span>
+                        <span class="stat-label">Ore Mese Precedente</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="oreAnnoCorrente">-</span>
+                        <span class="stat-label">Ore Anno Corrente</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="noUserSelected" class="no-data-state">
+                <div class="no-data-icon"><i class="fas fa-user-clock"></i></div>
+                <p>Seleziona un dipendente per visualizzare il calendario</p>
+            </div>
         </section>
     </div>
 
@@ -124,14 +217,17 @@
     <script>
         'use strict';
 
+        // STATE
         let currentCantieriMode = 'totali';
-        let currentTimeframe = '30days';
         let currentUserId = null;
-        let timelineChart = null;
-        let autoRefreshInterval = null;
+        let currentUserName = null;
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth() + 1;
+        let calendarData = null;
         let cantieriCache = { totali: null, mese: null };
-        let dipendentiDataCache = {};
+        let autoRefreshInterval = null;
 
+        // INIT
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('[ADMIN] Inizializzazione...');
             try {
@@ -155,10 +251,10 @@
             if (session && session.user) {
                 document.getElementById('adminName').textContent = session.user.name;
             }
-            Utils.handleResponsiveResize(handleResize);
         }
 
         function setupListeners() {
+            // Toggle cantieri
             document.querySelectorAll('.toggle-option').forEach(opt => {
                 opt.addEventListener('click', async function() {
                     if (this.classList.contains('active')) return;
@@ -170,58 +266,59 @@
                 });
             });
 
+            // Select dipendente
             document.getElementById('dipendentiSelect').addEventListener('change', async function() {
+                const selectedOption = this.options[this.selectedIndex];
                 currentUserId = this.value;
+                currentUserName = selectedOption.dataset.name || null;
+                
                 if (currentUserId) {
-                    showTimelineLoader();
-                    await loadTimeline();
+                    document.getElementById('noUserSelected').style.display = 'none';
+                    document.getElementById('calendarSection').style.display = 'block';
+                    
+                    // Reset al mese corrente
+                    const now = new Date();
+                    currentYear = now.getFullYear();
+                    currentMonth = now.getMonth() + 1;
+                    
+                    await loadCalendarData();
                 } else {
-                    clearChart();
+                    document.getElementById('noUserSelected').style.display = 'block';
+                    document.getElementById('calendarSection').style.display = 'none';
                 }
-            });
-
-            document.querySelectorAll('.timeframe-tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    if (this.classList.contains('active')) return;
-                    document.querySelectorAll('.timeframe-tab').forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    currentTimeframe = this.dataset.timeframe;
-                    if (currentUserId && dipendentiDataCache[currentUserId]) {
-                        updateTimelineFromCache(currentUserId, currentTimeframe);
-                    }
-                });
             });
         }
 
         async function loadInitialData() {
-            await Promise.all([loadCantieri(), loadDipendenti()]);
+            await Promise.all([
+                loadCantieri(),
+                loadDipendenti()
+            ]);
         }
 
+        // ===== CANTIERI =====
         function showCantieriLoader() {
             document.getElementById('cantieriGrid').innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <div class="spinner-container" style="grid-column: 1 / -1;">
                     <div class="loading-spinner"></div>
-                    <p style="margin-top: 15px; color: #6b7280; font-weight: 500;">
-                        Caricamento cantieri ${currentCantieriMode === 'mese' ? 'mese corrente' : 'totali'}...
-                    </p>
+                    <p class="spinner-text">Caricamento cantieri ${currentCantieriMode === 'mese' ? 'mese corrente' : 'totali'}...</p>
                 </div>
             `;
         }
 
         async function loadCantieri() {
-            const t0 = Date.now();
             try {
-                console.log(`[ADMIN] Caricamento cantieri '${currentCantieriMode}'...`);
+                console.log(`[ADMIN] Caricamento cantieri '${currentCantieriMode}'`);
                 
                 if (cantieriCache[currentCantieriMode]) {
-                    console.log(`[ADMIN] Da cache in ${Date.now() - t0}ms`);
+                    console.log('[ADMIN] Cantieri da cache');
                     renderCantieri(cantieriCache[currentCantieriMode]);
                     return;
                 }
 
                 const data = await Utils.loadCantieriOverview(currentCantieriMode);
                 cantieriCache[currentCantieriMode] = data;
-                console.log(`[ADMIN] Dal server in ${Date.now() - t0}ms (${data.length} cantieri)`);
+                console.log(`[ADMIN] Cantieri dal server: ${data.length}`);
                 renderCantieri(data);
             } catch (error) {
                 console.error('[ADMIN] Errore cantieri:', error);
@@ -229,83 +326,14 @@
             }
         }
 
-        async function loadDipendenti() {
-            try {
-                const data = await Utils.loadDipendentiList();
-                const sel = document.getElementById('dipendentiSelect');
-                sel.innerHTML = '<option value="">Seleziona dipendente...</option>' + 
-                    data.map(d => `<option value="${d.userId}">${d.nome} (${d.ruolo})</option>`).join('');
-            } catch (error) {
-                console.error('[ADMIN] Errore dipendenti:', error);
-                document.getElementById('dipendentiSelect').innerHTML = '<option>Errore caricamento</option>';
-            }
-        }
-
-        function showTimelineLoader() {
-            if (timelineChart) {
-                timelineChart.destroy();
-                timelineChart = null;
-            }
-            
-            document.querySelector('.chart-container').innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-                    <div class="loading-spinner"></div>
-                    <p style="margin-top: 15px; color: #6b7280; font-weight: 500;">Caricamento dati dipendente...</p>
-                </div>
-            `;
-            document.getElementById('statsContainer').innerHTML = '';
-        }
-
-        async function loadTimeline() {
-            if (!currentUserId) return;
-            const t0 = Date.now();
-            
-            try {
-                console.log(`[ADMIN] Caricamento timeline '${currentUserId}'`);
-                
-                if (dipendentiDataCache[currentUserId]) {
-                    console.log(`[ADMIN] Da cache in ${Date.now() - t0}ms`);
-                    updateTimelineFromCache(currentUserId, currentTimeframe);
-                    return;
-                }
-                
-                const data = await Utils.loadDipendenteTimeline(currentUserId, currentTimeframe);
-                dipendentiDataCache[currentUserId] = data;
-                console.log(`[ADMIN] Dal server in ${Date.now() - t0}ms`);
-                
-                renderChart(data);
-                renderStats(data);
-            } catch (error) {
-                console.error('[ADMIN] Errore timeline:', error);
-                showTimelineError();
-            }
-        }
-
-        function updateTimelineFromCache(userId, timeframe) {
-            const cached = dipendentiDataCache[userId];
-            if (!cached) return;
-            
-            let totaleOre;
-            switch (timeframe) {
-                case '30days': totaleOre = cached.oreMeseCorrente || cached.totaleOre || 0; break;
-                case 'lastMonth': totaleOre = cached.oreMesePrecedente || 0; break;
-                case 'year': totaleOre = cached.oreAnnoCorrente || 0; break;
-                default: totaleOre = cached.totaleOre || 0;
-            }
-            
-            renderChart({...cached, totaleOre});
-            renderStats({...cached, totaleOre});
-            console.log('[ADMIN] Switch timeframe istantaneo');
-        }
-
         function renderCantieri(data) {
             const grid = document.getElementById('cantieriGrid');
             if (!data || !data.length) {
-                grid.innerHTML = '<div class="no-data-state"><div class="no-data-icon"><i class="fas fa-building"></i></div><p>Nessun cantiere</p></div>';
+                grid.innerHTML = '<div class="no-data-state" style="grid-column: 1 / -1;"><div class="no-data-icon"><i class="fas fa-building"></i></div><p>Nessun cantiere trovato</p></div>';
                 return;
             }
             grid.innerHTML = data.map(c => `
-                <div class="cantiere-card slide-in" onclick="showDetails('${c.id}')">
+                <div class="cantiere-card slide-in" onclick="showCantiereDetails('${c.id}')">
                     <div class="cantiere-id">${c.id}</div>
                     <div class="cantiere-nome">${Utils.truncateText(c.nome, 30)}</div>
                     <div class="cantiere-ore">
@@ -320,69 +348,6 @@
             `).join('');
         }
 
-        function renderChart(data) {
-            const container = document.querySelector('.chart-container');
-            if (!container.querySelector('#timelineChart')) {
-                container.innerHTML = '<canvas id="timelineChart"></canvas>';
-            }
-            
-            const canvas = document.getElementById('timelineChart');
-            if (!canvas) return;
-            
-            if (timelineChart) {
-                timelineChart.destroy();
-                timelineChart = null;
-            }
-            
-            const actualData = data?.data || data;
-            timelineChart = new Chart(canvas.getContext('2d'), {
-                type: 'line',
-                data: Utils.prepareChartData(actualData, currentTimeframe),
-                options: Utils.getChartOptions(Utils.isMobile())
-            });
-        }
-
-        function renderStats(data) {
-            const actualData = data?.data || data;
-            const totaleOre = actualData?.totaleOre || 0;
-            const giornateLavorate = actualData?.giornateLavorate || 0;
-            const cantieriCount = actualData?.cantieriCoinvolti?.length || 0;
-            const media = giornateLavorate > 0 ? (totaleOre / giornateLavorate).toFixed(1) : 0;
-            
-            document.getElementById('statsContainer').innerHTML = `
-                <div class="stat-card"><span class="stat-value">${Utils.formatOre(totaleOre)}</span><span class="stat-label">Ore Totali</span></div>
-                <div class="stat-card"><span class="stat-value">${giornateLavorate}</span><span class="stat-label">Giorni</span></div>
-                <div class="stat-card"><span class="stat-value">${cantieriCount}</span><span class="stat-label">Cantieri</span></div>
-                <div class="stat-card"><span class="stat-value">${media}h</span><span class="stat-label">Media</span></div>
-            `;
-        }
-
-        function clearChart() {
-            if (timelineChart) {
-                timelineChart.destroy();
-                timelineChart = null;
-            }
-            document.querySelector('.chart-container').innerHTML = '<canvas id="timelineChart"></canvas>';
-            document.getElementById('statsContainer').innerHTML = '';
-        }
-
-        function showTimelineError() {
-            if (timelineChart) {
-                timelineChart.destroy();
-                timelineChart = null;
-            }
-            document.querySelector('.chart-container').innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-                    <div class="no-data-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                    <p style="margin-top: 15px; color: #ef4444; font-weight: 500;">Errore caricamento timeline</p>
-                </div>
-            `;
-        }
-
-        function showError(id, msg) {
-            document.getElementById(id).innerHTML = `<div class="no-data-state"><div class="no-data-icon"><i class="fas fa-exclamation-triangle"></i></div><p>${msg}</p></div>`;
-        }
-
         async function refreshCantieri() {
             cantieriCache = { totali: null, mese: null };
             await Utils.invalidateAdminCache('cantieri');
@@ -391,19 +356,228 @@
             Utils.showNotification('Cantieri aggiornati', 'success', 2000);
         }
 
-        async function refreshDipendenti() {
-            if (currentUserId) delete dipendentiDataCache[currentUserId];
-            await Utils.invalidateAdminCache('dipendenti');
-            await loadDipendenti();
-            if (currentUserId) {
-                showTimelineLoader();
-                await loadTimeline();
-            }
-            Utils.showNotification('Dipendenti aggiornati', 'success', 2000);
+        function showCantiereDetails(id) {
+            Utils.showNotification(`Dettagli cantiere ${id} - In sviluppo`, 'info');
         }
 
-        function showDetails(id) {
-            Utils.showNotification(`Dettagli cantiere ${id} - In sviluppo`, 'info');
+        // ===== DIPENDENTI =====
+        async function loadDipendenti() {
+            try {
+                const data = await Utils.loadDipendentiList();
+                const sel = document.getElementById('dipendentiSelect');
+                sel.innerHTML = '<option value="">Seleziona dipendente...</option>' + 
+                    data.map(d => `<option value="${d.userId}" data-name="${d.nome}">${d.nome} (${d.ruolo})</option>`).join('');
+            } catch (error) {
+                console.error('[ADMIN] Errore dipendenti:', error);
+                document.getElementById('dipendentiSelect').innerHTML = '<option>Errore caricamento</option>';
+            }
+        }
+
+        async function refreshDipendente() {
+            if (!currentUserId) {
+                Utils.showNotification('Seleziona prima un dipendente', 'warning');
+                return;
+            }
+            await loadCalendarData();
+            Utils.showNotification('Calendario aggiornato', 'success', 2000);
+        }
+
+        // ===== CALENDARIO =====
+        async function loadCalendarData() {
+            if (!currentUserId) return;
+
+            showCalendarLoader();
+
+            try {
+                console.log(`[ADMIN] Caricamento calendario: ${currentUserName} - ${currentYear}/${currentMonth}`);
+                
+                const data = await Utils.loadOtherUserMonthlyData(
+                    currentUserId,
+                    currentYear,
+                    currentMonth
+                );
+
+                calendarData = data;
+                renderCalendar();
+                await loadTotaliOre();
+            } catch (error) {
+                console.error('[ADMIN] Errore calendario:', error);
+                showCalendarError();
+            }
+        }
+
+        async function loadTotaliOre() {
+            try {
+                const data = await Utils.loadOtherUserInfo(currentUserId);
+
+                document.getElementById('oreMeseCorrente').textContent = Utils.formatOre(data.oreMese || 0);
+                document.getElementById('oreMesePrecedente').textContent = Utils.formatOre(data.oreMesePrecedente || 0);
+                document.getElementById('oreAnnoCorrente').textContent = Utils.formatOre(data.oreAnno || 0);
+            } catch (error) {
+                console.error('[ADMIN] Errore caricamento totali:', error);
+                document.getElementById('oreMeseCorrente').textContent = '-';
+                document.getElementById('oreMesePrecedente').textContent = '-';
+                document.getElementById('oreAnnoCorrente').textContent = '-';
+            }
+        }
+
+        function showCalendarLoader() {
+            document.getElementById('calendarGrid').innerHTML = `
+                <div class="spinner-container" style="grid-column: 1 / -1;">
+                    <div class="loading-spinner"></div>
+                    <p class="spinner-text">Caricamento calendario ${currentUserName}...</p>
+                </div>
+            `;
+        }
+
+        function showCalendarError() {
+            document.getElementById('calendarGrid').innerHTML = `
+                <div class="no-data-state" style="grid-column: 1 / -1;">
+                    <div class="no-data-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <p>Errore caricamento calendario</p>
+                </div>
+            `;
+        }
+
+        function renderCalendar() {
+            const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
+                               'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+            
+            document.getElementById('currentMonthDisplay').textContent = 
+                `${monthNames[currentMonth - 1]} ${currentYear}`;
+
+            const grid = document.getElementById('calendarGrid');
+            const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+            
+            let html = days.map(d => `<div class="calendar-day-header">${d}</div>`).join('');
+
+            const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+            const daysInPrevMonth = new Date(currentYear, currentMonth - 1, 0).getDate();
+
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === currentYear && (today.getMonth() + 1) === currentMonth;
+
+            // Giorni mese precedente
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = daysInPrevMonth - i;
+                html += `<div class="calendar-day other-month"><span class="day-number">${day}</span></div>`;
+            }
+
+            // Giorni mese corrente
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const workDay = calendarData?.workDays?.[dateStr];
+                const isToday = isCurrentMonth && day === today.getDate();
+                
+                let classes = 'calendar-day';
+                if (isToday) classes += ' today';
+                if (workDay) classes += ' has-work';
+                
+                let content = `<span class="day-number">${day}</span>`;
+                if (workDay && workDay.ore) {
+                    content += `<span class="day-hours">${workDay.ore}h</span>`;
+                }
+                
+                const onclickAttr = workDay ? `onclick="showDayDetails('${dateStr}')"` : '';
+                html += `<div class="${classes}" ${onclickAttr} data-date="${dateStr}">${content}</div>`;
+            }
+
+            // Giorni mese successivo
+            const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+            const remainingCells = totalCells - (firstDay + daysInMonth);
+            for (let day = 1; day <= remainingCells; day++) {
+                html += `<div class="calendar-day other-month"><span class="day-number">${day}</span></div>`;
+            }
+
+            grid.innerHTML = html;
+            updateNavigationButtons();
+        }
+
+        function updateNavigationButtons() {
+            const now = new Date();
+            const maxYear = now.getFullYear();
+            const maxMonth = now.getMonth() + 1;
+            
+            const isCurrentOrFuture = (currentYear > maxYear) || 
+                                     (currentYear === maxYear && currentMonth >= maxMonth);
+            
+            document.getElementById('nextMonthBtn').disabled = isCurrentOrFuture;
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            } else if (currentMonth < 1) {
+                currentMonth = 12;
+                currentYear--;
+            }
+            
+            loadCalendarData();
+        }
+
+        function goToToday() {
+            const now = new Date();
+            currentYear = now.getFullYear();
+            currentMonth = now.getMonth() + 1;
+            loadCalendarData();
+        }
+
+        function showDayDetails(dateStr) {
+            const workDay = calendarData?.workDays?.[dateStr];
+            if (!workDay) return;
+
+            const date = new Date(dateStr);
+            const formattedDate = date.toLocaleDateString('it-IT', { 
+                weekday: 'long', 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            });
+
+            let message = `<strong>${formattedDate}</strong><br><br>`;
+            message += `<strong>Cantiere:</strong> ${workDay.cantiereName || workDay.cantiereId}<br>`;
+            message += `<strong>Ore:</strong> ${workDay.ore}h<br>`;
+            if (workDay.note) {
+                message += `<strong>Note:</strong> ${workDay.note}`;
+            }
+
+            showTooltip(event.target, message);
+        }
+
+        function showTooltip(element, message) {
+            // Rimuovi tooltip esistenti
+            const existing = document.querySelector('.tooltip');
+            if (existing) existing.remove();
+
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.innerHTML = message;
+            document.body.appendChild(tooltip);
+
+            const rect = element.getBoundingClientRect();
+            tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
+            tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
+
+            // Rimuovi dopo 5 secondi o al click
+            setTimeout(() => tooltip.remove(), 5000);
+            document.addEventListener('click', function removeTooltip() {
+                tooltip.remove();
+                document.removeEventListener('click', removeTooltip);
+            });
+        }
+
+        // ===== UTILITIES =====
+        function showError(id, msg) {
+            document.getElementById(id).innerHTML = `
+                <div class="no-data-state" style="grid-column: 1 / -1;">
+                    <div class="no-data-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <p>${msg}</p>
+                </div>
+            `;
         }
 
         function logout() {
@@ -413,34 +587,36 @@
         }
 
         function setupAutoRefresh() {
+            // Auto-refresh ogni 30 minuti
             autoRefreshInterval = setInterval(async () => {
+                console.log('[ADMIN] Auto-refresh dati');
+                
+                // Refresh cantieri
                 cantieriCache = { totali: null, mese: null };
                 await loadCantieri();
+                
+                // Refresh calendario se utente selezionato
                 if (currentUserId) {
-                    delete dipendentiDataCache[currentUserId];
-                    await loadTimeline();
+                    await loadCalendarData();
                 }
-            }, 300000);
+            }, 1800000); // 30 minuti
         }
 
-        function handleResize(mobile) {
-            if (timelineChart) {
-                timelineChart.options = Utils.getChartOptions(mobile);
-                timelineChart.update();
-            }
-        }
-
+        // Cleanup
         window.addEventListener('beforeunload', () => {
             if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-            if (timelineChart) timelineChart.destroy();
         });
 
-        window.getCacheInfo = () => console.table({
+        // Debug helper
+        window.getAdminState = () => console.table({
+            cantieriMode: currentCantieriMode,
+            userId: currentUserId,
+            userName: currentUserName,
+            year: currentYear,
+            month: currentMonth,
+            hasCalendarData: !!calendarData,
             totaliCached: !!cantieriCache.totali,
-            meseCached: !!cantieriCache.mese,
-            dipendentiCached: Object.keys(dipendentiDataCache).length,
-            currentMode: currentCantieriMode,
-            currentUser: currentUserId
+            meseCached: !!cantieriCache.mese
         });
     </script>
 </body>
