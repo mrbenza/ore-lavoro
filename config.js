@@ -1,10 +1,10 @@
 // Configurazione Sistema Gestione Ore V2.2 - PRODUCTION MODE - CORS FIXED
 const CONFIG = {
-    // 🔧 PROXY VERCEL - URL RELATIVO (CORS gestito)
+    // PROXY VERCEL - URL RELATIVO (CORS gestito)
     APPS_SCRIPT_URL: '/api/proxy',
  
-    // 🔧 MODALITÀ PRODUZIONE
-    PRODUCTION_MODE: true,  // 🚀 CAMBIA A TRUE PER PRODUZIONE
+    // MODALITÀ PRODUZIONE
+    PRODUCTION_MODE: true,
     
     // Versioning V2.2
     VERSION: {
@@ -25,10 +25,10 @@ const CONFIG = {
         NOTIFICATION_DURATION: 4000,
         LOADING_MIN_TIME: 1000,
         AUTO_LOGOUT_TIME: 30 * 60 * 1000, // 30 minuti
-        SHOW_AUTH_METHOD: false, // 🔧 NASCOSTO IN PRODUZIONE
-        SHOW_DEBUG_INFO: false,   // 🔧 NASCOSTO IN PRODUZIONE
-        SHOW_SECURITY_STATUS: false, // 🆕 V2.2 - Box sicurezza rimosso
-        SHOW_DERIVED_STATS: false   // 🆕 V2.2 - Statistiche derivate rimosse
+        SHOW_AUTH_METHOD: false,
+        SHOW_DEBUG_INFO: false,
+        SHOW_SECURITY_STATUS: false,
+        SHOW_DERIVED_STATS: false
     },
     
     // Validazione
@@ -40,26 +40,26 @@ const CONFIG = {
         MIN_PASSWORD_LENGTH: 4
     },
     
-    // Debug e sicurezza - OTTIMIZZATO PER PRODUZIONE
-    DEBUG: false,              // 🔧 FALSE IN PRODUZIONE
+    // Debug e sicurezza
+    DEBUG: false,
     SECURITY: {
         HASH_ENABLED: true,
         AUTO_MIGRATION: true,
         SESSION_TIMEOUT: true,
-        LOG_AUTH_ATTEMPTS: false  // 🔧 PRIVACY IN PRODUZIONE
+        LOG_AUTH_ATTEMPTS: false
     },
     
-    // 🆕 CONFIGURAZIONE LOGGING FRONTEND V2.2
+    // CONFIGURAZIONE LOGGING FRONTEND V2.2
     LOGGING: {
-        CONSOLE_LOGS: false,      // 🔧 DISABILITA CONSOLE.LOG IN PRODUZIONE
-        ERROR_LOGS: true,         // Mantieni log errori per troubleshooting
-        AUTH_LOGS: false,         // 🔧 DISABILITA LOG AUTH PER PRIVACY
-        API_LOGS: false,          // 🔧 DISABILITA LOG API CALLS
-        PERFORMANCE_LOGS: false   // 🔧 DISABILITA LOG PERFORMANCE
+        CONSOLE_LOGS: false,
+        ERROR_LOGS: true,
+        AUTH_LOGS: false,
+        API_LOGS: false,
+        PERFORMANCE_LOGS: false
     }
 };
 
-// ===== SISTEMA LOGGING OTTIMIZZATO PER PRODUZIONE =====
+// ===== SISTEMA LOGGING =====
 const ProductionLogger = {
     log: function(...args) {
         if (CONFIG.LOGGING.CONSOLE_LOGS && !CONFIG.PRODUCTION_MODE) {
@@ -97,7 +97,6 @@ const ProductionLogger = {
         }
     },
     
-    // Solo per debug interno - mai in produzione
     debug: function(...args) {
         if (CONFIG.DEBUG && !CONFIG.PRODUCTION_MODE) {
             console.log('[DEBUG]', ...args);
@@ -105,26 +104,21 @@ const ProductionLogger = {
     }
 };
 
-// Funzioni di utilità comuni V2.2 - PRODUCTION OPTIMIZED + CORS FIXED + ADMIN
+// ===== FUNZIONI DI UTILITÀ =====
 const Utils = {
-    // ✅ Gestione chiamate API FIXED per URL relativi
+    // Gestione chiamate API
     async callAPI(params) {
         ProductionLogger.api('API Call:', params.action);
         
-        // 🔧 FIX: Gestione corretta URL relativi
         let targetUrl;
         if (CONFIG.APPS_SCRIPT_URL.startsWith('http')) {
-            // URL assoluto (sviluppo)
             targetUrl = new URL(CONFIG.APPS_SCRIPT_URL);
         } else {
-            // URL relativo (produzione con proxy)
             targetUrl = new URL(CONFIG.APPS_SCRIPT_URL, window.location.origin);
         }
         
-        // Gestione parametri con serializzazione JSON per oggetti complessi
         Object.keys(params).forEach(key => {
             const value = params[key];
-            
             if (typeof value === 'object' && value !== null) {
                 ProductionLogger.debug(`Serializzando oggetto ${key}:`, value);
                 targetUrl.searchParams.append(key, JSON.stringify(value));
@@ -148,7 +142,6 @@ const Utils = {
             
             ProductionLogger.api('API Response per:', params.action, result.success ? 'SUCCESS' : 'FAILED');
             
-            // Log informazioni sicurezza solo se non in produzione
             if (!CONFIG.PRODUCTION_MODE && result.systemInfo) {
                 ProductionLogger.auth('Auth Method:', result.systemInfo.authMethod);
                 ProductionLogger.auth('Hash Support:', result.systemInfo.hashSupport);
@@ -163,7 +156,7 @@ const Utils = {
         }
     },
     
-    // Gestione sessione V2.2 - Production
+    // Gestione sessione
     getSession() {
         return {
             user: JSON.parse(sessionStorage.getItem('currentUser') || 'null'),
@@ -174,7 +167,6 @@ const Utils = {
     setSession(user, token) {
         sessionStorage.setItem('currentUser', JSON.stringify(user));
         sessionStorage.setItem('sessionToken', token);
-        
         ProductionLogger.auth('Sessione salvata per utente:', user.name);
     },
     
@@ -198,7 +190,7 @@ const Utils = {
         window.location.href = CONFIG.PAGES.DASHBOARD;
     },
     
-    // Notifiche V2.2 ottimizzate
+    // Notifiche ottimizzate
     showNotification(message, type = 'success', duration = null) {
         let notification = document.getElementById('notification');
         
@@ -209,7 +201,6 @@ const Utils = {
             document.body.appendChild(notification);
         }
         
-        // Icone per tipo di notifica
         const icons = {
             success: '✅',
             error: '❌',
@@ -229,10 +220,98 @@ const Utils = {
             notification.classList.remove('show');
         }, notificationDuration);
         
-        // Log solo errori in produzione
         if (type === 'error') {
             ProductionLogger.error('Notification:', message);
         }
+    },
+    
+    // Mostra messaggio fullscreen per eventi importanti
+    showFullscreenMessage(message, type = 'info', duration = 3000) {
+        const existing = document.querySelector('.fullscreen-message');
+        if (existing) existing.remove();
+        
+        const overlay = document.createElement('div');
+        overlay.className = `fullscreen-message ${type}`;
+        overlay.innerHTML = `
+            <div class="fullscreen-message-content">
+                <div class="fullscreen-message-icon">
+                    ${type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'admin' ? '👑' : 'ℹ'}
+                </div>
+                <div class="fullscreen-message-text">${message}</div>
+                <div class="fullscreen-message-spinner"></div>
+            </div>
+        `;
+        
+        if (!document.getElementById('fullscreen-message-styles')) {
+            const style = document.createElement('style');
+            style.id = 'fullscreen-message-styles';
+            style.textContent = `
+                .fullscreen-message {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.85);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 99999;
+                    animation: fadeIn 0.3s ease-in;
+                }
+                .fullscreen-message-content {
+                    background: white;
+                    padding: 40px 60px;
+                    border-radius: 20px;
+                    text-align: center;
+                    max-width: 500px;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                }
+                .fullscreen-message-icon {
+                    font-size: 64px;
+                    margin-bottom: 20px;
+                }
+                .fullscreen-message.admin .fullscreen-message-icon {
+                    animation: pulse 1.5s ease-in-out infinite;
+                }
+                .fullscreen-message-text {
+                    font-size: 20px;
+                    font-weight: 600;
+                    color: #1f2937;
+                    line-height: 1.5;
+                    margin-bottom: 25px;
+                }
+                .fullscreen-message-spinner {
+                    width: 40px;
+                    height: 40px;
+                    border: 4px solid #f3f4f6;
+                    border-top-color: #4f46e5;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto;
+                }
+                @keyframes pulse {
+                    0%, 100% { transform: scale(1); opacity: 1; }
+                    50% { transform: scale(1.1); opacity: 0.8; }
+                }
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(overlay);
+        
+        if (duration > 0) {
+            setTimeout(() => overlay.remove(), duration);
+        }
+        
+        return overlay;
     },
     
     // Formatters
@@ -248,7 +327,7 @@ const Utils = {
         return new Date(date).toLocaleDateString('it-IT');
     },
     
-    // Validatori V2.2
+    // Validatori
     validateHours(hours) {
         const h = parseFloat(hours);
         return !isNaN(h) && h >= CONFIG.VALIDATION.MIN_HOURS && h <= CONFIG.VALIDATION.MAX_HOURS_PER_DAY;
@@ -262,7 +341,7 @@ const Utils = {
         return password && password.length >= CONFIG.VALIDATION.MIN_PASSWORD_LENGTH;
     },
     
-    // Auto-logout per sicurezza V2.2
+    // Auto-logout
     setupAutoLogout() {
         if (!CONFIG.SECURITY.SESSION_TIMEOUT) return;
         
@@ -285,19 +364,10 @@ const Utils = {
         ProductionLogger.log('Auto-logout configurato per', CONFIG.UI.AUTO_LOGOUT_TIME / 60000, 'minuti');
     },
     
-    // ✅ Funzione sicurezza ottimizzata per produzione V2.2
+    // Sicurezza
     showSecurityStatus(authMethod, hashSupport) {
-        // V2.2: Security status box rimosso completamente
-        if (!CONFIG.UI.SHOW_SECURITY_STATUS) {
-            return;
-        }
-        
-        // In produzione non mostra nessun messaggio di sicurezza
-        if (CONFIG.PRODUCTION_MODE) {
-            return;
-        }
-        
-        // Modalità sviluppo - mostra info dettagliate
+        if (!CONFIG.UI.SHOW_SECURITY_STATUS) return;
+        if (CONFIG.PRODUCTION_MODE) return;
         if (!CONFIG.UI.SHOW_AUTH_METHOD) return;
         
         const securityLevel = authMethod === 'hash' ? 'SICURO' : 'COMPATIBILITÀ';
@@ -312,7 +382,7 @@ const Utils = {
         }
     },
     
-    // ✅ Performance monitoring (solo in sviluppo)
+    // Performance monitoring
     measurePerformance(operation, callback) {
         if (!CONFIG.LOGGING.PERFORMANCE_LOGS || CONFIG.PRODUCTION_MODE) {
             return callback();
@@ -326,7 +396,7 @@ const Utils = {
         return result;
     },
     
-    // ✅ Error reporting per produzione
+    // Error reporting
     reportError(error, context = '') {
         const errorInfo = {
             message: error.message,
@@ -340,10 +410,8 @@ const Utils = {
         
         ProductionLogger.error('Errore applicazione:', errorInfo);
         
-        // In produzione potresti inviare questo a un servizio di monitoring
         if (CONFIG.PRODUCTION_MODE) {
-            // Esempio: invio a servizio esterno di monitoring
-            // this.sendToMonitoring(errorInfo);
+            // Qui potresti inviare a un servizio di monitoring
         }
         
         return errorInfo;
@@ -351,9 +419,7 @@ const Utils = {
 
     // ===== FUNZIONI ADMIN =====
     
-    /**
-     * Valida se l'utente corrente ha accesso admin
-     */
+    // Valida se l'utente corrente ha accesso admin
     validateAdmin: async function() {
         try {
             const sessionData = this.getSession();
@@ -377,9 +443,8 @@ const Utils = {
             return false;
         }
     },
-    /**
-     * Controlla accesso admin e reindirizza se necessario
-     */
+    
+    // Controlla accesso admin e reindirizza se necessario (per admin.html)
     checkAdminAccess: async function() {
         const isAdmin = await this.validateAdmin();
         
@@ -395,10 +460,38 @@ const Utils = {
         
         return true;
     },
+    
+    // Controlla se l'utente è admin e reindirizza dalla dashboard normale
+    checkAdminRedirect: async function() {
+        try {
+            const isAdmin = await this.validateAdmin();
+            
+            if (isAdmin) {
+                console.log('Admin rilevato, reindirizzamento...');
+                
+                // Mostra messaggio fullscreen
+                this.showFullscreenMessage(
+                    'Accesso Amministratore rilevato!<br>Verrai reindirizzato al pannello di controllo...',
+                    'admin',
+                    0 // Non auto-chiude
+                );
+                
+                // Redirect dopo 2 secondi
+                setTimeout(() => {
+                    window.location.href = CONFIG.PAGES.ADMIN || 'admin.html';
+                }, 2000);
+                
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.error('Errore controllo admin redirect:', error);
+            return false;
+        }
+    },
 
-    /**
-     * Carica overview cantieri per admin
-     */
+    // Carica overview cantieri per admin
     loadCantieriOverview: async function(modalita = 'totali') {
         try {
             const sessionData = this.getSession();
@@ -420,9 +513,7 @@ const Utils = {
         }
     },
 
-    /**
-     * Carica lista dipendenti per admin
-     */
+    // Carica lista dipendenti per admin
     loadDipendentiList: async function() {
         try {
             const sessionData = this.getSession();
@@ -443,9 +534,60 @@ const Utils = {
         }
     },
 
-    /**
-     * Carica timeline dipendente per admin
-     */
+    // Carica le informazioni ore di un altro utente (solo admin)
+    loadOtherUserInfo: async function(targetUserId) {
+        try {
+            const sessionData = this.getSession();
+            const result = await this.callAPI({
+                action: 'getOtherUserInfo',
+                sessionToken: sessionData.token,
+                targetUserId: targetUserId
+            });
+            
+            if (result && result.success) {
+                return result.data || {};
+            } else {
+                throw new Error(result?.message || 'Errore caricamento info utente');
+            }
+            
+        } catch (error) {
+            this.showNotification('Errore caricamento info utente: ' + error.message, 'error');
+            throw error;
+        }
+    },
+
+    // Carica i dati calendario mensile di un altro utente (solo admin)
+    loadOtherUserMonthlyData: async function(targetUserId, year, month) {
+        try {
+            const sessionData = this.getSession();
+            
+            ProductionLogger.debug('loadOtherUserMonthlyData:', {
+                targetUserId: targetUserId,
+                year: year,
+                month: month
+            });
+            
+            const result = await this.callAPI({
+                action: 'getOtherUserMonthlyData',
+                sessionToken: sessionData.token,
+                targetUserId: targetUserId,
+                year: String(year),
+                month: String(month)
+            });
+            
+            if (result && result.success) {
+                return result.data || {};
+            } else {
+                throw new Error(result?.message || 'Errore caricamento dati calendario');
+            }
+            
+        } catch (error) {
+            this.showNotification('Errore caricamento calendario: ' + error.message, 'error');
+            throw error;
+        }
+    },
+
+    // Carica timeline dipendente per admin (deprecata - usare loadOtherUserMonthlyData)
     loadDipendenteTimeline: async function(userId, timeframe = '30days') {
         try {
             const sessionData = this.getSession();
@@ -468,9 +610,7 @@ const Utils = {
         }
     },
 
-    /**
-     * Invalida cache admin
-     */
+    // Invalida cache admin
     invalidateAdminCache: async function(cacheType = 'all') {
         try {
             const sessionData = this.getSession();
@@ -623,61 +763,7 @@ const Utils = {
             }
         };
     },
-    
-    /** Carica le informazioni ore di un altro utente (solo admin)  */
-    loadOtherUserInfo: async function(targetUserId) {
-        try {
-            const sessionData = this.getSession();
-            const result = await this.callAPI({
-                action: 'getOtherUserInfo',
-                sessionToken: sessionData.token,
-                targetUserId: targetUserId
-            });
-            
-            if (result && result.success) {
-                return result.data || {};
-            } else {
-                throw new Error(result?.message || 'Errore caricamento info utente');
-            }
-            
-        } catch (error) {
-            this.showNotification('Errore caricamento info utente: ' + error.message, 'error');
-            throw error;
-        }
-    },
-    
-    /**
-     * Carica i dati calendario mensile di un altro utente (solo admin)
-     */
-    loadOtherUserMonthlyData: async function(targetUserId, year, month) {
-        try {
-            const sessionData = this.getSession();
-            
-            ProductionLogger.debug('loadOtherUserMonthlyData:', {
-                targetUserId: targetUserId,
-                year: year,
-                month: month
-            });
-            
-            const result = await this.callAPI({
-                action: 'getOtherUserMonthlyData',
-                sessionToken: sessionData.token,
-                targetUserId: targetUserId,
-                year: String(year),
-                month: String(month)
-            });
-            
-            if (result && result.success) {
-                return result.data || {};
-            } else {
-                throw new Error(result?.message || 'Errore caricamento dati calendario');
-            }
-            
-        } catch (error) {
-            this.showNotification('Errore caricamento calendario: ' + error.message, 'error');
-            throw error;
-        }
-    },
+
     // ===== UTILITY MOBILE =====
     
     isMobile: function() {
@@ -745,7 +831,7 @@ const Utils = {
     }
 };
 
-// Protezione accesso pagine V2.2 - Production
+// ===== PROTEZIONE ACCESSO PAGINE =====
 const PageGuard = {
     requireLogin() {
         if (!Utils.isLoggedIn()) {
@@ -765,7 +851,7 @@ const PageGuard = {
     }
 };
 
-// ============================ CONFIGURAZIONE ADMIN ============================
+// ===== CONFIGURAZIONE ADMIN =====
 const ADMIN_CONFIG = {
     ADMIN_PAGE: 'admin.html',
     
@@ -780,36 +866,28 @@ const ADMIN_CONFIG = {
         TOTALI_ASSOLUTI: 'totali'
     },
     
-    AUTO_REFRESH_INTERVAL: 300000,
+    AUTO_REFRESH_INTERVAL: 1800000, // 30 minuti
     MOBILE_BREAKPOINT: 768,
     CHART_HEIGHT_MOBILE: 250,
     CHART_HEIGHT_DESKTOP: 300
 };
 
-// ===== INIZIALIZZAZIONE SISTEMA PRODUCTION V2.2 =====
+// ===== INIZIALIZZAZIONE SISTEMA =====
 function initializeSystem() {
     if (CONFIG.PRODUCTION_MODE) {
-        // Produzione: Log minimo
         ProductionLogger.log('Sistema Gestione Ore V2.2 - Modalità Produzione (UI Semplificata)');
-        
-        // Rimuovi informazioni debug dal DOM
         removeDebugElements();
-        
-        // Setup error handling globale
         setupGlobalErrorHandling();
-        
     } else {
-        // Sviluppo: Log completo
-        ProductionLogger.log('🚀 Sistema Gestione Ore inizializzato V2.2 - Modalità Sviluppo');
-        ProductionLogger.log('📋 Configurazione:', CONFIG);
-        ProductionLogger.log('🎨 UI: Layout Semplificato');
-        ProductionLogger.log('🔐 Hash Support:', CONFIG.SECURITY.HASH_ENABLED);
-        ProductionLogger.log('🔑 Sessione attiva:', Utils.isLoggedIn());
+        ProductionLogger.log('Sistema Gestione Ore inizializzato V2.2 - Modalità Sviluppo');
+        ProductionLogger.log('Configurazione:', CONFIG);
+        ProductionLogger.log('UI: Layout Semplificato');
+        ProductionLogger.log('Hash Support:', CONFIG.SECURITY.HASH_ENABLED);
+        ProductionLogger.log('Sessione attiva:', Utils.isLoggedIn());
     }
 }
 
 function removeDebugElements() {
-    // Rimuovi elementi debug dal DOM in produzione
     const debugSelectors = [
         '.version-badge',
         '.debug-info', 
@@ -828,20 +906,17 @@ function removeDebugElements() {
 }
 
 function setupGlobalErrorHandling() {
-    // Cattura errori JavaScript globali
     window.addEventListener('error', (event) => {
         Utils.reportError(event.error, 'Global JavaScript Error');
     });
     
-    // Cattura promise rejections non gestite
     window.addEventListener('unhandledrejection', (event) => {
         Utils.reportError(new Error(event.reason), 'Unhandled Promise Rejection');
     });
 }
 
 // ===== COMPATIBILITÀ API =====
-// Mantieni le funzioni originali per compatibilità 
-const Logger = ProductionLogger; // Alias per compatibilità 
+const Logger = ProductionLogger;
 
 // Export per uso globale
 window.CONFIG = CONFIG;
