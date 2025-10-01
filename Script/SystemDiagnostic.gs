@@ -242,15 +242,15 @@ function showHealthStatusDialogSimple(healthCheck) {
   
   switch (healthCheck.status) {
     case 'healthy':
-      statusIcon = '✅';
+      statusIcon = 'âœ…';
       statusText = 'Sistema in Salute - Tutti i controlli superati';
       break;
     case 'warning':
-      statusIcon = '⚠️';
+      statusIcon = 'âš ï¸';
       statusText = 'Attenzione Richiesta - ' + healthCheck.warnings + ' problema/i rilevato/i';
       break;
     case 'critical':
-      statusIcon = '🚨';
+      statusIcon = 'ðŸš¨';
       statusText = 'Errori Critici - ' + healthCheck.criticalErrors + ' errore/i critico/i';
       break;
   }
@@ -263,7 +263,7 @@ function showHealthStatusDialogSimple(healthCheck) {
     message += 'PROBLEMI RILEVATI:\n\n';
     
     healthCheck.issues.forEach((issue, index) => {
-      const problemIcon = issue.type === 'error' ? '❌' : '⚠️';
+      const problemIcon = issue.type === 'error' ? 'âŒ' : 'âš ï¸';
       message += (index + 1) + '. ' + problemIcon + ' ' + issue.module.toUpperCase() + '\n';
       message += '   ' + issue.message + '\n';
       
@@ -286,8 +286,8 @@ function showHealthStatusDialogSimple(healthCheck) {
     message += 'Risolvere tutti i problemi evidenziati prima di procedere.\n\n';
   } else if (healthCheck.status === 'warning') {
     message += 'ATTENZIONE:\n';
-    message += 'Il sistema è funzionante ma presenta alcuni problemi minori.\n';
-    message += 'La risoluzione di questi avvisi migliorerà l\'affidabilità del sistema.\n\n';
+    message += 'Il sistema Ã¨ funzionante ma presenta alcuni problemi minori.\n';
+    message += 'La risoluzione di questi avvisi migliorerÃ  l\'affidabilitÃ  del sistema.\n\n';
   }
   
   message += 'Riepilogo: ' + healthCheck.criticalErrors + ' errori critici, ' + healthCheck.warnings + ' avvisi';
@@ -483,8 +483,8 @@ function showDiagnosticsDialogSimple(diagnostics) {
   let message = 'DIAGNOSTICA SISTEMA COMPLETATA\n\n';
   
   // Header con health score
-  const healthIcon = diagnostics.healthScore >= 80 ? '✅' : 
-                    diagnostics.healthScore >= 50 ? '⚠️' : '🚨';
+  const healthIcon = diagnostics.healthScore >= 80 ? 'âœ…' : 
+                    diagnostics.healthScore >= 50 ? 'âš ï¸' : 'ðŸš¨';
   const healthStatus = diagnostics.healthScore >= 80 ? 'ECCELLENTE' : 
                       diagnostics.healthScore >= 50 ? 'ATTENZIONE' : 'CRITICO';
   
@@ -493,7 +493,7 @@ function showDiagnosticsDialogSimple(diagnostics) {
   
   // Riepilogo generale
   message += 'RIEPILOGO GENERALE:\n';
-  message += 'Database: ' + (diagnostics.spreadsheet.status === 'ok' ? '✅' : '❌') + ' ' + diagnostics.spreadsheet.status + '\n';
+  message += 'Database: ' + (diagnostics.spreadsheet.status === 'ok' ? 'âœ…' : 'âŒ') + ' ' + diagnostics.spreadsheet.status + '\n';
   message += 'Fogli totali: ' + diagnostics.sheets.count + '\n';
   message += 'Dipendenti: ' + diagnostics.sheets.employees + '\n';
   message += 'Utenti sistema: ' + diagnostics.users.total + '\n';
@@ -502,11 +502,11 @@ function showDiagnosticsDialogSimple(diagnostics) {
   
   // Dettagli controlli
   message += 'DETTAGLI CONTROLLI:\n';
-  message += 'Permessi Drive: ' + (diagnostics.permissions.drive ? '✅' : '❌') + '\n';
-  message += 'Permessi Properties: ' + (diagnostics.permissions.properties ? '✅' : '❌') + '\n';
-  message += 'Cartella archivi: ' + (diagnostics.folders.archive ? '✅' : '❌') + '\n';
-  message += 'Cartella report: ' + (diagnostics.folders.reports ? '✅' : '❌') + '\n';
-  message += 'Configurazione: ' + (diagnostics.configuration.valid ? '✅' : '❌') + '\n\n';
+  message += 'Permessi Drive: ' + (diagnostics.permissions.drive ? 'âœ…' : 'âŒ') + '\n';
+  message += 'Permessi Properties: ' + (diagnostics.permissions.properties ? 'âœ…' : 'âŒ') + '\n';
+  message += 'Cartella archivi: ' + (diagnostics.folders.archive ? 'âœ…' : 'âŒ') + '\n';
+  message += 'Cartella report: ' + (diagnostics.folders.reports ? 'âœ…' : 'âŒ') + '\n';
+  message += 'Configurazione: ' + (diagnostics.configuration.valid ? 'âœ…' : 'âŒ') + '\n\n';
   
   // Errori se presenti
   if (diagnostics.errors.length > 0) {
@@ -524,17 +524,17 @@ function showDiagnosticsDialogSimple(diagnostics) {
   // Raccomandazioni
   message += 'RACCOMANDAZIONI:\n';
   if (diagnostics.healthScore >= 90) {
-    message += '• Sistema in perfetta salute - continua l\'uso normale\n';
-    message += '• Esegui diagnostica mensile per monitoraggio preventivo\n';
+    message += 'â€¢ Sistema in perfetta salute - continua l\'uso normale\n';
+    message += 'â€¢ Esegui diagnostica mensile per monitoraggio preventivo\n';
   } else if (diagnostics.healthScore >= 75) {
-    message += '• Sistema generalmente stabile con piccoli problemi risolvibili\n';
-    message += '• Risolvi gli errori minori elencati sopra quando possibile\n';
+    message += 'â€¢ Sistema generalmente stabile con piccoli problemi risolvibili\n';
+    message += 'â€¢ Risolvi gli errori minori elencati sopra quando possibile\n';
   } else if (diagnostics.healthScore >= 50) {
-    message += '• Risolvi IMMEDIATAMENTE gli errori critici evidenziati\n';
-    message += '• Evita operazioni massive fino alla risoluzione dei problemi\n';
+    message += 'â€¢ Risolvi IMMEDIATAMENTE gli errori critici evidenziati\n';
+    message += 'â€¢ Evita operazioni massive fino alla risoluzione dei problemi\n';
   } else {
-    message += '• STOP - Non usare il sistema fino alla risoluzione completa\n';
-    message += '• Risolvi TUTTI gli errori prima di procedere con qualsiasi operazione\n';
+    message += 'â€¢ STOP - Non usare il sistema fino alla risoluzione completa\n';
+    message += 'â€¢ Risolvi TUTTI gli errori prima di procedere con qualsiasi operazione\n';
   }
   
   const title = healthIcon + ' Diagnostica Sistema - Health Score: ' + diagnostics.healthScore + '/100';
@@ -551,33 +551,33 @@ function quickSystemTest() {
   // Test connessione
   try {
     getMainSpreadsheet();
-    results.push('✅ Database: OK');
+    results.push('âœ… Database: OK');
   } catch (error) {
-    results.push('❌ Database: ' + error.message);
+    results.push('âŒ Database: ' + error.message);
   }
   
   // Test dipendenti
   try {
     const employees = getActiveEmployeeNames();
-    results.push('✅ Dipendenti: ' + employees.length + ' trovati');
+    results.push('âœ… Dipendenti: ' + employees.length + ' trovati');
   } catch (error) {
-    results.push('❌ Dipendenti: ' + error.message);
+    results.push('âŒ Dipendenti: ' + error.message);
   }
   
   // Test utenti
   try {
     const users = getUsersList();
-    results.push('✅ Utenti: ' + users.length + ' nel sistema');
+    results.push('âœ… Utenti: ' + users.length + ' nel sistema');
   } catch (error) {
-    results.push('❌ Utenti: ' + error.message);
+    results.push('âŒ Utenti: ' + error.message);
   }
   
   const message = 'QUICK SYSTEM TEST\n\n' + results.join('\n') + '\n\nTimestamp: ' + new Date().toLocaleString('it-IT');
-  SpreadsheetApp.getUi().alert('🧪 Test Rapido Sistema', message);
+  SpreadsheetApp.getUi().alert('ðŸ§ª Test Rapido Sistema', message);
 }
 
 /**
- * Utility: Verifica se una funzione esiste ed è accessibile
+ * Utility: Verifica se una funzione esiste ed Ã¨ accessibile
  */
 function functionExists(functionName) {
   try {
