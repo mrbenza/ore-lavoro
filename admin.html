@@ -590,38 +590,130 @@
 
         function showDayDetails(dateStr) {
             const workDay = calendarData?.workDays?.[dateStr];
-            if (!workDay) return;
-
+            const hasExistingWork = workDay && workDay.ore > 0;
+            
             const date = new Date(dateStr);
             const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
                                'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
             
+            const popup = document.getElementById('dayDetailsPopup');
             const popupTitle = document.getElementById('popupTitle');
             const popupTotalHours = document.getElementById('popupTotalHours');
             const popupContent = document.getElementById('popupContent');
-            const popup = document.getElementById('dayDetailsPopup');
-
-            if (!popupTitle || !popupTotalHours || !popupContent || !popup) return;
-
+        
+            if (!popup || !popupTitle || !popupTotalHours || !popupContent) return;
+        
             popupTitle.textContent = `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-            popupTotalHours.textContent = `${workDay.ore}h totali`;
-
+            popupTotalHours.textContent = hasExistingWork ? `${workDay.ore}h registrate` : 'Nessuna registrazione';
+        
             let html = `
-                <div class="work-entry">
-                    <div class="work-entry-header">
-                        <div class="work-cantiere">${workDay.cantiereName || workDay.cantiereId}</div>
-                        <div class="work-hours-large">${workDay.ore}h</div>
+                <div style="background: ${hasExistingWork ? 'rgba(79, 70, 229, 0.05)' : 'rgba(245, 158, 11, 0.05)'}; 
+                            border-left: 4px solid ${hasExistingWork ? '#4f46e5' : '#f59e0b'}; 
+                            padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1f2937;">
+                        ${hasExistingWork ? '✏️ Modifica registrazione esistente' : '➕ Nuova registrazione'}
                     </div>
-                    ${workDay.note && workDay.note.trim() ? `<div class="work-note">"${workDay.note}"</div>` : ''}
+                </div>
+                
+                <div class="work-entry">
+                    <div style="display: grid; grid-template-columns: 1fr 120px; gap: 12px; margin-bottom: 15px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
+                                Cantiere ${hasExistingWork ? '(cambia per aggiornare)' : ''}
+                            </label>
+                            <select id="editCantiereId" 
+                                    style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; 
+                                           font-size: 14px; background: white; cursor: pointer; transition: border 0.2s;"
+                                    onfocus="this.style.borderColor='#4f46e5';"
+                                    onblur="this.style.borderColor='#e5e7eb';">
+                                <option value="">Caricamento cantieri...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
+                                Ore
+                            </label>
+                            <input type="number" id="editOre" 
+                                   value="${hasExistingWork ? workDay.ore : ''}" 
+                                   min="0" max="24" step="0.5" 
+                                   placeholder="0.0"
+                                   style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; 
+                                          font-size: 14px; text-align: center; font-weight: 600;"
+                                   onfocus="this.style.borderColor='#4f46e5';"
+                                   onblur="this.style.borderColor='#e5e7eb';">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
+                            Note aggiuntive (opzionale)
+                        </label>
+                        <textarea id="editNote" rows="3" 
+                                  placeholder="Aggiungi eventuali note..."
+                                  style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; 
+                                         font-size: 14px; resize: vertical; font-family: inherit;"
+                                  onfocus="this.style.borderColor='#4f46e5';"
+                                  onblur="this.style.borderColor='#e5e7eb';">${hasExistingWork && workDay.note ? workDay.note.split('\n** Modificato')[0] : ''}</textarea>
+                        <small style="color: #9ca3af; font-size: 11px;">
+                            ℹ️ Verrà aggiunto automaticamente il log amministrativo
+                        </small>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="popup-ok-button" 
+                            onclick="saveWorkEdit('${dateStr}', ${!hasExistingWork})" 
+                            style="flex: 1; background: linear-gradient(135deg, #10b981, #059669);">
+                        ${hasExistingWork ? '💾 Salva Modifiche' : '➕ Crea Registrazione'}
+                    </button>
+                    <button class="popup-ok-button" 
+                            onclick="closeDayDetails()" 
+                            style="flex: 1; background: #6b7280;">
+                        Annulla
+                    </button>
                 </div>
             `;
-            
-            html += '<button class="popup-ok-button" onclick="closeDayDetails()">OK</button>';
-
+        
             popupContent.innerHTML = html;
+            
+            // Carica TUTTI i cantieri (anche chiusi)
+            loadAllCantieriForEdit(hasExistingWork ? workDay.cantiereId : null);
+            
             popup.classList.add('show');
         }
-
+        
+        async function loadAllCantieriForEdit(currentCantiereId) {
+            try {
+                const sessionData = Utils.getSession();
+                const result = await Utils.callAPI({
+                    action: 'getAllCantieriForAdmin',
+                    sessionToken: sessionData.token
+                });
+                
+                const select = document.getElementById('editCantiereId');
+                
+                if (result.success && result.data) {
+                    select.innerHTML = '<option value="">-- Seleziona cantiere --</option>' + 
+                        result.data.map(c => {
+                            const statoLabel = c.stato !== 'Aperto' ? ` [${c.stato}]` : '';
+                            return `<option value="${c.id}" ${c.id === currentCantiereId ? 'selected' : ''}>
+                                ${c.id} - ${c.nome}${statoLabel}
+                            </option>`;
+                        }).join('');
+                        
+                    console.log('Cantieri caricati:', result.data.length);
+                } else {
+                    select.innerHTML = '<option value="">Errore caricamento cantieri</option>';
+                    Utils.showNotification('Errore caricamento cantieri', 'error');
+                }
+            } catch (error) {
+                console.error('Errore caricamento cantieri:', error);
+                const select = document.getElementById('editCantiereId');
+                select.innerHTML = '<option value="">Errore caricamento</option>';
+            }
+        }
+        
+        async funct
         function closeDayDetails() {
             const popup = document.getElementById('dayDetailsPopup');
             if (popup) {
