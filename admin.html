@@ -784,9 +784,16 @@
 			
 			document.getElementById('editOre').value = '';
 			document.getElementById('editNote').value = '';
-			document.getElementById('saveBtn').innerHTML = '➕ Crea Registrazione';
 			
+			// IMPORTANTE: Carica i cantieri PRIMA di cambiare il testo del bottone
 			loadAllCantieriForEdit(null);
+			
+			// Cambia il testo del bottone
+			const saveBtn = document.getElementById('saveBtn');
+			if (saveBtn) {
+				saveBtn.innerHTML = '➕ Crea Registrazione';
+			}
+			
 			document.getElementById('editArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 		}
 
