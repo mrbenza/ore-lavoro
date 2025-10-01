@@ -255,6 +255,7 @@
         let cantieriCache = { totali: null, mese: null };
         let calendarCache = {}; // Cache per i calendari: { userId_year_month: data }
         let autoRefreshInterval = null;
+		let currentEditDateStr = null;
 
         // INIT
         document.addEventListener('DOMContentLoaded', async function() {
@@ -541,7 +542,7 @@
                     content += `<span class="day-hours">${workDay.ore}h</span>`;
                 }
                 
-                const onclickAttr = workDay ? `onclick="showDayDetails('${dateStr}')"` : '';
+                const onclickAttr = workDay ? `onclick="currentEditDateStr='${dateStr}'; showDayDetails('${dateStr}')"` : '';
                 html += `<div class="${classes}" ${onclickAttr} data-date="${dateStr}">${content}</div>`;
             }
 
@@ -589,120 +590,244 @@
         }
 
         function showDayDetails(dateStr) {
-            const workDay = calendarData?.workDays?.[dateStr];
-            const hasExistingWork = workDay && workDay.ore > 0;
-            
-            const date = new Date(dateStr);
-            const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
-                               'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-            
-            const popup = document.getElementById('dayDetailsPopup');
-            const popupTitle = document.getElementById('popupTitle');
-            const popupTotalHours = document.getElementById('popupTotalHours');
-            const popupContent = document.getElementById('popupContent');
-        
-            if (!popup || !popupTitle || !popupTotalHours || !popupContent) return;
-        
-            popupTitle.textContent = `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-            popupTotalHours.textContent = hasExistingWork ? `${workDay.ore}h registrate` : 'Nessuna registrazione';
-        
-            let html = `
-                <div style="background: ${hasExistingWork ? 'rgba(79, 70, 229, 0.05)' : 'rgba(245, 158, 11, 0.05)'}; 
-                            border-left: 4px solid ${hasExistingWork ? '#4f46e5' : '#f59e0b'}; 
-                            padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                    <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1f2937; margin-bottom: 8px;">
-                        ${hasExistingWork ? '✏️ Modifica registrazione esistente' : '➕ Nuova registrazione'}
-                    </div>
-                    ${hasExistingWork ? `
-                        <div style="background: white; border-radius: 6px; padding: 10px; margin-top: 8px;">
-                            <div style="font-size: 11px; color: #6b7280; font-weight: 600; margin-bottom: 4px;">DATI ATTUALI:</div>
-                            <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center;">
-                                <div style="font-size: 12px; color: #374151;">
-                                    <strong>Cantiere:</strong>
-                                </div>
-                                <div style="font-size: 13px; color: #1f2937; font-weight: 600;">
-                                    ${workDay.cantiereName || workDay.cantiereId || 'N/A'}
-                                </div>
-                                <div style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 700;">
-                                    ${workDay.ore}h
-                                </div>
-                            </div>
-                            ${workDay.note && !workDay.note.includes('** Modificato') ? `
-                                <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #e5e7eb;">
-                                    <div style="font-size: 11px; color: #6b7280; font-weight: 600;">Note:</div>
-                                    <div style="font-size: 12px; color: #4b5563; font-style: italic;">${workDay.note}</div>
-                                </div>
-                            ` : ''}
-                        </div>
-                    ` : ''}
-                </div>
-                
-                <div class="work-entry">
-                    <div style="display: grid; grid-template-columns: 1fr 120px; gap: 12px; margin-bottom: 15px;">
-                        <div>
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
-                                Cantiere ${hasExistingWork ? '(cambia per aggiornare)' : ''}
-                            </label>
-                            <select id="editCantiereId" 
-                                    style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; 
-                                           font-size: 14px; background: white; cursor: pointer; transition: border 0.2s;"
-                                    onfocus="this.style.borderColor='#4f46e5';"
-                                    onblur="this.style.borderColor='#e5e7eb';">
-                                <option value="">Caricamento cantieri...</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
-                                Ore
-                            </label>
-                            <input type="number" id="editOre" 
-                                   value="${hasExistingWork ? workDay.ore : ''}" 
-                                   min="0" max="24" step="0.5" 
-                                   placeholder="0.0"
-                                   style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; 
-                                          font-size: 14px; text-align: center; font-weight: 600;"
-                                   onfocus="this.style.borderColor='#4f46e5';"
-                                   onblur="this.style.borderColor='#e5e7eb';">
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
-                            Note aggiuntive (opzionale)
-                        </label>
-                        <textarea id="editNote" rows="3" 
-                                  placeholder="Aggiungi eventuali note..."
-                                  style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; 
-                                         font-size: 14px; resize: vertical; font-family: inherit;"
-                                  onfocus="this.style.borderColor='#4f46e5';"
-                                  onblur="this.style.borderColor='#e5e7eb';">${hasExistingWork && workDay.note ? workDay.note.split('\n** Modificato')[0] : ''}</textarea>
-                        <small style="color: #9ca3af; font-size: 11px;">
-                            ℹ️ Verrà aggiunto automaticamente il log amministrativo
-                        </small>
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button class="popup-ok-button" 
-                            onclick="saveWorkEdit('${dateStr}', ${!hasExistingWork})" 
-                            style="flex: 1; background: linear-gradient(135deg, #10b981, #059669);">
-                        ${hasExistingWork ? '💾 Salva Modifiche' : '➕ Crea Registrazione'}
-                    </button>
-                    <button class="popup-ok-button" 
-                            onclick="closeDayDetails()" 
-                            style="flex: 1; background: #6b7280;">
-                        Annulla
-                    </button>
-                </div>
-            `;
-        
-            popupContent.innerHTML = html;
-            
-            // Carica TUTTI i cantieri (anche chiusi)
-            loadAllCantieriForEdit(hasExistingWork ? workDay.cantiereId : null);
-            
-            popup.classList.add('show');
-        }
+			const dayData = calendarData?.workDays?.[dateStr];
+			const hasExistingWork = dayData && dayData.totalOre > 0;
+			
+			const date = new Date(dateStr);
+			const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
+							   'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+			
+			const popup = document.getElementById('dayDetailsPopup');
+			const popupTitle = document.getElementById('popupTitle');
+			const popupTotalHours = document.getElementById('popupTotalHours');
+			const popupContent = document.getElementById('popupContent');
+
+			if (!popup || !popupTitle || !popupTotalHours || !popupContent) return;
+
+			popupTitle.textContent = `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+			popupTotalHours.textContent = hasExistingWork ? `${dayData.totalOre}h registrate` : 'Nessuna registrazione';
+
+			let html = '';
+			
+			if (hasExistingWork && dayData.entries.length > 0) {
+				// CASO: Esistono registrazioni
+				html += `
+					<div style="background: rgba(79, 70, 229, 0.05); border-left: 4px solid #4f46e5; 
+								padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+						<div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1f2937; margin-bottom: 8px;">
+							✏️ ${dayData.entries.length} registrazione/i esistente/i
+						</div>
+				`;
+				
+				// Mostra tutti gli inserimenti
+				dayData.entries.forEach((entry, index) => {
+					html += `
+						<div style="background: white; border-radius: 6px; padding: 10px; margin-top: 8px; 
+									border: 2px solid ${index === 0 ? '#4f46e5' : '#e5e7eb'};">
+							<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+								<div style="font-size: 11px; color: #6b7280; font-weight: 600;">REGISTRAZIONE ${index + 1}</div>
+								<button onclick="selectEntryToEdit(${index})" 
+										style="background: #4f46e5; color: white; border: none; padding: 4px 10px; 
+											   border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: 600;">
+									✏️ Modifica questa
+								</button>
+							</div>
+							<div style="display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center;">
+								<div style="font-size: 12px; color: #374151;"><strong>Cantiere:</strong></div>
+								<div style="font-size: 13px; color: #1f2937; font-weight: 600;">
+									${entry.cantiereName || entry.cantiereId}
+								</div>
+								<div style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 6px; 
+											font-size: 13px; font-weight: 700;">
+									${entry.ore}h
+								</div>
+							</div>
+							${entry.note && !entry.note.includes('** Modificato') ? `
+								<div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #e5e7eb;">
+									<div style="font-size: 11px; color: #6b7280; font-weight: 600;">Note:</div>
+									<div style="font-size: 12px; color: #4b5563; font-style: italic;">${entry.note}</div>
+								</div>
+							` : ''}
+						</div>
+					`;
+				});
+				
+				html += `</div>`;
+				
+				// Area modifica (inizialmente nascosta)
+				html += `
+					<div id="editArea" style="display: none;">
+						<div style="background: rgba(16, 185, 129, 0.05); border-left: 4px solid #10b981; 
+									padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+							<div style="font-weight: 600; color: #065f46;">
+								✏️ Modifica registrazione <span id="editingIndex"></span>
+							</div>
+						</div>
+						${generateEditForm('')}
+					</div>
+				`;
+				
+				// Pulsante nuovo inserimento
+				html += `
+					<button onclick="showNewEntryForm()" 
+							style="width: 100%; background: #10b981; color: white; border: none; padding: 12px; 
+								   border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px;">
+						➕ Aggiungi Nuovo Inserimento
+					</button>
+				`;
+				
+			} else {
+				// CASO: Nessuna registrazione
+				html += `
+					<div style="background: rgba(245, 158, 11, 0.05); border-left: 4px solid #f59e0b; 
+								padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+						<div style="font-weight: 600; color: #1f2937;">➕ Nuova registrazione</div>
+					</div>
+					${generateEditForm('')}
+				`;
+			}
+			
+			html += `
+				<button class="popup-ok-button" onclick="closeDayDetails()" 
+						style="background: #6b7280; margin-top: 10px;">
+					Chiudi
+				</button>
+			`;
+
+			popupContent.innerHTML = html;
+			popup.classList.add('show');
+		}
+
+		function generateEditForm(selectedCantiereId) {
+			return `
+				<div class="work-entry">
+					<div style="display: grid; grid-template-columns: 1fr 120px; gap: 12px; margin-bottom: 15px;">
+						<div>
+							<label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
+								Cantiere
+							</label>
+							<select id="editCantiereId" 
+									style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; 
+										   font-size: 14px; background: white; cursor: pointer;">
+								<option value="">Caricamento...</option>
+							</select>
+						</div>
+						<div>
+							<label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
+								Ore
+							</label>
+							<input type="number" id="editOre" value="" min="0" max="24" step="0.5" placeholder="0.0"
+								   style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; 
+										  font-size: 14px; text-align: center; font-weight: 600;">
+						</div>
+					</div>
+					<div>
+						<label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
+							Note aggiuntive
+						</label>
+						<textarea id="editNote" rows="3" placeholder="Aggiungi note..."
+								  style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; 
+										 font-size: 14px; resize: vertical;"></textarea>
+					</div>
+					<button onclick="saveWorkEdit()" id="saveBtn"
+							style="width: 100%; background: linear-gradient(135deg, #10b981, #059669); color: white; 
+								   border: none; padding: 15px; border-radius: 8px; font-weight: 600; cursor: pointer; 
+								   margin-top: 15px;">
+						💾 Salva Modifiche
+					</button>
+				</div>
+			`;
+		}
+
+		let selectedEntryIndex = null;
+
+		function selectEntryToEdit(index) {
+			selectedEntryIndex = index;
+			const dayData = calendarData.workDays[currentEditDateStr];
+			const entry = dayData.entries[index];
+			
+			document.getElementById('editArea').style.display = 'block';
+			document.getElementById('editingIndex').textContent = index + 1;
+			
+			// Popola form
+			document.getElementById('editOre').value = entry.ore;
+			document.getElementById('editNote').value = entry.note ? entry.note.split('\n** Modificato')[0] : '';
+			
+			// Carica cantieri
+			loadAllCantieriForEdit(entry.cantiereId);
+			
+			// Scroll al form
+			document.getElementById('editArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+		}
+
+		function showNewEntryForm() {
+			selectedEntryIndex = null;
+			document.getElementById('editArea').style.display = 'block';
+			document.getElementById('editingIndex').textContent = '(Nuova)';
+			
+			document.getElementById('editOre').value = '';
+			document.getElementById('editNote').value = '';
+			document.getElementById('saveBtn').innerHTML = '➕ Crea Registrazione';
+			
+			loadAllCantieriForEdit(null);
+			document.getElementById('editArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+		}
+
+		async function saveWorkEdit() {
+			const cantiereId = document.getElementById('editCantiereId').value;
+			const ore = parseFloat(document.getElementById('editOre').value);
+			const note = document.getElementById('editNote').value.trim();
+			
+			if (!cantiereId) {
+				Utils.showNotification('Seleziona un cantiere', 'warning');
+				return;
+			}
+			
+			if (isNaN(ore) || ore <= 0 || ore > 24) {
+				Utils.showNotification('Inserisci ore valide (0.1-24)', 'error');
+				return;
+			}
+			
+			const isNewEntry = selectedEntryIndex === null;
+			
+			const loadingMsg = Utils.showFullscreenMessage(
+				isNewEntry ? 'Creazione registrazione...' : 'Salvataggio modifiche...', 
+				'info', 0
+			);
+			
+			try {
+				const sessionData = Utils.getSession();
+				const result = await Utils.callAPI({
+					action: 'updateWorkEntry',
+					sessionToken: sessionData.token,
+					targetUserId: currentUserId,
+					dateStr: currentEditDateStr,
+					updateData: JSON.stringify({
+						cantiereId: cantiereId,
+						ore: ore,
+						note: note,
+						isNewEntry: isNewEntry
+					})
+				});
+				
+				loadingMsg.remove();
+				
+				if (result.success) {
+					Utils.showNotification(
+						isNewEntry ? '✅ Registrazione creata!' : '✅ Modifiche salvate!', 
+						'success'
+					);
+					closeDayDetails();
+					await loadCalendarData();
+				} else {
+					Utils.showNotification('Errore: ' + result.message, 'error');
+				}
+			} catch (error) {
+				loadingMsg.remove();
+				console.error('Errore:', error);
+				Utils.showNotification('Errore durante il salvataggio', 'error');
+			}
+		}
         
         async function loadAllCantieriForEdit(currentCantiereId) {
             try {
@@ -735,86 +860,6 @@
             }
         }
         
-        async function saveWorkEdit(dateStr, isNewEntry) {
-            try {
-                const cantiereId = document.getElementById('editCantiereId').value;
-                const ore = parseFloat(document.getElementById('editOre').value);
-                const note = document.getElementById('editNote').value.trim();
-                
-                // Validazione
-                if (!cantiereId) {
-                    Utils.showNotification('Seleziona un cantiere', 'warning');
-                    return;
-                }
-                
-                if (isNaN(ore) || ore <= 0 || ore > 24) {
-                    Utils.showNotification('Inserisci ore valide (0.1-24)', 'error');
-                    return;
-                }
-                
-                // Conferma se nuovo inserimento
-                if (isNewEntry) {
-                    const conferma = confirm(
-                        `Stai per creare una NUOVA registrazione:\n\n` +
-                        `Data: ${dateStr}\n` +
-                        `Cantiere: ${cantiereId}\n` +
-                        `Ore: ${ore}h\n\n` +
-                        `Confermi l'operazione?`
-                    );
-                    
-                    if (!conferma) return;
-                }
-                
-                // Loading
-                const loadingMsg = Utils.showFullscreenMessage(
-                    isNewEntry ? 'Creazione nuova registrazione...' : 'Salvataggio modifiche...', 
-                    'info', 
-                    0
-                );
-                
-                const sessionData = Utils.getSession();
-                const result = await Utils.callAPI({
-                    action: 'updateWorkEntry',
-                    sessionToken: sessionData.token,
-                    targetUserId: currentUserId,
-                    dateStr: dateStr,
-                    updateData: JSON.stringify({
-                        cantiereId: cantiereId,
-                        ore: ore,
-                        note: note,
-                        isNewEntry: isNewEntry
-                    })
-                });
-                
-                loadingMsg.remove();
-                
-                if (result.success) {
-                    Utils.showNotification(
-                        isNewEntry ? '✅ Nuova registrazione creata!' : '✅ Modifiche salvate!', 
-                        'success'
-                    );
-                    closeDayDetails();
-                    
-                    // Ricarica calendario
-                    await loadCalendarData();
-                    
-                    console.log('Operazione completata:', result.data);
-                } else {
-                    Utils.showNotification('Errore: ' + result.message, 'error');
-                }
-                
-            } catch (error) {
-                console.error('Errore salvataggio:', error);
-                Utils.showNotification('Errore durante il salvataggio', 'error');
-            }
-        }
-        function closeDayDetails() {
-            const popup = document.getElementById('dayDetailsPopup');
-            if (popup) {
-                popup.classList.remove('show');
-            }
-        }
-
         // ===== UTILITIES =====
         function showError(id, msg) {
             document.getElementById(id).innerHTML = `
