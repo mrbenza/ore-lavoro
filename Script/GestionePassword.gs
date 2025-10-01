@@ -1,4 +1,20 @@
-// ===== GESTIONE PASSWORD - VERSIONE MINIMALISTA =====
+// ===== GESTIONE PASSWORD - VERSIONE DINAMICA (AUTO-ADATTIVA) =====
+
+/**
+ * Mappa delle colonne - letta dinamicamente dagli header
+ */
+function getColumnMapping(sheet) {
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const columnMap = {};
+  
+  headers.forEach((header, index) => {
+    if (header) {
+      columnMap[header.toString().trim()] = index;
+    }
+  });
+  
+  return columnMap;
+}
 
 /**
  * Funzione principale - Cambia password dipendente (chiamabile dal menu)
@@ -36,16 +52,27 @@ function executeChangeEmployeePassword() {
     }
     
   } catch (error) {
-    SpreadsheetApp.getUi().alert('❌ Errore\n\nQualcosa è andato storto. Contatta l\'amministratore.');
+    SpreadsheetApp.getUi().alert('❌ Errore\n\nQualcosa è andato storto: ' + error.message);
   }
 }
 
 /**
- * Legge lista dipendenti dal foglio "Utenti"
+ * Legge lista dipendenti dal foglio "Utenti" - VERSIONE DINAMICA
  */
 function getUsersList() {
   const spreadsheet = getMainSpreadsheet();
   const usersSheet = getSheetSafe(spreadsheet, 'Utenti');
+  
+  // Leggi mappa colonne dagli header
+  const colMap = getColumnMapping(usersSheet);
+  
+  // Verifica che esistano le colonne necessarie
+  const requiredColumns = ['Username', 'Nome Completo', 'Attivo', 'Password', 'Password Hash'];
+  for (const col of requiredColumns) {
+    if (colMap[col] === undefined) {
+      throw new Error(`Colonna "${col}" non trovata nel foglio Utenti!`);
+    }
+  }
   
   const data = usersSheet.getDataRange().getValues();
   const utenti = [];
@@ -54,14 +81,18 @@ function getUsersList() {
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     
-    // Solo se ha username (F) e nome (B)
-    if (row[5] && row[1]) {
+    const username = row[colMap['Username']];
+    const nome = row[colMap['Nome Completo']];
+    
+    // Solo se ha username e nome
+    if (username && nome) {
       utenti.push({
         rowIndex: i + 1,
-        userId: row[5].toString().trim(),
-        nome: row[1].toString().trim(),
-        attivo: (row[8] || '').toString().trim(),
-        hasPassword: !!(row[6] && row[6] !== '')
+        userId: username.toString().trim(),
+        nome: nome.toString().trim(),
+        attivo: (row[colMap['Attivo']] || '').toString().trim(),
+        hasPassword: !!(row[colMap['Password']] && row[colMap['Password']] !== ''),
+        colMap: colMap  // Salviamo la mappa per usarla dopo
       });
     }
   }
@@ -138,26 +169,32 @@ function showNewPasswordDialog(utente) {
 }
 
 /**
- * Aggiorna password nel foglio
+ * Aggiorna password nel foglio - VERSIONE DINAMICA
  */
 function updateUserPassword(utente, nuovaPassword) {
   try {
     const spreadsheet = getMainSpreadsheet();
     const usersSheet = getSheetSafe(spreadsheet, 'Utenti');
     
+    // Rileggi la mappa colonne (per sicurezza)
+    const colMap = getColumnMapping(usersSheet);
+    
     // Genera hash sicuro
     const hashedPassword = generatePasswordHash(nuovaPassword);
     
-    // Aggiorna colonne G (password) e H (hash)
-    usersSheet.getRange(utente.rowIndex, 7).setValue(nuovaPassword);
-    usersSheet.getRange(utente.rowIndex, 8).setValue(hashedPassword);
+    // Aggiorna colonne Password e Password Hash (posizione dinamica)
+    const passwordCol = colMap['Password'] + 1;  // +1 perché getRange parte da 1
+    const hashCol = colMap['Password Hash'] + 1;
+    
+    usersSheet.getRange(utente.rowIndex, passwordCol).setValue(nuovaPassword);
+    usersSheet.getRange(utente.rowIndex, hashCol).setValue(hashedPassword);
     
     return { success: true };
     
   } catch (error) {
     return { 
       success: false, 
-      message: 'Impossibile salvare la nuova password.' 
+      message: 'Impossibile salvare la nuova password: ' + error.message
     };
   }
 }
@@ -193,7 +230,7 @@ function displayUsersList() {
     SpreadsheetApp.getUi().alert('📋 Lista Dipendenti\n\n' + lista);
     
   } catch (error) {
-    SpreadsheetApp.getUi().alert('❌ Errore\n\nImpossibile leggere la lista dipendenti.');
+    SpreadsheetApp.getUi().alert('❌ Errore\n\nImpossibile leggere la lista dipendenti: ' + error.message);
   }
 }
 
@@ -235,6 +272,6 @@ function executeDebugPasswordHash() {
     SpreadsheetApp.getUi().alert('🔐 Controllo Password\n\n' + stato);
     
   } catch (error) {
-    SpreadsheetApp.getUi().alert('❌ Errore\n\nImpossibile controllare le password.');
+    SpreadsheetApp.getUi().alert('❌ Errore\n\nImpossibile controllare le password: ' + error.message);
   }
 }
