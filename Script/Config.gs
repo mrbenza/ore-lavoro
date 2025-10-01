@@ -18,6 +18,15 @@ const CONFIG = {
     'Tracking Archivi'
   ],
   
+  // Dati azienda
+  COMPANY: {
+    NAME: 'La Tua Azienda SRL',
+    ADDRESS: 'Via Roma 123, 00100 Roma',
+    VAT: 'IT12345678901',
+    PHONE: '+39 06 1234567',
+    EMAIL: 'info@tuaazienda.it'
+  },
+
   // Cartelle Drive
   FOLDERS: {
     ARCHIVE: 'Archivi Ore Lavorate',
@@ -42,15 +51,6 @@ const CONFIG = {
     get DEFAULT_ARCHIVE_YEAR() { return this.CURRENT_YEAR - 1; }
   },
   
-  // Dati azienda
-  COMPANY: {
-    NAME: 'La Tua Azienda SRL',
-    ADDRESS: 'Via Roma 123, 00100 Roma',
-    VAT: 'IT12345678901',
-    PHONE: '+39 06 1234567',
-    EMAIL: 'info@tuaazienda.it'
-  },
-  
   // Tariffe orarie (per report commercialista)
   HOURLY_RATES: {
     DEFAULT: 25.00,
@@ -63,6 +63,131 @@ const CONFIG = {
     MIN_PASSWORD_LENGTH: 4,
     MIN_YEAR: 2020,
     MAX_YEAR: 2030
+  }
+};
+
+// ============================ MAPPING COLONNE ================================
+// Mappa colonne foglio "Utenti" (0-based per coerenza con getValues)
+/*const COLUMNS = {
+  ID_UTENTE: 0,
+  NOME: 1,
+  EMAIL: 2,
+  TELEFONO: 3,
+  DATA_ASSUNZIONE: 4,
+  USER_ID: 5,
+  PASSWORD: 6,
+  PASSWORD_HASH: 7,
+  ATTIVO: 8
+};*/
+
+const COLUMNS = {
+  ID_UTENTE: 0,        // Colonna A
+  NOME: 1,             // Colonna B  
+  EMAIL: 2,            // Colonna C
+  TELEFONO: 3,         // Colonna D
+  DATA_ASSUNZIONE: 4,  // Colonna E ← MANTENIAMO
+  RUOLO: 5,            // Colonna F ← NUOVA
+  USER_ID: 6,          // Colonna G ← SPOSTATA da F
+  PASSWORD: 7,         // Colonna H ← SPOSTATA da G
+  PASSWORD_HASH: 8,    // Colonna I ← SPOSTATA da H
+  ATTIVO: 9            // Colonna J ← SPOSTATA da I
+};
+
+// Mappa colonne foglio "Cantieri" (0-based)
+// Struttura attesa (minima):
+// 0=ID, 1=Nome, 2=Indirizzo, 3=Stato, ... 6=OreTotali, 7=UltimoAggiornamento, 8=UltimoDipendente, 9=NumeroInserimenti
+const COLUMNS_CANTIERI = {
+  ID: 0,
+  NOME: 1,
+  INDIRIZZO: 2,
+  STATO: 3,
+  ORE_TOTALI: 6,
+  ULTIMO_UPDATE: 7,
+  ULTIMO_DIPENDENTE: 8,
+  NUM_INSERIMENTI: 9
+};
+
+// ============================== CELLE ORE ====================================
+const USER_SHEET_CELLS = {
+  ORE_MESE_CORRENTE: 'F3',
+  ORE_MESE_PRECEDENTE: 'G3',
+  ANNO_CORRENTE: 'H3'
+};
+// ============================ RUOLI UTENTE (NUOVO) ============================
+const USER_ROLES = {
+  ADMIN: 'Admin',
+  ADMINISTRATOR: 'Administrator',
+  DIPENDENTE: 'Dipendente'
+};
+
+// ============================ CONFIGURAZIONE ADMIN (NUOVO) ============================
+const ADMIN_CONFIG = {
+  REQUIRED_ROLES: ['Admin', 'Administrator', 'admin', 'administrator'],
+  REFRESH_INTERVAL: 300000, // 5 minuti
+  DEFAULT_TIMEFRAME: '30days',
+  
+  TIMEFRAMES: {
+    THIRTY_DAYS: '30days',
+    LAST_MONTH: 'lastMonth',
+    CURRENT_YEAR: 'year'
+  },
+  
+  CANTIERI_MODES: {
+    MESE_CORRENTE: 'mese',
+    TOTALI_ASSOLUTI: 'totali'
+  }
+};
+
+// ============================ VALIDAZIONI ADMIN (NUOVO) ============================
+const ADMIN_VALIDATION = {
+  VALID_TIMEFRAMES: ['30days', 'lastMonth', 'year'],
+  VALID_CANTIERI_MODES: ['mese', 'totali'],
+  REQUIRED_ROLES: ['Admin', 'Administrator', 'admin', 'administrator'],
+  
+  isAdminRole: function(ruolo) {
+    if (!ruolo) return false;
+    return this.REQUIRED_ROLES.includes(ruolo);
+  },
+  
+  isValidTimeframe: function(timeframe) {
+    return this.VALID_TIMEFRAMES.includes(timeframe);
+  },
+  
+  isValidCantieriMode: function(mode) {
+    return this.VALID_CANTIERI_MODES.includes(mode);
+  }
+};
+
+// ============================ CACHE ADMIN (NUOVO) ============================
+const CACHE_CONFIG = {
+  CANTIERI_OVERVIEW: 180,    // 3 minuti
+  DIPENDENTI_LIST: 300,      // 5 minuti  
+  TIMELINE_DATA: 120,        // 2 minuti
+  
+  CACHE_KEYS: {
+    CANTIERI_MESE: 'admin_cantieri_mese_',
+    CANTIERI_TOTALI: 'admin_cantieri_totali_',
+    DIPENDENTI: 'admin_dipendenti_list',
+    TIMELINE: 'admin_timeline_'
+  }
+};
+
+// ============================ DEBUG ADMIN (NUOVO) ============================
+const ADMIN_DEBUG = {
+  ENABLED: true,
+  LOG_PERFORMANCE: true,
+  
+  log: function(message, data = null) {
+    if (this.ENABLED) {
+      console.log(`[ADMIN] ${message}`, data || '');
+    }
+  },
+  
+  logPerformance: function(operation, startTime) {
+    if (this.LOG_PERFORMANCE) {
+      const duration = Date.now() - startTime;
+      console.log(`[ADMIN PERF] ${operation}: ${duration}ms`);
+    }
   }
 };
 
@@ -158,3 +283,4 @@ const SUCCESS_MESSAGES = {
   REPORT_GENERATED: 'Report generato correttamente',
   CALCULATION_COMPLETED: 'Calcolo totali completato'
 };
+
