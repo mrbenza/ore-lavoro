@@ -713,7 +713,79 @@
             }
         }
         
-        async funct
+        async function saveWorkEdit(dateStr, isNewEntry) {
+            try {
+                const cantiereId = document.getElementById('editCantiereId').value;
+                const ore = parseFloat(document.getElementById('editOre').value);
+                const note = document.getElementById('editNote').value.trim();
+                
+                // Validazione
+                if (!cantiereId) {
+                    Utils.showNotification('Seleziona un cantiere', 'warning');
+                    return;
+                }
+                
+                if (isNaN(ore) || ore <= 0 || ore > 24) {
+                    Utils.showNotification('Inserisci ore valide (0.1-24)', 'error');
+                    return;
+                }
+                
+                // Conferma se nuovo inserimento
+                if (isNewEntry) {
+                    const conferma = confirm(
+                        `Stai per creare una NUOVA registrazione:\n\n` +
+                        `Data: ${dateStr}\n` +
+                        `Cantiere: ${cantiereId}\n` +
+                        `Ore: ${ore}h\n\n` +
+                        `Confermi l'operazione?`
+                    );
+                    
+                    if (!conferma) return;
+                }
+                
+                // Loading
+                const loadingMsg = Utils.showFullscreenMessage(
+                    isNewEntry ? 'Creazione nuova registrazione...' : 'Salvataggio modifiche...', 
+                    'info', 
+                    0
+                );
+                
+                const sessionData = Utils.getSession();
+                const result = await Utils.callAPI({
+                    action: 'updateWorkEntry',
+                    sessionToken: sessionData.token,
+                    targetUserId: currentUserId,
+                    dateStr: dateStr,
+                    updateData: JSON.stringify({
+                        cantiereId: cantiereId,
+                        ore: ore,
+                        note: note,
+                        isNewEntry: isNewEntry
+                    })
+                });
+                
+                loadingMsg.remove();
+                
+                if (result.success) {
+                    Utils.showNotification(
+                        isNewEntry ? '✅ Nuova registrazione creata!' : '✅ Modifiche salvate!', 
+                        'success'
+                    );
+                    closeDayDetails();
+                    
+                    // Ricarica calendario
+                    await loadCalendarData();
+                    
+                    console.log('Operazione completata:', result.data);
+                } else {
+                    Utils.showNotification('Errore: ' + result.message, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Errore salvataggio:', error);
+                Utils.showNotification('Errore durante il salvataggio', 'error');
+            }
+        }
         function closeDayDetails() {
             const popup = document.getElementById('dayDetailsPopup');
             if (popup) {
