@@ -697,7 +697,24 @@
 			popupContent.innerHTML = html;
 			popup.classList.add('show');
 		}
-
+		
+		function closeDayDetails() {
+			const popup = document.getElementById('dayDetailsPopup');
+			if (popup) {
+				popup.classList.remove('show');
+			}
+			
+			// Reset stato
+			selectedEntryIndex = null;
+			currentEditDateStr = null;
+			
+			// Nasconde l'area di edit se era visibile
+			const editArea = document.getElementById('editArea');
+			if (editArea) {
+				editArea.style.display = 'none';
+			}
+		}
+		
 		function generateEditForm(selectedCantiereId) {
 			return `
 				<div class="work-entry">
