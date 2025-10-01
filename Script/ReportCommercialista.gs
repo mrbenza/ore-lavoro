@@ -137,7 +137,6 @@ function showMonthlyReportDialog() {
     </div>
     
     <script>
-      // Carica lista dipendenti all'avvio
       window.onload = function() {
         google.script.run
           .withSuccessHandler(function(employees) {
@@ -162,7 +161,6 @@ function showMonthlyReportDialog() {
         const year = parseInt(document.getElementById('year').value);
         const employee = document.getElementById('employee').value;
         
-        // Validazione
         if (isNaN(month) || month < 1 || month > 12) {
           alert('Seleziona un mese valido');
           return;
@@ -173,7 +171,6 @@ function showMonthlyReportDialog() {
           return;
         }
         
-        // UI Loading
         const statusDiv = document.getElementById('status');
         const resultDiv = document.getElementById('result');
         
@@ -188,7 +185,6 @@ function showMonthlyReportDialog() {
         btn.innerHTML = 'Generando...';
         btn.style.backgroundColor = '#6c757d';
         
-        // Chiamata backend
         google.script.run
           .withSuccessHandler(function(response) {
             btn.disabled = false;
@@ -400,7 +396,7 @@ function extractEmployeeMonthData(employeeName, month, year) {
 }
 
 /**
- * Crea report mensile per singolo dipendente
+ * Crea report mensile per singolo dipendente - VERSIONE CORRETTA
  */
 function createEmployeeMonthlyReport(employeeData, monthName, year, targetFolder) {
   const fileName = `Report_${formatFileName(employeeData.employeeName)}_${monthName}_${year}`;
@@ -410,102 +406,137 @@ function createEmployeeMonthlyReport(employeeData, monthName, year, targetFolder
   
   let row = 1;
   
-  // Header aziendale
-  sheet.getRange(row, 1, 1, 6).merge();
+  // ===== HEADER AZIENDALE =====
+  sheet.getRange(row, 1, 1, 4).merge();
   sheet.getRange(row, 1).setValue(`REPORT ORE LAVORATE - ${CONFIG.COMPANY.NAME}`);
-  sheet.getRange(row, 1).setFontSize(16).setFontWeight('bold').setHorizontalAlignment('center');
+  sheet.getRange(row, 1)
+    .setFontSize(16)
+    .setFontWeight('bold')
+    .setHorizontalAlignment('center')
+    .setBackground('#1a73e8')
+    .setFontColor('#ffffff');
   row++;
   
-  sheet.getRange(row, 1, 1, 6).merge();
+  sheet.getRange(row, 1, 1, 4).merge();
   sheet.getRange(row, 1).setValue(`${CONFIG.COMPANY.ADDRESS} - P.IVA: ${CONFIG.COMPANY.VAT}`);
-  sheet.getRange(row, 1).setHorizontalAlignment('center').setFontSize(10);
+  sheet.getRange(row, 1)
+    .setHorizontalAlignment('center')
+    .setFontSize(10)
+    .setBackground('#e8f0fe');
   row += 2;
   
-  // Informazioni report
-  sheet.getRange(row, 1).setValue('DIPENDENTE:').setFontWeight('bold');
-  sheet.getRange(row, 2).setValue(employeeData.employeeName);
+  // ===== INFORMAZIONI REPORT =====
+  const infoStyle = {
+    labelColor: '#1a73e8',
+    valueColor: '#202124'
+  };
+  
+  sheet.getRange(row, 1).setValue('DIPENDENTE:').setFontWeight('bold').setFontColor(infoStyle.labelColor);
+  sheet.getRange(row, 2, 1, 3).merge();
+  sheet.getRange(row, 2).setValue(employeeData.employeeName).setFontSize(11);
   row++;
   
-  sheet.getRange(row, 1).setValue('PERIODO:').setFontWeight('bold');
-  sheet.getRange(row, 2).setValue(`${monthName} ${year}`);
+  sheet.getRange(row, 1).setValue('PERIODO:').setFontWeight('bold').setFontColor(infoStyle.labelColor);
+  sheet.getRange(row, 2, 1, 3).merge();
+  sheet.getRange(row, 2).setValue(`${monthName} ${year}`).setFontSize(11).setFontWeight('bold');
   row++;
   
-  sheet.getRange(row, 1).setValue('ORE TOTALI:').setFontWeight('bold');
-  sheet.getRange(row, 2).setValue(employeeData.totalHours).setNumberFormat('#,##0.0');
+  sheet.getRange(row, 1).setValue('ORE TOTALI:').setFontWeight('bold').setFontColor(infoStyle.labelColor);
+  sheet.getRange(row, 2).setValue(employeeData.totalHours).setNumberFormat('#,##0.0').setFontWeight('bold');
   row++;
   
-  sheet.getRange(row, 1).setValue('GIORNI LAVORATI:').setFontWeight('bold');
+  sheet.getRange(row, 1).setValue('GIORNI LAVORATI:').setFontWeight('bold').setFontColor(infoStyle.labelColor);
   sheet.getRange(row, 2).setValue(employeeData.rows.length);
   row++;
   
   const avgHours = employeeData.rows.length > 0 ? employeeData.totalHours / employeeData.rows.length : 0;
-  sheet.getRange(row, 1).setValue('MEDIA ORE/GIORNO:').setFontWeight('bold');
+  sheet.getRange(row, 1).setValue('MEDIA ORE/GIORNO:').setFontWeight('bold').setFontColor(infoStyle.labelColor);
   sheet.getRange(row, 2).setValue(avgHours).setNumberFormat('#,##0.0');
   row += 2;
   
-  // Riepilogo cantieri
+  // ===== RIEPILOGO CANTIERI =====
   if (Object.keys(employeeData.constructionSitesSummary).length > 0) {
-    sheet.getRange(row, 1).setValue('RIEPILOGO CANTIERI').setFontWeight('bold').setFontSize(12);
+    sheet.getRange(row, 1, 1, 4).merge();
+    sheet.getRange(row, 1).setValue('RIEPILOGO CANTIERI')
+      .setFontWeight('bold')
+      .setFontSize(12)
+      .setBackground('#f1f3f4')
+      .setHorizontalAlignment('center');
     row++;
     
-    const siteHeaders = ['ID Cantiere', 'Nome Cantiere', 'Ore Totali', 'Giorni', 'Media Ore/Giorno'];
+    const siteHeaders = ['Nome Cantiere', 'Ore Totali', 'Giorni', 'Media Ore'];
     for (let i = 0; i < siteHeaders.length; i++) {
-      sheet.getRange(row, i + 1).setValue(siteHeaders[i]).setFontWeight('bold');
+      sheet.getRange(row, i + 1)
+        .setValue(siteHeaders[i])
+        .setFontWeight('bold')
+        .setHorizontalAlignment('center')
+        .setBackground('#1a73e8')
+        .setFontColor('#ffffff');
     }
-    sheet.getRange(row, 1, 1, siteHeaders.length).setBackground('#e6f3ff');
     row++;
     
+    const siteStartRow = row;
     Object.keys(employeeData.constructionSitesSummary).forEach(siteId => {
       const site = employeeData.constructionSitesSummary[siteId];
       const avgSiteHours = site.daysCount > 0 ? site.totalHours / site.daysCount : 0;
+      const rowColor = (row - siteStartRow) % 2 === 0 ? '#ffffff' : '#f8f9fa';
       
-      sheet.getRange(row, 1).setValue(siteId);
-      sheet.getRange(row, 2).setValue(site.name);
-      sheet.getRange(row, 3).setValue(site.totalHours).setNumberFormat('#,##0.0');
-      sheet.getRange(row, 4).setValue(site.daysCount);
-      sheet.getRange(row, 5).setValue(avgSiteHours).setNumberFormat('#,##0.0');
+      sheet.getRange(row, 1).setValue(site.name).setBackground(rowColor);
+      sheet.getRange(row, 2).setValue(site.totalHours).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center');
+      sheet.getRange(row, 3).setValue(site.daysCount).setBackground(rowColor).setHorizontalAlignment('center');
+      sheet.getRange(row, 4).setValue(avgSiteHours).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center');
       row++;
     });
+    
+    const siteTableRows = Object.keys(employeeData.constructionSitesSummary).length + 1;
+    sheet.getRange(siteStartRow - 1, 1, siteTableRows, 4)
+      .setBorder(true, true, true, true, true, true, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
     
     row += 2;
   }
   
-  // Dettaglio giornaliero
-  sheet.getRange(row, 1).setValue('DETTAGLIO GIORNALIERO').setFontWeight('bold').setFontSize(12);
+  // ===== DETTAGLIO GIORNALIERO =====
+  sheet.getRange(row, 1, 1, 4).merge();
+  sheet.getRange(row, 1).setValue('DETTAGLIO GIORNALIERO')
+    .setFontWeight('bold')
+    .setFontSize(12)
+    .setBackground('#f1f3f4')
+    .setHorizontalAlignment('center');
   row++;
   
-  const detailHeaders = ['Data', 'ID Cantiere', 'Nome Cantiere', 'Ore', 'Note'];
+  const detailHeaders = ['Data', 'Nome Cantiere', 'Ore'];
   for (let i = 0; i < detailHeaders.length; i++) {
-    sheet.getRange(row, i + 1).setValue(detailHeaders[i]).setFontWeight('bold');
+    sheet.getRange(row, i + 1)
+      .setValue(detailHeaders[i])
+      .setFontWeight('bold')
+      .setHorizontalAlignment('center')
+      .setBackground('#1a73e8')
+      .setFontColor('#ffffff');
   }
-  sheet.getRange(row, 1, 1, detailHeaders.length).setBackground('#fff2cc');
   row++;
   
-  employeeData.rows.forEach(dayData => {
-    sheet.getRange(row, 1).setValue(dayData.dateFormatted);
-    sheet.getRange(row, 2).setValue(dayData.siteId);
-    sheet.getRange(row, 3).setValue(dayData.siteName);
-    sheet.getRange(row, 4).setValue(dayData.hours).setNumberFormat('#,##0.0');
-    sheet.getRange(row, 5).setValue(dayData.notes);
+  const detailStartRow = row;
+  employeeData.rows.forEach((dayData, index) => {
+    const rowColor = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
+    
+    sheet.getRange(row, 1).setValue(dayData.dateFormatted).setBackground(rowColor).setHorizontalAlignment('center');
+    sheet.getRange(row, 2).setValue(dayData.siteName).setBackground(rowColor);
+    sheet.getRange(row, 3).setValue(dayData.hours).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center');
     row++;
   });
   
-  // Formattazione finale
-  sheet.autoResizeColumns(1, 6);
-  
-  // Bordi tabelle
-  if (Object.keys(employeeData.constructionSitesSummary).length > 0) {
-    const siteSummaryStartRow = 9;
-    const siteSummaryRows = Object.keys(employeeData.constructionSitesSummary).length + 1;
-    sheet.getRange(siteSummaryStartRow, 1, siteSummaryRows, 5).setBorder(true, true, true, true, true, true);
-  }
-  
   if (employeeData.rows.length > 0) {
-    const detailStartRow = row - employeeData.rows.length - 1;
-    sheet.getRange(detailStartRow, 1, employeeData.rows.length + 1, 5).setBorder(true, true, true, true, true, true);
+    sheet.getRange(detailStartRow - 1, 1, employeeData.rows.length + 1, 3)
+      .setBorder(true, true, true, true, true, true, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
   }
   
-  // Sposta file in cartella corretta
+  // ===== FORMATTAZIONE FINALE =====
+  sheet.setColumnWidth(1, 120);
+  sheet.setColumnWidth(2, 250);
+  sheet.setColumnWidth(3, 80);
+  
+  sheet.setFrozenRows(2);
+  
   const file = DriveApp.getFileById(spreadsheet.getId());
   moveFileToFolder(file, targetFolder);
   
@@ -528,59 +559,75 @@ function createSummaryReport(employeeResults, targetFolder, monthName, year) {
   
   let row = 1;
   
-  // Header
   sheet.getRange(row, 1, 1, 5).merge();
   sheet.getRange(row, 1).setValue(`RIEPILOGO GENERALE - ${monthName} ${year}`);
-  sheet.getRange(row, 1).setFontSize(16).setFontWeight('bold').setHorizontalAlignment('center');
+  sheet.getRange(row, 1)
+    .setFontSize(16)
+    .setFontWeight('bold')
+    .setHorizontalAlignment('center')
+    .setBackground('#1a73e8')
+    .setFontColor('#ffffff');
   row += 2;
   
-  // Totali generali
   const totalHours = employeeResults.reduce((sum, emp) => sum + emp.totalHours, 0);
   const totalDays = employeeResults.reduce((sum, emp) => sum + emp.daysWorked, 0);
   
-  sheet.getRange(row, 1).setValue('ORE TOTALI MENSILI:').setFontWeight('bold');
-  sheet.getRange(row, 2).setValue(totalHours).setNumberFormat('#,##0.0');
+  sheet.getRange(row, 1).setValue('ORE TOTALI MENSILI:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 2).setValue(totalHours).setNumberFormat('#,##0.0').setFontWeight('bold');
   row++;
   
-  sheet.getRange(row, 1).setValue('DIPENDENTI ATTIVI:').setFontWeight('bold');
-  sheet.getRange(row, 2).setValue(employeeResults.length);
+  sheet.getRange(row, 1).setValue('DIPENDENTI ATTIVI:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 2).setValue(employeeResults.length).setFontWeight('bold');
   row++;
   
-  sheet.getRange(row, 1).setValue('GIORNI TOTALI:').setFontWeight('bold');
+  sheet.getRange(row, 1).setValue('GIORNI TOTALI:').setFontWeight('bold').setFontColor('#1a73e8');
   sheet.getRange(row, 2).setValue(totalDays);
   row++;
   
   const avgHoursPerEmployee = employeeResults.length > 0 ? totalHours / employeeResults.length : 0;
-  sheet.getRange(row, 1).setValue('MEDIA ORE/DIPENDENTE:').setFontWeight('bold');
+  sheet.getRange(row, 1).setValue('MEDIA ORE/DIPENDENTE:').setFontWeight('bold').setFontColor('#1a73e8');
   sheet.getRange(row, 2).setValue(avgHoursPerEmployee).setNumberFormat('#,##0.0');
   row += 2;
   
-  // Tabella dipendenti
-  const headers = ['Dipendente', 'Ore Totali', 'Giorni Lavorati', 'Media Ore/Giorno', 'Cantieri'];
-  for (let i = 0; i < headers.length; i++) {
-    sheet.getRange(row, i + 1).setValue(headers[i]).setFontWeight('bold');
-  }
-  sheet.getRange(row, 1, 1, headers.length).setBackground('#d4edda');
+  sheet.getRange(row, 1, 1, 5).merge();
+  sheet.getRange(row, 1).setValue('DETTAGLIO PER DIPENDENTE')
+    .setFontWeight('bold')
+    .setFontSize(12)
+    .setBackground('#f1f3f4')
+    .setHorizontalAlignment('center');
   row++;
   
-  employeeResults.forEach(employee => {
+  const headers = ['Dipendente', 'Ore Totali', 'Giorni Lavorati', 'Media Ore', 'Cantieri'];
+  for (let i = 0; i < headers.length; i++) {
+    sheet.getRange(row, i + 1)
+      .setValue(headers[i])
+      .setFontWeight('bold')
+      .setHorizontalAlignment('center')
+      .setBackground('#1a73e8')
+      .setFontColor('#ffffff');
+  }
+  row++;
+  
+  const tableStartRow = row;
+  employeeResults.forEach((employee, index) => {
     const avgDaily = employee.daysWorked > 0 ? employee.totalHours / employee.daysWorked : 0;
     const sitesCount = Object.keys(employee.constructionSites || {}).length;
+    const rowColor = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
     
-    sheet.getRange(row, 1).setValue(employee.name);
-    sheet.getRange(row, 2).setValue(employee.totalHours).setNumberFormat('#,##0.0');
-    sheet.getRange(row, 3).setValue(employee.daysWorked);
-    sheet.getRange(row, 4).setValue(avgDaily).setNumberFormat('#,##0.0');
-    sheet.getRange(row, 5).setValue(sitesCount);
+    sheet.getRange(row, 1).setValue(employee.name).setBackground(rowColor);
+    sheet.getRange(row, 2).setValue(employee.totalHours).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center');
+    sheet.getRange(row, 3).setValue(employee.daysWorked).setBackground(rowColor).setHorizontalAlignment('center');
+    sheet.getRange(row, 4).setValue(avgDaily).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center');
+    sheet.getRange(row, 5).setValue(sitesCount).setBackground(rowColor).setHorizontalAlignment('center');
     row++;
   });
   
-  // Formattazione
-  sheet.autoResizeColumns(1, 5);
-  const tableRange = sheet.getRange(6, 1, employeeResults.length + 1, 5);
-  tableRange.setBorder(true, true, true, true, true, true);
+  const tableRange = sheet.getRange(tableStartRow - 1, 1, employeeResults.length + 1, 5);
+  tableRange.setBorder(true, true, true, true, true, true, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
   
-  // Sposta in cartella
+  sheet.autoResizeColumns(1, 5);
+  sheet.setFrozenRows(1);
+  
   const file = DriveApp.getFileById(spreadsheet.getId());
   moveFileToFolder(file, targetFolder);
   
@@ -603,7 +650,6 @@ function generateAnnualReport(year) {
       throw new Error(ERROR_MESSAGES.NO_EMPLOYEES);
     }
     
-    // Raccolta dati annuali per tutti i dipendenti
     const annualData = employees.map(employeeName => {
       const employeeAnnualData = extractEmployeeYearData(employeeName, year);
       return {
@@ -653,7 +699,6 @@ function extractEmployeeYearData(employeeName, year) {
     const constructionSites = {};
     let totalHours = 0;
     
-    // Inizializza mesi
     for (let m = 1; m <= 12; m++) {
       monthlyData[m] = { hours: 0, days: 0 };
     }
@@ -715,50 +760,212 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
   
   let row = 1;
   
-  // Header
   sheet.getRange(row, 1, 1, 14).merge();
   sheet.getRange(row, 1).setValue(`REPORT ANNUALE ${year} - ${CONFIG.COMPANY.NAME}`);
-  sheet.getRange(row, 1).setFontSize(16).setFontWeight('bold').setHorizontalAlignment('center');
-  row += 2;
-  
-  // Totali generali
-  const totalHours = annualData.reduce((sum, emp) => sum + emp.totalHours, 0);
-  sheet.getRange(row, 1).setValue('ORE TOTALI ANNO:').setFontWeight('bold');
-  sheet.getRange(row, 2).setValue(totalHours).setNumberFormat('#,##0.0');
+  sheet.getRange(row, 1)
+    .setFontSize(16)
+    .setFontWeight('bold')
+    .setHorizontalAlignment('center')
+    .setBackground('#1a73e8')
+    .setFontColor('#ffffff');
   row++;
   
-  sheet.getRange(row, 1).setValue('DIPENDENTI ATTIVI:').setFontWeight('bold');
-  sheet.getRange(row, 2).setValue(annualData.length);
+  sheet.getRange(row, 1, 1, 14).merge();
+  sheet.getRange(row, 1).setValue(`${CONFIG.COMPANY.ADDRESS} - P.IVA: ${CONFIG.COMPANY.VAT}`);
+  sheet.getRange(row, 1)
+    .setHorizontalAlignment('center')
+    .setFontSize(10)
+    .setBackground('#e8f0fe');
   row += 2;
   
-  // Tabella mensile per dipendente
+  const totalHours = annualData.reduce((sum, emp) => sum + emp.totalHours, 0);
+  
+  sheet.getRange(row, 1).setValue('ORE TOTALI ANNO:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 2).setValue(totalHours).setNumberFormat('#,##0.0').setFontWeight('bold');
+  row++;
+  
+  sheet.getRange(row, 1).setValue('DIPENDENTI ATTIVI:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 2).setValue(annualData.length).setFontWeight('bold');
+  row++;
+  
+  const avgHoursPerEmployee = annualData.length > 0 ? totalHours / annualData.length : 0;
+  sheet.getRange(row, 1).setValue('MEDIA ORE/DIPENDENTE:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 2).setValue(avgHoursPerEmployee).setNumberFormat('#,##0.0');
+  row += 2;
+  
+  sheet.getRange(row, 1, 1, 14).merge();
+  sheet.getRange(row, 1).setValue('RIEPILOGO MENSILE PER DIPENDENTE')
+    .setFontWeight('bold')
+    .setFontSize(12)
+    .setBackground('#f1f3f4')
+    .setHorizontalAlignment('center');
+  row++;
+  
   const monthHeaders = ['Dipendente', 'Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic', 'TOTALE'];
   for (let i = 0; i < monthHeaders.length; i++) {
-    sheet.getRange(row, i + 1).setValue(monthHeaders[i]).setFontWeight('bold');
+    sheet.getRange(row, i + 1)
+      .setValue(monthHeaders[i])
+      .setFontWeight('bold')
+      .setHorizontalAlignment('center')
+      .setBackground('#1a73e8')
+      .setFontColor('#ffffff');
   }
-  sheet.getRange(row, 1, 1, monthHeaders.length).setBackground('#e3f2fd');
   row++;
   
-  annualData.forEach(employee => {
-    sheet.getRange(row, 1).setValue(employee.name);
+  const tableStartRow = row;
+  annualData.forEach((employee, index) => {
+    const rowColor = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
+    
+    sheet.getRange(row, 1).setValue(employee.name).setBackground(rowColor);
     
     for (let month = 1; month <= 12; month++) {
       const monthHours = employee.monthlyData[month] ? employee.monthlyData[month].hours : 0;
-      sheet.getRange(row, month + 1).setValue(monthHours).setNumberFormat('#,##0.0');
+      sheet.getRange(row, month + 1)
+        .setValue(monthHours)
+        .setNumberFormat('#,##0.0')
+        .setBackground(rowColor)
+        .setHorizontalAlignment('center');
     }
     
-    sheet.getRange(row, 14).setValue(employee.totalHours).setNumberFormat('#,##0.0').setFontWeight('bold');
+    sheet.getRange(row, 14)
+      .setValue(employee.totalHours)
+      .setNumberFormat('#,##0.0')
+      .setFontWeight('bold')
+      .setBackground(rowColor)
+      .setHorizontalAlignment('center');
     row++;
   });
   
-  // Formattazione
-  sheet.autoResizeColumns(1, 14);
-  const tableRange = sheet.getRange(5, 1, annualData.length + 1, 14);
-  tableRange.setBorder(true, true, true, true, true, true);
+  sheet.getRange(row, 1)
+    .setValue('TOTALI MENSILI')
+    .setFontWeight('bold')
+    .setBackground('#e8f0fe')
+    .setHorizontalAlignment('center');
   
-  // Sposta in cartella
+  for (let month = 1; month <= 12; month++) {
+    const monthTotal = annualData.reduce((sum, emp) => {
+      const monthData = emp.monthlyData[month];
+      return sum + (monthData ? monthData.hours : 0);
+    }, 0);
+    
+    sheet.getRange(row, month + 1)
+      .setValue(monthTotal)
+      .setNumberFormat('#,##0.0')
+      .setFontWeight('bold')
+      .setBackground('#e8f0fe')
+      .setHorizontalAlignment('center');
+  }
+  
+  sheet.getRange(row, 14)
+    .setValue(totalHours)
+    .setNumberFormat('#,##0.0')
+    .setFontWeight('bold')
+    .setBackground('#1a73e8')
+    .setFontColor('#ffffff')
+    .setHorizontalAlignment('center');
+  row++;
+  
+  const tableRange = sheet.getRange(tableStartRow - 1, 1, annualData.length + 2, 14);
+  tableRange.setBorder(true, true, true, true, true, true, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
+  
+  row += 2;
+  
+  sheet.getRange(row, 1, 1, 14).merge();
+  sheet.getRange(row, 1).setValue('STATISTICHE ANNUALI')
+    .setFontWeight('bold')
+    .setFontSize(12)
+    .setBackground('#f1f3f4')
+    .setHorizontalAlignment('center');
+  row++;
+  
+  const monthlyTotals = {};
+  for (let month = 1; month <= 12; month++) {
+    monthlyTotals[month] = annualData.reduce((sum, emp) => {
+      const monthData = emp.monthlyData[month];
+      return sum + (monthData ? monthData.hours : 0);
+    }, 0);
+  }
+  
+  let maxMonth = 1;
+  let maxHours = monthlyTotals[1];
+  for (let month = 2; month <= 12; month++) {
+    if (monthlyTotals[month] > maxHours) {
+      maxHours = monthlyTotals[month];
+      maxMonth = month;
+    }
+  }
+  
+  const topEmployee = annualData.reduce((max, emp) => 
+    emp.totalHours > max.totalHours ? emp : max
+  , annualData[0]);
+  
+  sheet.getRange(row, 1).setValue('MESE PIÙ PRODUTTIVO:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 2, 1, 2).merge();
+  sheet.getRange(row, 2).setValue(`${getMonthName(maxMonth)} (${formatNumberItalian(maxHours)} ore)`);
+  row++;
+  
+  sheet.getRange(row, 1).setValue('DIPENDENTE TOP:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 2, 1, 2).merge();
+  sheet.getRange(row, 2).setValue(`${topEmployee.name} (${formatNumberItalian(topEmployee.totalHours)} ore)`);
+  row++;
+  
+  const q1 = monthlyTotals[1] + monthlyTotals[2] + monthlyTotals[3];
+  const q2 = monthlyTotals[4] + monthlyTotals[5] + monthlyTotals[6];
+  const q3 = monthlyTotals[7] + monthlyTotals[8] + monthlyTotals[9];
+  const q4 = monthlyTotals[10] + monthlyTotals[11] + monthlyTotals[12];
+  
+  row++;
+  sheet.getRange(row, 1, 1, 5).merge();
+  sheet.getRange(row, 1).setValue('RIEPILOGO TRIMESTRALE')
+    .setFontWeight('bold')
+    .setFontSize(11)
+    .setBackground('#f1f3f4')
+    .setHorizontalAlignment('center');
+  row++;
+  
+  const quarterHeaders = ['Trimestre', 'Ore Totali', 'Media Mensile'];
+  for (let i = 0; i < quarterHeaders.length; i++) {
+    sheet.getRange(row, i + 1)
+      .setValue(quarterHeaders[i])
+      .setFontWeight('bold')
+      .setHorizontalAlignment('center')
+      .setBackground('#1a73e8')
+      .setFontColor('#ffffff');
+  }
+  row++;
+  
+  const quarters = [
+    { name: 'Q1 (Gen-Mar)', total: q1 },
+    { name: 'Q2 (Apr-Giu)', total: q2 },
+    { name: 'Q3 (Lug-Set)', total: q3 },
+    { name: 'Q4 (Ott-Dic)', total: q4 }
+  ];
+  
+  quarters.forEach((quarter, index) => {
+    const rowColor = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
+    const avgMonthly = quarter.total / 3;
+    
+    sheet.getRange(row, 1).setValue(quarter.name).setBackground(rowColor);
+    sheet.getRange(row, 2).setValue(quarter.total).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center');
+    sheet.getRange(row, 3).setValue(avgMonthly).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center');
+    row++;
+  });
+  
+  const quarterTableRange = sheet.getRange(row - 5, 1, 5, 3);
+  quarterTableRange.setBorder(true, true, true, true, true, true, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
+  
+  for (let col = 2; col <= 13; col++) {
+    sheet.setColumnWidth(col, 60);
+  }
+  
+  sheet.setColumnWidth(1, 180);
+  sheet.setColumnWidth(14, 80);
+  sheet.setFrozenRows(3);
+  
   const file = DriveApp.getFileById(spreadsheet.getId());
   moveFileToFolder(file, targetFolder);
+  
+  debugLog('Report annuale creato', { fileName: fileName });
   
   return file;
 }
@@ -772,7 +979,7 @@ function createOrFindReportFolder(year) {
 }
 
 /**
- * Funzione di test per validazione sistema report
+ * Test sistema report
  */
 function testReportSystem() {
   try {
@@ -780,16 +987,12 @@ function testReportSystem() {
     const currentMonth = today.getMonth() + 1;
     const currentYear = today.getFullYear();
     
-    // Test 1: Verifica accesso fogli
     const employees = getActiveEmployeeNames();
     if (employees.length === 0) {
       throw new Error('Nessun dipendente trovato per test');
     }
     
-    // Test 2: Verifica cartelle
     const reportFolder = createOrFindReportFolder(currentYear);
-    
-    // Test 3: Test estrazione dati su primo dipendente
     const testEmployee = employees[0];
     const testData = extractEmployeeMonthData(testEmployee, currentMonth, currentYear);
     
@@ -824,7 +1027,7 @@ function testReportSystem() {
 }
 
 /**
- * Genera report di test veloce (senza salvare file)
+ * Genera anteprima report
  */
 function generateTestReportPreview() {
   try {
@@ -850,17 +1053,8 @@ function generateTestReportPreview() {
         preview += `${index + 1}. ${employeeName}\n`;
         preview += `   Ore totali: ${employeeData.totalHours}\n`;
         preview += `   Giorni lavorati: ${employeeData.rows.length}\n`;
-        preview += `   Cantieri: ${Object.keys(employeeData.constructionSitesSummary).length}\n`;
+        preview += `   Cantieri: ${Object.keys(employeeData.constructionSitesSummary).length}\n\n`;
         
-        if (Object.keys(employeeData.constructionSitesSummary).length > 0) {
-          preview += `   Dettaglio cantieri:\n`;
-          Object.keys(employeeData.constructionSitesSummary).forEach(siteId => {
-            const site = employeeData.constructionSitesSummary[siteId];
-            preview += `     - ${siteId}: ${site.totalHours}h\n`;
-          });
-        }
-        
-        preview += '\n';
         totalHoursAll += employeeData.totalHours;
         totalDaysAll += employeeData.rows.length;
       }
@@ -872,8 +1066,7 @@ function generateTestReportPreview() {
     preview += `Media ore/dipendente: ${employees.length > 0 ? (totalHoursAll / employees.length).toFixed(1) : 0}\n\n`;
     
     if (totalHoursAll === 0) {
-      preview += `ATTENZIONE: Nessuna ora registrata per il mese corrente.\n`;
-      preview += `Questo è normale se è inizio mese o se i dati sono in mesi precedenti.`;
+      preview += `ATTENZIONE: Nessuna ora registrata per il mese corrente.`;
     } else {
       preview += `I dati sono pronti per la generazione dei report.`;
     }
@@ -886,7 +1079,7 @@ function generateTestReportPreview() {
 }
 
 /**
- * Ottiene statistiche report per anno
+ * Ottiene statistiche anno
  */
 function getReportStatistics(year) {
   try {
@@ -899,7 +1092,6 @@ function getReportStatistics(year) {
       employeeStats: []
     };
     
-    // Inizializza mesi
     for (let month = 1; month <= 12; month++) {
       stats.monthlyTotals[month] = 0;
     }
@@ -910,7 +1102,6 @@ function getReportStatistics(year) {
       if (employeeYearData.totalHours > 0) {
         stats.totalHours += employeeYearData.totalHours;
         
-        // Aggrega per mese
         Object.keys(employeeYearData.monthlyData).forEach(month => {
           const monthNum = parseInt(month);
           stats.monthlyTotals[monthNum] += employeeYearData.monthlyData[month].hours;
@@ -924,7 +1115,6 @@ function getReportStatistics(year) {
       }
     });
     
-    // Ordina dipendenti per ore decrescenti
     stats.employeeStats.sort((a, b) => b.totalHours - a.totalHours);
     
     return stats;
@@ -936,7 +1126,7 @@ function getReportStatistics(year) {
 }
 
 /**
- * Mostra statistiche anno in formato leggibile
+ * Mostra statistiche anno
  */
 function showYearStatistics() {
   const year = showInputDialog(
@@ -990,12 +1180,12 @@ function showYearStatistics() {
 }
 
 /**
- * Funzione di manutenzione: pulisce report vecchi
+ * Pulisce report vecchi
  */
 function cleanupOldReports() {
   try {
     const currentYear = CONFIG.DATES.CURRENT_YEAR;
-    const yearsToKeep = 3; // Mantieni ultimi 3 anni
+    const yearsToKeep = 3;
     const cutoffYear = currentYear - yearsToKeep;
     
     const baseFolder = findOrCreateFolder(CONFIG.FOLDERS.REPORTS);
@@ -1006,7 +1196,6 @@ function cleanupOldReports() {
       const folder = folderIterator.next();
       const folderName = folder.getName();
       
-      // Cerca cartelle con pattern "Report_YYYY"
       const yearMatch = folderName.match(/Report_(\d{4})/);
       if (yearMatch) {
         const year = parseInt(yearMatch[1]);
