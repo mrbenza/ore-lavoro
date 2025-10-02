@@ -621,33 +621,115 @@
 				
 				// Mostra tutti gli inserimenti
 				dayData.entries.forEach((entry, index) => {
+					const cantiereLabel = entry.cantiereName || entry.cantiereId;
+					const cantiereTrunc = cantiereLabel.length > 20 
+						? cantiereLabel.substring(0, 20) + '...' 
+						: cantiereLabel;
+					const entryLabel = `#${index + 1} - ${cantiereTrunc}`;
+					
 					html += `
-						<div style="background: white; border-radius: 6px; padding: 10px; margin-top: 8px; 
-									border: 2px solid ${index === 0 ? '#4f46e5' : '#e5e7eb'};">
-							<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-								<div style="font-size: 11px; color: #6b7280; font-weight: 600;">REGISTRAZIONE ${index + 1}</div>
-								<button onclick="selectEntryToEdit(${index})" 
-										style="background: #4f46e5; color: white; border: none; padding: 4px 10px; 
-											   border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: 600;">
-									✏️ Modifica
-								</button>
+						<div style="
+							background: white; 
+							border-radius: 10px; 
+							padding: 14px; 
+							margin-top: 10px; 
+							border: 2px solid ${index === 0 ? '#4f46e5' : '#e5e7eb'};
+							box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+						">
+							<div style="
+								display: flex; 
+								justify-content: space-between; 
+								align-items: center; 
+								margin-bottom: 10px;
+							">
+								<div style="
+									font-size: 12px; 
+									color: #6b7280; 
+									font-weight: 700;
+									text-transform: uppercase;
+								">${entryLabel}</div>
 							</div>
-							<div style="display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center;">
-								<div style="font-size: 12px; color: #374151;"><strong>Cantiere:</strong></div>
-								<div style="font-size: 13px; color: #1f2937; font-weight: 600;">
-									${entry.cantiereName || entry.cantiereId}
+							
+							<div style="
+								display: grid; 
+								grid-template-columns: 1fr auto; 
+								gap: 12px; 
+								align-items: center;
+								margin-bottom: 12px;
+							">
+								<div>
+									<div style="font-size: 11px; color: #9ca3af; font-weight: 600; margin-bottom: 3px;">
+										CANTIERE
+									</div>
+									<div style="font-size: 14px; color: #1f2937; font-weight: 600;">
+										${entry.cantiereName || entry.cantiereId}
+									</div>
 								</div>
-								<div style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 6px; 
-											font-size: 13px; font-weight: 700;">
-									${entry.ore}h
-								</div>
+								<div style="
+									background: linear-gradient(135deg, #dbeafe, #bfdbfe); 
+									color: #1e40af;
+									padding: 8px 16px; 
+									border-radius: 10px; 
+									font-size: 18px; 
+									font-weight: 800;
+									text-align: center;
+									min-width: 60px;
+								">${entry.ore}h</div>
 							</div>
+							
 							${entry.note && !entry.note.includes('** Modificato') ? `
-								<div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #e5e7eb;">
-									<div style="font-size: 11px; color: #6b7280; font-weight: 600;">Note:</div>
-									<div style="font-size: 12px; color: #4b5563; font-style: italic;">${entry.note}</div>
+								<div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+									<div style="font-size: 10px; color: #9ca3af; font-weight: 600; margin-bottom: 4px;">NOTE</div>
+									<div style="font-size: 13px; color: #4b5563; font-style: italic;">${entry.note}</div>
 								</div>
 							` : ''}
+							
+							<div style="
+								display: grid; 
+								grid-template-columns: 1fr 1fr; 
+								gap: 10px; 
+								margin-top: 14px;
+								padding-top: 12px;
+								border-top: 1px solid #f3f4f6;
+							">
+								<button onclick="selectEntryToEdit(${index})" style="
+									background: linear-gradient(135deg, #4f46e5, #4338ca);
+									color: white; 
+									border: none; 
+									padding: 12px;
+									border-radius: 10px; 
+									font-size: 13px; 
+									cursor: pointer; 
+									font-weight: 700;
+									display: flex;
+									align-items: center;
+									justify-content: center;
+									gap: 6px;
+									min-height: 48px;
+								">
+									<span style="font-size: 15px;">✏️</span>
+									<span>Modifica</span>
+								</button>
+								
+								<button onclick="showDeleteConfirmation(${index})" style="
+									background: linear-gradient(135deg, #ef4444, #dc2626);
+									color: white; 
+									border: none; 
+									padding: 12px;
+									border-radius: 10px; 
+									font-size: 13px; 
+									cursor: pointer; 
+									font-weight: 700;
+									display: flex;
+									align-items: center;
+									justify-content: center;
+									gap: 6px;
+									min-height: 48px;
+								">
+									<span style="font-size: 15px;">🗑️</span>
+									<span>Elimina</span>
+								</button>
+							</div>
 						</div>
 					`;
 				});
