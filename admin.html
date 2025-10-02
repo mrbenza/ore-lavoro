@@ -620,7 +620,6 @@
 						</div>
 				`;
 				
-				// Mostra tutti gli inserimenti
 				dayData.entries.forEach((entry, index) => {
 					const cantiereLabel = entry.cantiereName || entry.cantiereId;
 					const cantiereTrunc = cantiereLabel.length > 20 
@@ -629,106 +628,35 @@
 					const entryLabel = `#${index + 1} - ${cantiereTrunc}`;
 					
 					html += `
-						<div style="
-							background: white; 
-							border-radius: 10px; 
-							padding: 14px; 
-							margin-top: 10px; 
-							border: 2px solid ${index === 0 ? '#4f46e5' : '#e5e7eb'};
-							box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-						">
-							<div style="
-								display: flex; 
-								justify-content: space-between; 
-								align-items: center; 
-								margin-bottom: 10px;
-							">
-								<div style="
-									font-size: 12px; 
-									color: #6b7280; 
-									font-weight: 700;
-									text-transform: uppercase;
-								">${entryLabel}</div>
+						<div style="background: white; border-radius: 10px; padding: 14px; margin-top: 10px; 
+									border: 2px solid ${index === 0 ? '#4f46e5' : '#e5e7eb'}; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
+							<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+								<div style="font-size: 12px; color: #6b7280; font-weight: 700; text-transform: uppercase;">${entryLabel}</div>
 							</div>
-							
-							<div style="
-								display: grid; 
-								grid-template-columns: 1fr auto; 
-								gap: 12px; 
-								align-items: center;
-								margin-bottom: 12px;
-							">
+							<div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin-bottom: 12px;">
 								<div>
-									<div style="font-size: 11px; color: #9ca3af; font-weight: 600; margin-bottom: 3px;">
-										CANTIERE
-									</div>
-									<div style="font-size: 14px; color: #1f2937; font-weight: 600;">
-										${entry.cantiereName || entry.cantiereId}
-									</div>
+									<div style="font-size: 11px; color: #9ca3af; font-weight: 600; margin-bottom: 3px;">CANTIERE</div>
+									<div style="font-size: 14px; color: #1f2937; font-weight: 600;">${entry.cantiereName || entry.cantiereId}</div>
 								</div>
-								<div style="
-									background: linear-gradient(135deg, #dbeafe, #bfdbfe); 
-									color: #1e40af;
-									padding: 8px 16px; 
-									border-radius: 10px; 
-									font-size: 18px; 
-									font-weight: 800;
-									text-align: center;
-									min-width: 60px;
-								">${entry.ore}h</div>
+								<div style="background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; padding: 8px 16px; 
+											border-radius: 10px; font-size: 18px; font-weight: 800; text-align: center; min-width: 60px;">${entry.ore}h</div>
 							</div>
-							
 							${entry.note && !entry.note.includes('** Modificato') ? `
 								<div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
 									<div style="font-size: 10px; color: #9ca3af; font-weight: 600; margin-bottom: 4px;">NOTE</div>
 									<div style="font-size: 13px; color: #4b5563; font-style: italic;">${entry.note}</div>
 								</div>
 							` : ''}
-							
-							<div style="
-								display: grid; 
-								grid-template-columns: 1fr 1fr; 
-								gap: 10px; 
-								margin-top: 14px;
-								padding-top: 12px;
-								border-top: 1px solid #f3f4f6;
-							">
-								<button onclick="selectEntryToEdit(${index})" style="
-									background: linear-gradient(135deg, #4f46e5, #4338ca);
-									color: white; 
-									border: none; 
-									padding: 12px;
-									border-radius: 10px; 
-									font-size: 13px; 
-									cursor: pointer; 
-									font-weight: 700;
-									display: flex;
-									align-items: center;
-									justify-content: center;
-									gap: 6px;
-									min-height: 48px;
-								">
-									<span style="font-size: 15px;">✏️</span>
-									<span>Modifica</span>
+							<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
+								<button onclick="selectEntryToEdit(${index})" style="background: linear-gradient(135deg, #4f46e5, #4338ca); color: white; 
+										border: none; padding: 12px; border-radius: 10px; font-size: 13px; cursor: pointer; font-weight: 700;
+										display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px;">
+									<span style="font-size: 15px;">✏️</span><span>Modifica</span>
 								</button>
-								
-								<button onclick="showDeleteConfirmation(${index})" style="
-									background: linear-gradient(135deg, #ef4444, #dc2626);
-									color: white; 
-									border: none; 
-									padding: 12px;
-									border-radius: 10px; 
-									font-size: 13px; 
-									cursor: pointer; 
-									font-weight: 700;
-									display: flex;
-									align-items: center;
-									justify-content: center;
-									gap: 6px;
-									min-height: 48px;
-								">
-									<span style="font-size: 15px;">🗑️</span>
-									<span>Elimina</span>
+								<button onclick="showDeleteConfirmation(${index})" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; 
+										border: none; padding: 12px; border-radius: 10px; font-size: 13px; cursor: pointer; font-weight: 700;
+										display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px;">
+									<span style="font-size: 15px;">🗑️</span><span>Elimina</span>
 								</button>
 							</div>
 						</div>
@@ -736,21 +664,15 @@
 				});
 				
 				html += `</div>`;
-				
-				// Area modifica (inizialmente nascosta)
 				html += `
 					<div id="editArea" style="display: none;">
 						<div style="background: rgba(16, 185, 129, 0.05); border-left: 4px solid #10b981; 
 									padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-							<div style="font-weight: 600; color: #065f46;">
-								✏️ Modifica registrazione <span id="editingIndex"></span>
-							</div>
+							<div style="font-weight: 600; color: #065f46;">✏️ Modifica registrazione <span id="editingIndex"></span></div>
 						</div>
 						${generateEditForm('')}
 					</div>
 				`;
-				
-				// Pulsante nuovo inserimento
 				html += `
 					<button onclick="showNewEntryForm()" 
 							style="width: 100%; background: #10b981; color: white; border: none; padding: 12px; 
@@ -758,7 +680,6 @@
 						➕ Aggiungi Nuovo Inserimento
 					</button>
 				`;
-				
 			} else {
 				// CASO: Nessuna registrazione
 				html += `
@@ -779,6 +700,11 @@
 
 			popupContent.innerHTML = html;
 			popup.classList.add('show');
+			
+			// IMPORTANTE: Se non ci sono registrazioni esistenti, carica i cantieri per il form nuovo
+			if (!hasExistingWork) {
+				loadAllCantieriForEdit(null);
+			}
 		}
 		
 		// Mostra popup conferma cancellazione ottimizzato per mobile
