@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -543,8 +544,7 @@
                 }
                 
                 const onclickAttr = workDay ? `onclick="currentEditDateStr='${dateStr}'; showDayDetails('${dateStr}')"` : '';
-                html += `<div class="${classes}" ${onclickAttr} data-date="${dateStr}">${content}</div>`;
-            }
+				html += `<div class="${classes}" onclick="currentEditDateStr='${dateStr}'; showDayDetails('${dateStr}')" ...>`;	            }
 
             // Giorni mese successivo
             const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
