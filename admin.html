@@ -944,7 +944,6 @@
 				loadingMsg.remove();
 				
 				if (result.success) {
-					// Vibrazione successo
 					if (navigator.vibrate) {
 						navigator.vibrate([100, 50, 100]);
 					}
@@ -954,8 +953,14 @@
 						'success'
 					);
 					
-					// Chiudi popup dettagli e ricarica calendario
+					// Chiudi popup
 					closeDayDetails();
+					
+					// INVALIDA CACHE
+					const cacheKey = `${currentUserId}_${currentYear}_${currentMonth}`;
+					delete calendarCache[cacheKey];
+					
+					// RICARICA automaticamente il calendario
 					await loadCalendarData();
 					
 				} else {
@@ -1121,8 +1126,17 @@
 						isNewEntry ? '✅ Registrazione creata!' : '✅ Modifiche salvate!', 
 						'success'
 					);
+					
+					// Chiudi popup
 					closeDayDetails();
+					
+					// INVALIDA CACHE per l'utente e mese corrente
+					const cacheKey = `${currentUserId}_${currentYear}_${currentMonth}`;
+					delete calendarCache[cacheKey];
+					
+					// RICARICA automaticamente il calendario
 					await loadCalendarData();
+					
 				} else {
 					Utils.showNotification('Errore: ' + result.message, 'error');
 				}
