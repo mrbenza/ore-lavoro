@@ -528,7 +528,7 @@
                 html += `<div class="calendar-day other-month"><span class="day-number">${day}</span></div>`;
             }
 
-// Giorni mese corrente
+            // Giorni mese corrente
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const workDay = calendarData?.workDays?.[dateStr];
@@ -545,8 +545,8 @@
                 
                 // TUTTI i giorni sono cliccabili
                 html += `<div class="${classes}" onclick="currentEditDateStr='${dateStr}'; showDayDetails('${dateStr}')" data-date="${dateStr}">${content}</div>`;
-             showDayDetails('${dateStr}')" data-date="${dateStr}">${content}</div>`;
             }
+			
 			// Giorni mese successivo
             const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
             const remainingCells = totalCells - (firstDay + daysInMonth);
