@@ -413,16 +413,18 @@
                 const result = await Utils.loadAdminDashboardData();
 
                 if (!result || !result.success) {
-                    Utils.showNotification('Accesso negato. Solo gli amministratori possono accedere a questa pagina.', 'error');
+                    // Logout + redirect per evitare loop (index.html con sessione attiva → dashboard → admin → loop)
+                    Utils.showNotification('Accesso non autorizzato.', 'error');
+                    Utils.clearSession();
                     setTimeout(() => Utils.redirectToLogin(), 2000);
                     return false;
                 }
 
                 const { cantieri, dipendenti } = result.data;
 
-                // Pre-popola entrambe le modalità — switch mese/totali diventa istantaneo
+                // Pre-popola cache totali; mese viene caricato on-demand al click del tab
                 cantieriCache.totali = cantieri.totali;
-                cantieriCache.mese = cantieri.mese;
+                cantieriCache.mese = null; // caricato on-demand
                 renderCantieri(cantieriCache[currentCantieriMode]);
 
                 // Popola dropdown dipendenti
