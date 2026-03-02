@@ -351,40 +351,6 @@ COMPANY: {
 
 ---
 
-### 2026-03-02 — ui-frontend-developer — Fix Sicurezza UI (FIX-09, FIX-10, FIX-11, FIX-12)
-
-- **FIX-09 — XSS in `admin.html`**: Aggiunta funzione `Utils.escapeHtml()` in `config.js`. Applicata in 5 punti di `admin.html` (`renderCantieri()`, `showDayDetails()`, `showDeleteConfirmation()`, `loadAllCantieriForEdit()`, `loadDipendenti()`) per prevenire injection di HTML arbitrario tramite dati provenienti dal server.
-- **FIX-10 — XSS in `dashboard.html`**: Applicata `Utils.escapeHtml()` nella funzione `showDayDetails()` di `dashboard.html` sui campi `entry.cantiere`, `entry.ore`, `entry.note`.
-- **FIX-11 — `.trim()` sulla password in `index.html`**: Rimosso `.trim()` dal campo password prima dell'invio al backend. Il trim rimane applicato solo allo username. Una password con spazi significativi veniva silenziosamente alterata prima dell'autenticazione.
-- **FIX-12 — `console.*` con dati sensibili in produzione**: Sostituiti 30 `console.*` totali con `ProductionLogger` in tutti e 3 gli HTML (`index.html`: 9, `admin.html`: 16, `dashboard.html`: 5) e in `config.js` (9 nelle utility). Rimosso `window.getAdminState` da `admin.html` per eliminare l'esposizione dello stato admin sulla finestra globale.
-
----
-
-### 2026-03-02 — ui-frontend-developer — Fix rendering ore calendario admin (FIX-16)
-
-**File modificato**: `admin.html` (riga 542)
-**Summary**: Corretto campo inesistente `workDay.ore` in `workDay.totalOre` nella logica di rendering del calendario mensile in `admin.html`.
-**Details**: Il calendario mensile della dashboard admin non mostrava mai le ore nelle celle dei giorni lavorativi. La causa era l'accesso a `workDay.ore`, campo non presente nella struttura restituita dall'API `getOtherUserMonthlyData`. Il campo corretto, coerente con la risposta effettiva dell'API, e `workDay.totalOre`. Le due API (`getMonthlyWorkData` per i dipendenti e `getOtherUserMonthlyData` per gli admin) hanno strutture dati intenzionalmente diverse: nessuna modifica backend e stata necessaria. Il fix e puramente frontend e circoscritto a una singola riga.
-**Status**: Completato
-
----
-
-### 2026-03-02 — ui-frontend-developer — Accessibilita modale e navigazione tastiera (FIX-13, FIX-14)
-
-**File modificati**: `dashboard.html`, `admin.html`
-
-**FIX-13 — Attributi ARIA e focus trap sui modal**
-
-Aggiunti attributi di accessibilita (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`) ai modal `#dayDetailsPopup` e `#deleteConfirmModal` in entrambi i file. Implementata la utility `createFocusTrap(dialogElement)` che circoscrive la navigazione da tastiera all'interno del dialogo aperto: calcola dinamicamente gli elementi interattivi focusabili, intercetta il tasto Tab (e Shift+Tab) per mantenere il focus nel perimetro del modal, chiude il dialogo alla pressione di Escape e ripristina il focus all'elemento che aveva il focus prima dell'apertura. In `dashboard.html` la trap viene attivata su `#dayDetailsPopup`; in `admin.html` viene attivata sia su `#dayDetailsPopup` sia su `#deleteConfirmModal` tramite le variabili `currentPopupFocusTrap` e `currentDeleteModalFocusTrap`.
-
-**FIX-14 — Navigazione tastiera su elementi interattivi non-button**
-
-In `dashboard.html`: gli elementi `.footer-item` (navigazione inferiore) hanno ricevuto `role="button"`, `tabindex="0"`, `aria-label` descrittivo e `aria-current="page"` sull'elemento attivo. Aggiunto handler `keydown` che intercetta Enter e Space per attivare il click, in modo da equiparare il comportamento a quello di un elemento `<button>` nativo. In `admin.html`: gli elementi `.toggle-option` (toggle "Totali Assoluti / Mese Corrente") hanno ricevuto `role="button"`, `tabindex="0"` e `aria-pressed` dinamico (aggiornato a `true`/`false` al cambio selezione). Aggiunto handler `keydown` con attivazione Enter/Space sugli stessi elementi.
-
-**Status**: Completato
-
----
-
 ## Aggiornamenti
 
 ### Frontend (index, dashboard, admin, config.js)

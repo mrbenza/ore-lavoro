@@ -340,18 +340,7 @@ const Utils = {
     validatePassword(password) {
         return password && password.length >= CONFIG.VALIDATION.MIN_PASSWORD_LENGTH;
     },
-
-    // Escaping HTML per prevenire XSS nei template literals
-    escapeHtml: function(str) {
-        if (str === null || str === undefined) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    },
-
+    
     // Auto-logout
     setupAutoLogout() {
         if (!CONFIG.SECURITY.SESSION_TIMEOUT) return;
@@ -436,7 +425,7 @@ const Utils = {
             const sessionData = this.getSession();
             
             if (!sessionData || !sessionData.token || !sessionData.user) {
-                ProductionLogger.error('Session data mancante');
+                console.error('Session data mancante');
                 return false;
             }
             
@@ -446,11 +435,11 @@ const Utils = {
                 userId: sessionData.user.userId
             });
             
-            ProductionLogger.log('API validateAdmin response:', result.success);
+            console.log('API validateAdmin response:', result);
             return result && result.success;
             
         } catch (error) {
-            ProductionLogger.error('Errore validazione admin:', error);
+            console.error('Errore validazione admin:', error);
             return false;
         }
     },
@@ -478,7 +467,7 @@ const Utils = {
             const isAdmin = await this.validateAdmin();
             
             if (isAdmin) {
-                ProductionLogger.log('Admin rilevato, reindirizzamento...');
+                console.log('Admin rilevato, reindirizzamento...');
                 
                 // Mostra messaggio fullscreen
                 this.showFullscreenMessage(
@@ -497,7 +486,7 @@ const Utils = {
             
             return false;
         } catch (error) {
-            ProductionLogger.error('Errore controllo admin redirect:', error);
+            console.error('Errore controllo admin redirect:', error);
             return false;
         }
     },
@@ -637,7 +626,7 @@ const Utils = {
             return result && result.success;
             
         } catch (error) {
-            ProductionLogger.error('Errore invalidazione cache:', error);
+            console.error('Errore invalidazione cache:', error);
             return false;
         }
     },
@@ -719,7 +708,7 @@ const Utils = {
             };
             
         } catch (error) {
-            ProductionLogger.error('Errore preparazione dati grafico:', error);
+            console.error('Errore preparazione dati grafico:', error);
             return { labels: [], datasets: [] };
         }
     },
@@ -799,16 +788,16 @@ const Utils = {
 
     setupAutoRefresh: function(refreshCallback, interval = 300000) {
         if (!refreshCallback || typeof refreshCallback !== 'function') {
-            ProductionLogger.error('Callback refresh non valido');
+            console.error('Callback refresh non valido');
             return null;
         }
         
         return setInterval(async () => {
             try {
-                ProductionLogger.log('Auto-refresh dati admin...');
+                console.log('Auto-refresh dati admin...');
                 await refreshCallback();
             } catch (error) {
-                ProductionLogger.error('Errore auto-refresh:', error);
+                console.error('Errore auto-refresh:', error);
             }
         }, interval);
     },

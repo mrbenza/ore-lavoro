@@ -155,8 +155,8 @@
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <button class="refresh-btn" onclick="refreshCantieri()" title="Aggiorna dati"><i class="fas fa-sync-alt"></i></button>
                     <div class="toggle-container">
-                        <div class="toggle-option active" data-mode="totali" role="button" tabindex="0" aria-pressed="true">Totali Assoluti</div>
-                        <div class="toggle-option" data-mode="mese" role="button" tabindex="0" aria-pressed="false">Mese Corrente</div>
+                        <div class="toggle-option active" data-mode="totali">Totali Assoluti</div>
+                        <div class="toggle-option" data-mode="mese">Mese Corrente</div>
                     </div>
                 </div>
             </div>
@@ -230,10 +230,7 @@
     </div>
 
                 <!-- POPUP DETTAGLI GIORNO -->
-    <div class="day-details-popup" id="dayDetailsPopup"
-         role="dialog"
-         aria-modal="true"
-         aria-labelledby="popupTitle">
+    <div class="day-details-popup" id="dayDetailsPopup">
         <div class="popup-content">
             <div class="popup-header">
                 <div class="popup-title" id="popupTitle">Dettagli Giorno</div>
@@ -261,62 +258,9 @@
         let autoRefreshInterval = null;
 		let currentEditDateStr = null;
 
-        // FIX-13: elemento opener per ripristino focus alla chiusura dei modal
-        let popupOpenerElement = null;
-        let deleteModalOpenerElement = null;
-
-        // FIX-13: focus trap — mantiene il focus dentro un dialogo finché è aperto
-        function createFocusTrap(dialogElement) {
-            const focusableSelectors = [
-                'a[href]', 'button:not([disabled])', 'input:not([disabled])',
-                'select:not([disabled])', 'textarea:not([disabled])',
-                '[tabindex]:not([tabindex="-1"])'
-            ].join(', ');
-
-            function getFocusable() {
-                return Array.from(dialogElement.querySelectorAll(focusableSelectors))
-                    .filter(el => !el.closest('[hidden]') && el.offsetParent !== null);
-            }
-
-            function handleKeydown(e) {
-                if (e.key !== 'Tab') return;
-                const focusable = getFocusable();
-                if (!focusable.length) { e.preventDefault(); return; }
-                const first = focusable[0];
-                const last = focusable[focusable.length - 1];
-                if (e.shiftKey) {
-                    if (document.activeElement === first) {
-                        e.preventDefault();
-                        last.focus();
-                    }
-                } else {
-                    if (document.activeElement === last) {
-                        e.preventDefault();
-                        first.focus();
-                    }
-                }
-            }
-
-            dialogElement.addEventListener('keydown', handleKeydown);
-
-            return {
-                activate: function() {
-                    const focusable = getFocusable();
-                    if (focusable.length) focusable[0].focus();
-                },
-                destroy: function() {
-                    dialogElement.removeEventListener('keydown', handleKeydown);
-                }
-            };
-        }
-
-        // Istanze correnti dei focus trap
-        let currentPopupFocusTrap = null;
-        let currentDeleteModalFocusTrap = null;
-
         // INIT
         document.addEventListener('DOMContentLoaded', async function() {
-            ProductionLogger.log('[ADMIN] Inizializzazione...');
+            console.log('[ADMIN] Inizializzazione...');
             try {
                 const hasAccess = await Utils.checkAdminAccess();
                 if (!hasAccess) return;
@@ -326,9 +270,9 @@
                 await loadInitialData();
                 setupAutoRefresh();
                 
-                ProductionLogger.log('[ADMIN] Dashboard pronta');
+                console.log('[ADMIN] Dashboard pronta');
             } catch (error) {
-                ProductionLogger.error('[ADMIN] Errore init:', error);
+                console.error('[ADMIN] Errore init:', error);
                 Utils.showNotification('Errore caricamento dashboard', 'error');
             }
         });
@@ -343,28 +287,13 @@
         function setupListeners() {
             // Toggle cantieri
             document.querySelectorAll('.toggle-option').forEach(opt => {
-                // Handler condiviso click e tastiera
-                async function activateToggle() {
+                opt.addEventListener('click', async function() {
                     if (this.classList.contains('active')) return;
-                    document.querySelectorAll('.toggle-option').forEach(o => {
-                        o.classList.remove('active');
-                        o.setAttribute('aria-pressed', 'false');
-                    });
+                    document.querySelectorAll('.toggle-option').forEach(o => o.classList.remove('active'));
                     this.classList.add('active');
-                    this.setAttribute('aria-pressed', 'true');
                     currentCantieriMode = this.dataset.mode;
                     showCantieriLoader();
                     await loadCantieri();
-                }
-
-                opt.addEventListener('click', activateToggle);
-
-                // FIX-14: supporto tastiera per elementi role="button"
-                opt.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        activateToggle.call(this);
-                    }
                 });
             });
 
@@ -389,16 +318,6 @@
                     document.getElementById('calendarSection').style.display = 'none';
                 }
             });
-
-            // FIX-13: chiusura dayDetailsPopup con tasto Escape
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    const popup = document.getElementById('dayDetailsPopup');
-                    if (popup && popup.classList.contains('show')) {
-                        closeDayDetails();
-                    }
-                }
-            });
         }
 
         async function loadInitialData() {
@@ -420,20 +339,20 @@
 
         async function loadCantieri() {
             try {
-                ProductionLogger.log(`[ADMIN] Caricamento cantieri '${currentCantieriMode}'`);
+                console.log(`[ADMIN] Caricamento cantieri '${currentCantieriMode}'`);
                 
                 if (cantieriCache[currentCantieriMode]) {
-                    ProductionLogger.log('[ADMIN] Cantieri da cache');
+                    console.log('[ADMIN] Cantieri da cache');
                     renderCantieri(cantieriCache[currentCantieriMode]);
                     return;
                 }
 
                 const data = await Utils.loadCantieriOverview(currentCantieriMode);
                 cantieriCache[currentCantieriMode] = data;
-                ProductionLogger.log(`[ADMIN] Cantieri dal server: ${data.length}`);
+                console.log(`[ADMIN] Cantieri dal server: ${data.length}`);
                 renderCantieri(data);
             } catch (error) {
-                ProductionLogger.error('[ADMIN] Errore cantieri:', error);
+                console.error('[ADMIN] Errore cantieri:', error);
                 showError('cantieriGrid', 'Errore caricamento cantieri');
             }
         }
@@ -445,17 +364,17 @@
                 return;
             }
             grid.innerHTML = data.map(c => `
-                <div class="cantiere-card slide-in" onclick="showCantiereDetails('${Utils.escapeHtml(c.id)}')">
-                    <div class="cantiere-nome">${Utils.truncateText(Utils.escapeHtml(c.nome), 35)}</div>
+                <div class="cantiere-card slide-in" onclick="showCantiereDetails('${c.id}')">
+                    <div class="cantiere-nome">${Utils.truncateText(c.nome, 35)}</div>
                     <div class="cantiere-ore">
                         <span class="label">Ore ${currentCantieriMode === 'mese' ? 'Mese' : 'Totali'}</span>
                         ${Utils.formatOre(c.oreTotali)}
                     </div>
                     <div class="cantiere-meta">
-                        <span class="stato-badge ${getStatoBadgeClass(c.stato)}">${Utils.escapeHtml(c.stato)}</span>
+                        <span class="stato-badge ${getStatoBadgeClass(c.stato)}">${c.stato}</span>
                         <span style="display: flex; align-items: center; gap: 4px;">
                             <small style="color: #9ca3af;">Ultimo inserimento:</small>
-                            <i class="fas fa-clock"></i>
+                            <i class="fas fa-clock"></i> 
                             ${Utils.formatDataAdmin(c.ultimoAggiornamento)}
                         </span>
                     </div>
@@ -493,10 +412,10 @@
             try {
                 const data = await Utils.loadDipendentiList();
                 const sel = document.getElementById('dipendentiSelect');
-                sel.innerHTML = '<option value="">Seleziona dipendente...</option>' +
-                    data.map(d => `<option value="${Utils.escapeHtml(d.userId)}" data-name="${Utils.escapeHtml(d.nome)}">${Utils.escapeHtml(d.nome)} (${Utils.escapeHtml(d.ruolo)})</option>`).join('');
+                sel.innerHTML = '<option value="">Seleziona dipendente...</option>' + 
+                    data.map(d => `<option value="${d.userId}" data-name="${d.nome}">${d.nome} (${d.ruolo})</option>`).join('');
             } catch (error) {
-                ProductionLogger.error('[ADMIN] Errore dipendenti:', error);
+                console.error('[ADMIN] Errore dipendenti:', error);
                 document.getElementById('dipendentiSelect').innerHTML = '<option>Errore caricamento</option>';
             }
         }
@@ -523,7 +442,7 @@
             
             // Controlla cache
             if (calendarCache[cacheKey]) {
-                ProductionLogger.log('[ADMIN] Calendario da cache:', cacheKey);
+                console.log('[ADMIN] Calendario da cache:', cacheKey);
                 calendarData = calendarCache[cacheKey];
                 renderCalendar();
                 await loadTotaliOre();
@@ -533,7 +452,7 @@
             showCalendarLoader();
 
             try {
-                ProductionLogger.log(`[ADMIN] Caricamento calendario: ${currentUserName} - ${currentYear}/${currentMonth}`);
+                console.log(`[ADMIN] Caricamento calendario: ${currentUserName} - ${currentYear}/${currentMonth}`);
                 
                 const data = await Utils.loadOtherUserMonthlyData(
                     currentUserId,
@@ -546,7 +465,7 @@
                 renderCalendar();
                 await loadTotaliOre();
             } catch (error) {
-                ProductionLogger.error('[ADMIN] Errore calendario:', error);
+                console.error('[ADMIN] Errore calendario:', error);
                 showCalendarError();
             }
         }
@@ -559,7 +478,7 @@
                 document.getElementById('oreMesePrecedente').textContent = Utils.formatOre(data.oreMesePrecedente || 0);
                 document.getElementById('oreAnnoCorrente').textContent = Utils.formatOre(data.oreAnno || 0);
             } catch (error) {
-                ProductionLogger.error('[ADMIN] Errore caricamento totali:', error);
+                console.error('[ADMIN] Errore caricamento totali:', error);
                 document.getElementById('oreMeseCorrente').textContent = '-';
                 document.getElementById('oreMesePrecedente').textContent = '-';
                 document.getElementById('oreAnnoCorrente').textContent = '-';
@@ -620,8 +539,8 @@
                 if (workDay) classes += ' has-work';
                 
                 let content = `<span class="day-number">${day}</span>`;
-                if (workDay && workDay.totalOre) {
-                    content += `<span class="day-hours">${workDay.totalOre}h</span>`;
+                if (workDay && workDay.ore) {
+                    content += `<span class="day-hours">${workDay.ore}h</span>`;
                 }
                 
                 // TUTTI i giorni sono cliccabili
@@ -703,13 +622,13 @@
 				
 				dayData.entries.forEach((entry, index) => {
 					const cantiereLabel = entry.cantiereName || entry.cantiereId;
-					const cantiereTrunc = cantiereLabel.length > 20
-						? cantiereLabel.substring(0, 20) + '...'
+					const cantiereTrunc = cantiereLabel.length > 20 
+						? cantiereLabel.substring(0, 20) + '...' 
 						: cantiereLabel;
-					const entryLabel = `#${index + 1} - ${Utils.escapeHtml(cantiereTrunc)}`;
+					const entryLabel = `#${index + 1} - ${cantiereTrunc}`;
 					
 					html += `
-						<div style="background: white; border-radius: 10px; padding: 14px; margin-top: 10px;
+						<div style="background: white; border-radius: 10px; padding: 14px; margin-top: 10px; 
 									border: 2px solid ${index === 0 ? '#4f46e5' : '#e5e7eb'}; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
 							<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
 								<div style="font-size: 12px; color: #6b7280; font-weight: 700; text-transform: uppercase;">${entryLabel}</div>
@@ -717,15 +636,15 @@
 							<div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin-bottom: 12px;">
 								<div>
 									<div style="font-size: 11px; color: #9ca3af; font-weight: 600; margin-bottom: 3px;">CANTIERE</div>
-									<div style="font-size: 14px; color: #1f2937; font-weight: 600;">${Utils.escapeHtml(entry.cantiereName || entry.cantiereId)}</div>
+									<div style="font-size: 14px; color: #1f2937; font-weight: 600;">${entry.cantiereName || entry.cantiereId}</div>
 								</div>
-								<div style="background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; padding: 8px 16px;
-											border-radius: 10px; font-size: 18px; font-weight: 800; text-align: center; min-width: 60px;">${Utils.escapeHtml(entry.ore)}h</div>
+								<div style="background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; padding: 8px 16px; 
+											border-radius: 10px; font-size: 18px; font-weight: 800; text-align: center; min-width: 60px;">${entry.ore}h</div>
 							</div>
 							${entry.note && !entry.note.includes('** Modificato') ? `
 								<div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
 									<div style="font-size: 10px; color: #9ca3af; font-weight: 600; margin-bottom: 4px;">NOTE</div>
-									<div style="font-size: 13px; color: #4b5563; font-style: italic;">${Utils.escapeHtml(entry.note)}</div>
+									<div style="font-size: 13px; color: #4b5563; font-style: italic;">${entry.note}</div>
 								</div>
 							` : ''}
 							<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
@@ -781,13 +700,7 @@
 
 			popupContent.innerHTML = html;
 			popup.classList.add('show');
-
-			// FIX-13: salva l'opener e attiva il focus trap
-			popupOpenerElement = document.activeElement;
-			if (currentPopupFocusTrap) currentPopupFocusTrap.destroy();
-			currentPopupFocusTrap = createFocusTrap(popup);
-			currentPopupFocusTrap.activate();
-
+			
 			// IMPORTANTE: Se non ci sono registrazioni esistenti, carica i cantieri per il form nuovo
 			if (!hasExistingWork) {
 				loadAllCantieriForEdit(null);
@@ -809,11 +722,7 @@
 			}
 			
 			const modalHTML = `
-				<div id="deleteConfirmModal"
-					role="dialog"
-					aria-modal="true"
-					aria-labelledby="deleteModalTitle"
-					style="
+				<div id="deleteConfirmModal" style="
 					position: fixed;
 					top: 0;
 					left: 0;
@@ -849,7 +758,7 @@
 								margin: 0 auto 15px;
 								font-size: 36px;
 							">🗑️</div>
-							<h3 id="deleteModalTitle" style="font-size: 22px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">
+							<h3 style="font-size: 22px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">
 								Elimina Registrazione
 							</h3>
 							<p style="font-size: 14px; color: #6b7280;">
@@ -875,7 +784,7 @@
 								<div style="display: flex; justify-content: space-between; align-items: center;">
 									<span style="font-size: 13px; color: #6b7280; font-weight: 600;">Cantiere:</span>
 									<span style="font-size: 14px; color: #1f2937; font-weight: 600;">
-										${Utils.escapeHtml(entry.cantiereName || entry.cantiereId)}
+										${entry.cantiereName || entry.cantiereId}
 									</span>
 								</div>
 								<div style="display: flex; justify-content: space-between; align-items: center;">
@@ -887,7 +796,7 @@
 										background: rgba(239, 68, 68, 0.1);
 										padding: 4px 12px;
 										border-radius: 8px;
-									">${Utils.escapeHtml(entry.ore)}h</span>
+									">${entry.ore}h</span>
 								</div>
 								${entry.note && !entry.note.includes('** Modificato') ? `
 									<div style="
@@ -899,7 +808,7 @@
 											Note:
 										</span>
 										<span style="font-size: 13px; color: #4b5563; font-style: italic;">
-											${Utils.escapeHtml(entry.note)}
+											${entry.note}
 										</span>
 									</div>
 								` : ''}
@@ -1002,46 +911,13 @@
 				</style>
 			`;
 			
-			deleteModalOpenerElement = document.activeElement;
 			document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-			// FIX-13: attiva focus trap sul modal di conferma eliminazione
-			const insertedModal = document.getElementById('deleteConfirmModal');
-			if (insertedModal) {
-				if (currentDeleteModalFocusTrap) currentDeleteModalFocusTrap.destroy();
-				currentDeleteModalFocusTrap = createFocusTrap(insertedModal);
-				currentDeleteModalFocusTrap.activate();
-
-				// Chiusura con Escape
-				function deleteModalEscapeHandler(e) {
-					if (e.key === 'Escape') {
-						closeDeleteModal();
-						document.removeEventListener('keydown', deleteModalEscapeHandler);
-					}
-				}
-				document.addEventListener('keydown', deleteModalEscapeHandler);
-				// Salva il riferimento per rimozione al closeDeleteModal
-				insertedModal._escapeHandler = deleteModalEscapeHandler;
-			}
 		}
 
 		function closeDeleteModal() {
 			const modal = document.getElementById('deleteConfirmModal');
 			if (modal) {
-				// FIX-13: rimuovi Escape handler se presente
-				if (modal._escapeHandler) {
-					document.removeEventListener('keydown', modal._escapeHandler);
-				}
 				modal.remove();
-			}
-			// FIX-13: distruggi focus trap e ripristina focus sull'opener
-			if (currentDeleteModalFocusTrap) {
-				currentDeleteModalFocusTrap.destroy();
-				currentDeleteModalFocusTrap = null;
-			}
-			if (deleteModalOpenerElement && typeof deleteModalOpenerElement.focus === 'function') {
-				deleteModalOpenerElement.focus();
-				deleteModalOpenerElement = null;
 			}
 		}
 
@@ -1092,7 +968,7 @@
 				}
 			} catch (error) {
 				loadingMsg.remove();
-				ProductionLogger.error('Errore cancellazione:', error);
+				console.error('Errore cancellazione:', error);
 				Utils.showNotification('Errore durante l\'eliminazione', 'error');
 			}
 		}
@@ -1112,21 +988,11 @@
 			if (popup) {
 				popup.classList.remove('show');
 			}
-
-			// FIX-13: distruggi focus trap e ripristina il focus sull'opener
-			if (currentPopupFocusTrap) {
-				currentPopupFocusTrap.destroy();
-				currentPopupFocusTrap = null;
-			}
-			if (popupOpenerElement && typeof popupOpenerElement.focus === 'function') {
-				popupOpenerElement.focus();
-				popupOpenerElement = null;
-			}
-
+			
 			// Reset stato
 			selectedEntryIndex = null;
 			currentEditDateStr = null;
-
+			
 			// Nasconde l'area di edit se era visibile
 			const editArea = document.getElementById('editArea');
 			if (editArea) {
@@ -1276,7 +1142,7 @@
 				}
 			} catch (error) {
 				loadingMsg.remove();
-				ProductionLogger.error('Errore salvataggio modifica:', error);
+				console.error('Errore:', error);
 				Utils.showNotification('Errore durante il salvataggio', 'error');
 			}
 		}
@@ -1292,21 +1158,21 @@
                 const select = document.getElementById('editCantiereId');
                 
                 if (result.success && result.data) {
-                    select.innerHTML = '<option value="">-- Seleziona cantiere --</option>' +
+                    select.innerHTML = '<option value="">-- Seleziona cantiere --</option>' + 
                         result.data.map(c => {
-                            const statoLabel = c.stato !== 'Aperto' ? ` [${Utils.escapeHtml(c.stato)}]` : '';
-                            return `<option value="${Utils.escapeHtml(c.id)}" ${c.id === currentCantiereId ? 'selected' : ''}>
-                                ${Utils.escapeHtml(c.id)} - ${Utils.escapeHtml(c.nome)}${statoLabel}
+                            const statoLabel = c.stato !== 'Aperto' ? ` [${c.stato}]` : '';
+                            return `<option value="${c.id}" ${c.id === currentCantiereId ? 'selected' : ''}>
+                                ${c.id} - ${c.nome}${statoLabel}
                             </option>`;
                         }).join('');
-
-                    ProductionLogger.log('Cantieri caricati:', result.data.length);
+                        
+                    console.log('Cantieri caricati:', result.data.length);
                 } else {
                     select.innerHTML = '<option value="">Errore caricamento cantieri</option>';
                     Utils.showNotification('Errore caricamento cantieri', 'error');
                 }
             } catch (error) {
-                ProductionLogger.error('Errore caricamento cantieri:', error);
+                console.error('Errore caricamento cantieri:', error);
                 const select = document.getElementById('editCantiereId');
                 select.innerHTML = '<option value="">Errore caricamento</option>';
             }
@@ -1331,7 +1197,7 @@
         function setupAutoRefresh() {
             // Auto-refresh ogni 30 minuti
             autoRefreshInterval = setInterval(async () => {
-                ProductionLogger.log('[ADMIN] Auto-refresh dati');
+                console.log('[ADMIN] Auto-refresh dati');
                 
                 // Refresh cantieri
                 cantieriCache = { totali: null, mese: null };
@@ -1349,6 +1215,17 @@
             if (autoRefreshInterval) clearInterval(autoRefreshInterval);
         });
 
+        // Debug helper
+        window.getAdminState = () => console.table({
+            cantieriMode: currentCantieriMode,
+            userId: currentUserId,
+            userName: currentUserName,
+            year: currentYear,
+            month: currentMonth,
+            hasCalendarData: !!calendarData,
+            totaliCached: !!cantieriCache.totali,
+            meseCached: !!cantieriCache.mese
+        });
     </script>
 </body>
 </html>
