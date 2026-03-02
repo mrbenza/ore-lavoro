@@ -633,13 +633,62 @@ const Utils = {
                 sessionToken: sessionData.token,
                 cacheType: cacheType
             });
-            
+
             return result && result.success;
-            
+
         } catch (error) {
             ProductionLogger.error('Errore invalidazione cache:', error);
             return false;
         }
+    },
+
+    // Carica tutti i dati iniziali dashboard admin in una sola chiamata API
+    // Usa sessionStorage come cache lato client (TTL 5 minuti)
+    loadAdminDashboardData: async function() {
+        try {
+            const sessionData = this.getSession();
+            if (!sessionData || !sessionData.token) {
+                return { success: false, message: 'Sessione non valida' };
+            }
+
+            // Controlla cache sessionStorage (5 minuti)
+            const CACHE_KEY = 'adminDashboardData_v1';
+            const CACHE_TTL = 5 * 60 * 1000;
+            try {
+                const cached = sessionStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Date.now() - parsed.ts < CACHE_TTL) {
+                        ProductionLogger.log('[Utils] Admin dashboard da sessionStorage cache');
+                        return { success: true, data: parsed.data, fromCache: true };
+                    }
+                    sessionStorage.removeItem(CACHE_KEY);
+                }
+            } catch (_) {}
+
+            const result = await this.callAPI({
+                action: 'getAdminDashboardData',
+                sessionToken: sessionData.token
+            });
+
+            if (result && result.success) {
+                try {
+                    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: result.data, ts: Date.now() }));
+                } catch (_) {}
+            }
+
+            return result;
+        } catch (error) {
+            ProductionLogger.error('[Utils] Errore loadAdminDashboardData:', error);
+            throw error;
+        }
+    },
+
+    // Svuota la cache sessionStorage della dashboard admin
+    clearAdminDashboardCache: function() {
+        try {
+            sessionStorage.removeItem('adminDashboardData_v1');
+        } catch (_) {}
     },
 
     // ===== FORMATTERS ADMIN =====
