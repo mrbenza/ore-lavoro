@@ -158,29 +158,25 @@ function doGet(e) {
         parseInt(e.parameter.entryIndex, 10)
       );
     }
-    else if (action === 'getAdminDashboardData') {
-      // → AdminAPI.gs - endpoint combinato dashboard admin
-      result = getAdminDashboardData(e.parameter.sessionToken);
-    }
     else if (action === 'invalidateCache') {
       // → AdminAPI.gs
       result = invalidateAdminCache(e.parameter.sessionToken, e.parameter.cacheType);
     }
-
+    
     // ========================================
     // UNKNOWN ACTION
     // ========================================
-
+    
     else {
-      result = {
-        success: false,
+      result = { 
+        success: false, 
         message: 'Azione non riconosciuta: ' + action,
         availableActions: [
-          'ping',
-          'authenticate',
-          'saveWorkEntry',
-          'getCantieri',
-          'getUserInfo',
+          'ping', 
+          'authenticate', 
+          'saveWorkEntry', 
+          'getCantieri', 
+          'getUserInfo', 
           'getMonthlyWorkData',
           'validateAdmin',
           'getCantieriOverview',
@@ -191,14 +187,13 @@ function doGet(e) {
           'getAllCantieriForAdmin',
           'updateWorkEntry',
           'deleteWorkEntry',
-          'invalidateCache',
-          'getAdminDashboardData'
+          'invalidateCache'
         ]
       };
     }
-
+    
     return createCORSResponse(result);
-
+    
   } catch (error) {
     return createCORSResponse(handleError('doGet', error));
   }
@@ -334,29 +329,25 @@ function doPost(e) {
         parseInt(params.entryIndex, 10)
       );
     }
-    else if (params.action === 'getAdminDashboardData') {
-      // → AdminAPI.gs - endpoint combinato dashboard admin
-      result = getAdminDashboardData(params.sessionToken);
-    }
     else if (params.action === 'invalidateCache') {
       // → AdminAPI.gs
       result = invalidateAdminCache(params.sessionToken, params.cacheType);
     }
-
+    
     // ========================================
     // UNKNOWN ACTION
     // ========================================
-
+    
     else {
-      result = {
-        success: false,
+      result = { 
+        success: false, 
         message: 'Azione non riconosciuta: ' + params.action,
         availableActions: [
-          'ping',
-          'authenticate',
-          'saveWorkEntry',
-          'getCantieri',
-          'getUserInfo',
+          'ping', 
+          'authenticate', 
+          'saveWorkEntry', 
+          'getCantieri', 
+          'getUserInfo', 
           'getMonthlyWorkData',
           'validateAdmin',
           'getCantieriOverview',
@@ -367,14 +358,13 @@ function doPost(e) {
           'getAllCantieriForAdmin',
           'updateWorkEntry',
           'deleteWorkEntry',
-          'invalidateCache',
-          'getAdminDashboardData'
+          'invalidateCache'
         ]
       };
     }
-
+    
     return createCORSResponse(result);
-
+    
   } catch (error) {
     return createCORSResponse(handleError('doPost', error));
   }

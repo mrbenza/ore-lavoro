@@ -1054,165 +1054,23 @@ function testDeleteWorkEntry() {
     dateStr: '2025-01-15', // Data esistente nel foglio
     entryIndex: 0 // Prima registrazione del giorno
   };
-
+  
   console.log('=== TEST DELETE WORK ENTRY ===');
   console.log('Config: ' + JSON.stringify(TEST_CONFIG));
-
+  
   const result = deleteWorkEntry(
     TEST_CONFIG.sessionToken,
     TEST_CONFIG.targetUserId,
     TEST_CONFIG.dateStr,
     TEST_CONFIG.entryIndex
   );
-
+  
   console.log('=== RISULTATO ===');
   console.log(JSON.stringify(result, null, 2));
-
+  
   if (result.success) {
     console.log('✅ TEST PASSED - Registrazione eliminata');
   } else {
     console.log('❌ TEST FAILED - ' + result.message);
-  }
-}
-
-// ========================================
-// DASHBOARD ADMIN - ENDPOINT COMBINATO
-// ========================================
-
-/**
- * Carica tutti i dati iniziali della dashboard admin in una sola chiamata.
- * Sostituisce: validateAdmin + getCantieriOverview(totali) + getCantieriOverview(mese) + getDipendentiList
- * Riduzione: 3 chiamate API → 1 sola chiamata.
- *
- * @param {string} sessionToken - Token di sessione (formato: userId_timestamp_random)
- * @returns {Object} {success, data: {admin, cantieri: {totali, mese}, dipendenti}} oppure {success: false, message}
- */
-function getAdminDashboardData(sessionToken) {
-  const startTime = Date.now();
-
-  try {
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
-    }
-
-    // Apre il foglio UNA SOLA VOLTA
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-
-    // Legge Utenti per: (a) verificare ruolo admin, (b) costruire lista dipendenti
-    const userSheet = spreadsheet.getSheetByName(SHEET_NAMES.UTENTI);
-    const userData = userSheet.getDataRange().getValues();
-
-    // Estrae userId dal token (formato: userId_timestamp_random)
-    const userId = String(sessionToken).split('_')[0];
-
-    let adminFound = false;
-    let adminName = '';
-    const dipendenti = [];
-
-    for (let i = 1; i < userData.length; i++) {
-      const row = userData[i];
-      const rowUserId = String(row[6]);
-      const ruolo = row[5] || 'Dipendente';
-      const isActive = row[9];
-
-      // Verifica admin
-      if (rowUserId === userId && ruolo === 'Admin' && isActive === 'Si') {
-        adminFound = true;
-        adminName = row[1];
-      }
-
-      // Costruisce lista dipendenti (esclude admin, solo attivi)
-      if (row[6] && ruolo !== 'Admin' && isActive === 'Si') {
-        dipendenti.push({
-          userId: row[6],
-          nome: row[1],
-          ruolo: ruolo
-        });
-      }
-    }
-
-    if (!adminFound) {
-      return { success: false, message: 'Accesso non autorizzato' };
-    }
-
-    // Controlla cache backend (5 minuti) — esclude i dati personali admin
-    const cache = CacheService.getScriptCache();
-    const cacheKey = 'admin_dashboard_data_v1';
-    const cachedStr = cache.get(cacheKey);
-
-    if (cachedStr) {
-      Logger.debug('Cache hit admin_dashboard_data');
-      try {
-        const cachedData = JSON.parse(cachedStr);
-        // Aggiunge dati dipendenti freschi (non cachati per sicurezza)
-        cachedData.dipendenti = dipendenti;
-        return {
-          success: true,
-          data: {
-            admin: { userId: userId, nome: adminName },
-            cantieri: cachedData.cantieri,
-            dipendenti: dipendenti
-          }
-        };
-      } catch (_) {
-        // Cache corrotta, continua con calcolo
-      }
-    }
-
-    Logger.debug('Cache miss admin_dashboard - calcolo completo');
-
-    // Legge Cantieri UNA SOLA VOLTA
-    const cantieriSheet = spreadsheet.getSheetByName(SHEET_NAMES.CANTIERI);
-    const lastRowCantieri = cantieriSheet.getLastRow();
-    const cantieriRawData = lastRowCantieri >= 2
-      ? cantieriSheet.getRange(2, 1, lastRowCantieri - 1, 10).getValues()
-      : [];
-
-    // Calcola ore mese corrente (un unico loop su tutti i fogli dipendente)
-    const oreMeseMap = calcolaOreMeseCorrenteOttimizzato(spreadsheet);
-
-    // Costruisce i due array cantieri in un unico passaggio
-    const cantieriTotali = [];
-    const cantieriMese = [];
-
-    for (let i = 0; i < cantieriRawData.length; i++) {
-      const row = cantieriRawData[i];
-      if (!row[0]) continue;
-
-      const cantiereId = String(row[0]);
-      const base = {
-        id: cantiereId,
-        nome: row[1] || 'N/A',
-        indirizzo: row[2] || '',
-        stato: row[3] || 'N/A',
-        ultimoAggiornamento: row[7],
-        ultimoDipendente: row[8] || '',
-        numeroInserimenti: parseInt(row[9]) || 0
-      };
-
-      cantieriTotali.push(Object.assign({}, base, { oreTotali: parseFloat(row[6]) || 0 }));
-      cantieriMese.push(Object.assign({}, base, { oreTotali: oreMeseMap[cantiereId] || 0 }));
-    }
-
-    // Salva in cache (solo cantieri — i dipendenti vengono sempre calcolati freschi)
-    const dataToCache = { cantieri: { totali: cantieriTotali, mese: cantieriMese } };
-    try {
-      cache.put(cacheKey, JSON.stringify(dataToCache), 300); // 5 minuti
-    } catch (_) {}
-
-    Logger.debug('getAdminDashboardData completato in ' + (Date.now() - startTime) + 'ms');
-
-    return {
-      success: true,
-      data: {
-        admin: { userId: userId, nome: adminName },
-        cantieri: { totali: cantieriTotali, mese: cantieriMese },
-        dipendenti: dipendenti
-      }
-    };
-
-  } catch (error) {
-    Logger.critical('Errore getAdminDashboardData:', error);
-    return { success: false, message: 'Errore: ' + error.toString() };
   }
 }

@@ -318,21 +318,14 @@
         document.addEventListener('DOMContentLoaded', async function() {
             ProductionLogger.log('[ADMIN] Inizializzazione...');
             try {
-                // Verifica sessione locale prima di qualsiasi chiamata API
-                const session = Utils.getSession();
-                if (!session || !session.token) {
-                    Utils.redirectToLogin();
-                    return;
-                }
-
+                const hasAccess = await Utils.checkAdminAccess();
+                if (!hasAccess) return;
+                
                 initUI();
                 setupListeners();
-
-                // loadInitialData include ora la validazione admin integrata
-                const hasAccess = await loadInitialData();
-                if (!hasAccess) return;
-
+                await loadInitialData();
                 setupAutoRefresh();
+                
                 ProductionLogger.log('[ADMIN] Dashboard pronta');
             } catch (error) {
                 ProductionLogger.error('[ADMIN] Errore init:', error);
@@ -409,33 +402,10 @@
         }
 
         async function loadInitialData() {
-            try {
-                const result = await Utils.loadAdminDashboardData();
-
-                if (!result || !result.success) {
-                    Utils.showNotification('Accesso negato. Solo gli amministratori possono accedere a questa pagina.', 'error');
-                    setTimeout(() => Utils.redirectToLogin(), 2000);
-                    return false;
-                }
-
-                const { cantieri, dipendenti } = result.data;
-
-                // Pre-popola entrambe le modalità — switch mese/totali diventa istantaneo
-                cantieriCache.totali = cantieri.totali;
-                cantieriCache.mese = cantieri.mese;
-                renderCantieri(cantieriCache[currentCantieriMode]);
-
-                // Popola dropdown dipendenti
-                const sel = document.getElementById('dipendentiSelect');
-                sel.innerHTML = '<option value="">Seleziona dipendente...</option>' +
-                    dipendenti.map(d => `<option value="${Utils.escapeHtml(d.userId)}" data-name="${Utils.escapeHtml(d.nome)}">${Utils.escapeHtml(d.nome)} (${Utils.escapeHtml(d.ruolo)})</option>`).join('');
-
-                ProductionLogger.log('[ADMIN] Dati iniziali caricati' + (result.fromCache ? ' (da sessionStorage cache)' : ' (dal server)'));
-                return true;
-            } catch (error) {
-                ProductionLogger.error('[ADMIN] Errore loadInitialData:', error);
-                throw error;
-            }
+            await Promise.all([
+                loadCantieri(),
+                loadDipendenti()
+            ]);
         }
 
         // ===== CANTIERI =====
@@ -508,7 +478,6 @@
 
         async function refreshCantieri() {
             cantieriCache = { totali: null, mese: null };
-            Utils.clearAdminDashboardCache(); // Invalida anche cache sessionStorage
             await Utils.invalidateAdminCache('cantieri');
             showCantieriLoader();
             await loadCantieri();
@@ -1363,9 +1332,8 @@
             // Auto-refresh ogni 30 minuti
             autoRefreshInterval = setInterval(async () => {
                 ProductionLogger.log('[ADMIN] Auto-refresh dati');
-
+                
                 // Refresh cantieri
-                Utils.clearAdminDashboardCache(); // Invalida cache sessionStorage prima del refresh
                 cantieriCache = { totali: null, mese: null };
                 await loadCantieri();
                 
