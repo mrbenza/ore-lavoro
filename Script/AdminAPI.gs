@@ -1144,11 +1144,13 @@ function getAdminDashboardData(sessionToken) {
       Logger.debug('Cache hit admin_dashboard_data');
       try {
         const cachedData = JSON.parse(cachedStr);
+        // Aggiunge dati dipendenti freschi (non cachati per sicurezza)
+        cachedData.dipendenti = dipendenti;
         return {
           success: true,
           data: {
             admin: { userId: userId, nome: adminName },
-            cantieri: { totali: cachedData.cantieri.totali, mese: null },
+            cantieri: cachedData.cantieri,
             dipendenti: dipendenti
           }
         };
@@ -1159,31 +1161,41 @@ function getAdminDashboardData(sessionToken) {
 
     Logger.debug('Cache miss admin_dashboard - calcolo completo');
 
-    // Legge Cantieri (solo modalità totali — mese viene caricato on-demand dal frontend)
+    // Legge Cantieri UNA SOLA VOLTA
     const cantieriSheet = spreadsheet.getSheetByName(SHEET_NAMES.CANTIERI);
     const lastRowCantieri = cantieriSheet.getLastRow();
     const cantieriRawData = lastRowCantieri >= 2
       ? cantieriSheet.getRange(2, 1, lastRowCantieri - 1, 10).getValues()
       : [];
 
+    // Calcola ore mese corrente (un unico loop su tutti i fogli dipendente)
+    const oreMeseMap = calcolaOreMeseCorrenteOttimizzato(spreadsheet);
+
+    // Costruisce i due array cantieri in un unico passaggio
     const cantieriTotali = [];
+    const cantieriMese = [];
+
     for (let i = 0; i < cantieriRawData.length; i++) {
       const row = cantieriRawData[i];
       if (!row[0]) continue;
-      cantieriTotali.push({
-        id: String(row[0]),
+
+      const cantiereId = String(row[0]);
+      const base = {
+        id: cantiereId,
         nome: row[1] || 'N/A',
         indirizzo: row[2] || '',
         stato: row[3] || 'N/A',
-        oreTotali: parseFloat(row[6]) || 0,
         ultimoAggiornamento: row[7],
         ultimoDipendente: row[8] || '',
         numeroInserimenti: parseInt(row[9]) || 0
-      });
+      };
+
+      cantieriTotali.push(Object.assign({}, base, { oreTotali: parseFloat(row[6]) || 0 }));
+      cantieriMese.push(Object.assign({}, base, { oreTotali: oreMeseMap[cantiereId] || 0 }));
     }
 
-    // Salva in cache (solo totali — mese è calcolato on-demand, dipendenti sempre freschi)
-    const dataToCache = { cantieri: { totali: cantieriTotali } };
+    // Salva in cache (solo cantieri — i dipendenti vengono sempre calcolati freschi)
+    const dataToCache = { cantieri: { totali: cantieriTotali, mese: cantieriMese } };
     try {
       cache.put(cacheKey, JSON.stringify(dataToCache), 300); // 5 minuti
     } catch (_) {}
@@ -1194,7 +1206,7 @@ function getAdminDashboardData(sessionToken) {
       success: true,
       data: {
         admin: { userId: userId, nome: adminName },
-        cantieri: { totali: cantieriTotali, mese: null },
+        cantieri: { totali: cantieriTotali, mese: cantieriMese },
         dipendenti: dipendenti
       }
     };
