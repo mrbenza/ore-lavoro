@@ -68,7 +68,7 @@ Un foglio per ogni dipendente attivo. Il nome del foglio corrisponde al valore n
 | G2 | Ore mese precedente | `=SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY())-1,1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY()),1))` |
 | H2 | Ore anno corrente | `=SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),1,1),A:A,"<"&DATE(YEAR(TODAY())+1,1,1))` |
 
-**Attenzione:** Le righe dati iniziano dalla riga 2. La riga 1 contiene gli header. Le celle F2, G2, H2 devono restare libere da inserimenti manuali (non inserire mai dati nella riga 2 delle colonne F-H).
+**Attenzione:** Le righe dati iniziano dalla riga 5. La riga 1 contiene gli header. Le celle F2, G2, H2 devono restare libere da inserimenti manuali (non inserire mai dati nella riga 2-4 delle colonne F-H).
 
 ---
 

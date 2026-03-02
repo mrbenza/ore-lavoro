@@ -625,7 +625,7 @@
 
         // ⚡ AUTENTICAZIONE VELOCE V2.2 - COMPLETAMENTE SILENZIOSA
         async function authenticateUser(userId, password) {
-            console.log('⚡ Autenticazione veloce V2.2:', userId);
+            ProductionLogger.log('Autenticazione:', userId);
             
             try {
                 const result = await Utils.callAPI({
@@ -634,7 +634,7 @@
                     password: password
                 });
                 
-                console.log('⚡ Risultato autenticazione V2.2:', result.success ? 'SUCCESS' : 'FAILED');
+                ProductionLogger.log('Risultato autenticazione:', result.success ? 'SUCCESS' : 'FAILED');
                 
                 // BLOCCA qualsiasi chiamata a showSecurityStatus
                 if (result.success && result.systemInfo) {
@@ -645,7 +645,7 @@
                 return result;
                 
             } catch (error) {
-                console.error('❌ Errore autenticazione:', error);
+                ProductionLogger.error('Errore autenticazione:', error);
                 throw new Error('Errore di autenticazione: ' + error.message);
             }
         }
@@ -728,7 +728,7 @@
             e.preventDefault();
             
             const userId = elements.userId.value.trim();
-            const password = elements.password.value.trim();
+            const password = elements.password.value;
 
             // Reset messaggi
             hideAllMessages();
@@ -767,14 +767,14 @@
                         }, 1500);
                     }
                     
-                    console.log('⚡ Login successful');
+                    ProductionLogger.log('Login successful');
                     
                     // Salva sessione
                     Utils.setSession(user.data, user.sessionToken);
                     
                     // ⚡ REDIRECT IMMEDIATO
                     setTimeout(() => {
-                        console.log('⚡ Redirect alla dashboard...');
+                        ProductionLogger.log('Redirect alla dashboard...');
                         window.location.href = CONFIG.PAGES.DASHBOARD;
                     }, 2000);
                    
@@ -783,7 +783,7 @@
                 }
             } catch (error) {
                 showError('Errore durante l\'autenticazione: ' + error.message);
-                console.error('❌ Login error:', error);
+                ProductionLogger.error('Login error:', error);
             } finally {
                 elements.loginBtn.disabled = false;
                 elements.loginBtn.innerHTML = 'Accedi';
@@ -792,7 +792,7 @@
 
         // ⚡ SETUP VELOCE AL CARICAMENTO
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('⚡ Sistema Login V2.2 avviato');
+            ProductionLogger.log('Sistema Login V2.2 avviato');
             
             // Se già loggato, redirect immediato
             if (PageGuard.redirectIfLoggedIn()) {
@@ -803,8 +803,8 @@
             setupFormValidation();
             
             // ✅ CONNECTION TEST DISABILITATO PER PERFORMANCE
-            console.log('⚡ Connection test disabilitato - modalità veloce attiva');
-            console.log('⚡ Form login pronto per l\'uso');
+            ProductionLogger.log('Connection test disabilitato - modalità veloce attiva');
+            ProductionLogger.log('Form login pronto per l\'uso');
             
             // Focus automatico sul campo username
             elements.userId.focus();
@@ -828,7 +828,7 @@
             if (Utils && Utils.showNotification) {
                 Utils.showNotification(message, type, duration);
             } else {
-                console.log(`${type.toUpperCase()}: ${message}`);
+                ProductionLogger.log(`${type.toUpperCase()}: ${message}`);
             }
         }
     </script>

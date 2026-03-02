@@ -1015,7 +1015,10 @@
         </div>
     </div>
 
-    <div class="day-details-popup" id="dayDetailsPopup">
+    <div class="day-details-popup" id="dayDetailsPopup"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="popupTitle">
         <div class="popup-content">
             <div class="popup-header">
                 <div class="popup-title" id="popupTitle">Dettagli Giorno</div>
@@ -1028,11 +1031,11 @@
     </div>
 
     <div class="bottom-footer">
-        <div class="footer-item active">
+        <div class="footer-item active" role="button" tabindex="0" aria-label="Inserisci ore">
             <div class="footer-icon">✏️</div>
             <div class="footer-label">Inserisci</div>
         </div>
-        <div class="footer-item">
+        <div class="footer-item" role="button" tabindex="0" aria-label="Calendario">
             <div class="footer-icon">📅</div>
             <div class="footer-label">Calendario</div>
         </div>
@@ -1058,6 +1061,57 @@
         let currentDate = new Date();
         let calendarData = {};
         let refreshInterval = null;
+
+        // Elemento che ha aperto il popup (per ripristino focus alla chiusura)
+        let popupOpenerElement = null;
+
+        // FIX-13: Focus trap — mantiene il focus dentro il dialogo quando è aperto
+        function createFocusTrap(dialogElement) {
+            const focusableSelectors = [
+                'a[href]', 'button:not([disabled])', 'input:not([disabled])',
+                'select:not([disabled])', 'textarea:not([disabled])',
+                '[tabindex]:not([tabindex="-1"])'
+            ].join(', ');
+
+            function getFocusable() {
+                return Array.from(dialogElement.querySelectorAll(focusableSelectors))
+                    .filter(el => !el.closest('[hidden]') && el.offsetParent !== null);
+            }
+
+            function handleKeydown(e) {
+                if (e.key !== 'Tab') return;
+                const focusable = getFocusable();
+                if (!focusable.length) { e.preventDefault(); return; }
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    }
+                } else {
+                    if (document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
+            }
+
+            dialogElement.addEventListener('keydown', handleKeydown);
+
+            return {
+                activate: function() {
+                    const focusable = getFocusable();
+                    if (focusable.length) focusable[0].focus();
+                },
+                destroy: function() {
+                    dialogElement.removeEventListener('keydown', handleKeydown);
+                }
+            };
+        }
+
+        // Istanza corrente del focus trap per il popup
+        let currentFocusTrap = null;
 
         // Cache elementi DOM
         const elements = {};
@@ -1132,7 +1186,7 @@
                 await initializeApp();
                 startAutoRefresh();
             } catch (error) {
-                console.error('Errore inizializzazione:', error);
+                ProductionLogger.error('Errore inizializzazione:', error);
                 showNotification('Errore durante l\'inizializzazione', 'error');
             }
         });
@@ -1160,16 +1214,28 @@
         // Setup navigazione
         function setupNavigation() {
             if (!elements.footerItems) return;
-            
+
             elements.footerItems.forEach(item => {
-                item.addEventListener('click', function() {
+                // Handler condiviso per click e tastiera
+                function activateFooterItem() {
                     const label = this.querySelector('.footer-label').textContent;
                     navigateToPage(label);
-                    
                     elements.footerItems.forEach(footerItem => {
                         footerItem.classList.remove('active');
+                        footerItem.removeAttribute('aria-current');
                     });
                     this.classList.add('active');
+                    this.setAttribute('aria-current', 'page');
+                }
+
+                item.addEventListener('click', activateFooterItem);
+
+                // FIX-14: supporto tastiera per elementi role="button"
+                item.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        activateFooterItem.call(this);
+                    }
                 });
             });
         }
@@ -1263,7 +1329,7 @@
                 }
                 
             } catch (error) {
-                console.error('Errore calendario:', error);
+                ProductionLogger.error('Errore calendario:', error);
                 showNotification('Errore nel caricamento calendario', 'error');
                 renderCalendar(year, month);
             } finally {
@@ -1383,40 +1449,57 @@
         // Mostra dettagli giorno
         function showDayDetails(day, workData) {
             if (!elements.popupTitle || !elements.popupContent || !elements.dayDetailsPopup) return;
-            
+
+            // FIX-13: salva l'elemento che ha aperto il popup per ripristinare il focus alla chiusura
+            popupOpenerElement = document.activeElement;
+
             const monthNames = [
                 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
                 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
             ];
-            
+
             elements.popupTitle.innerHTML = `
                 <div class="popup-title">${day} ${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}</div>
                 <div class="popup-total-hours">${workData.totalHours}h totali</div>
             `;
-            
+
             let html = '';
             workData.entries.forEach(entry => {
                 html += `
                     <div class="work-entry">
                         <div class="work-entry-header">
-                            <div class="work-cantiere">${entry.cantiere}</div>
-                            <div class="work-hours-large">${entry.ore}h</div>
+                            <div class="work-cantiere">${Utils.escapeHtml(entry.cantiere)}</div>
+                            <div class="work-hours-large">${Utils.escapeHtml(entry.ore)}h</div>
                         </div>
-                        ${entry.note ? `<div class="work-note">"${entry.note}"</div>` : ''}
+                        ${entry.note ? `<div class="work-note">"${Utils.escapeHtml(entry.note)}"</div>` : ''}
                     </div>
                 `;
             });
-            
+
             html += '<button class="popup-ok-button" onclick="closeDayDetails()">OK</button>';
-            
+
             elements.popupContent.innerHTML = html;
             elements.dayDetailsPopup.classList.add('show');
+
+            // FIX-13: attiva il focus trap e sposta il focus sul primo elemento interattivo
+            if (currentFocusTrap) currentFocusTrap.destroy();
+            currentFocusTrap = createFocusTrap(elements.dayDetailsPopup);
+            currentFocusTrap.activate();
         }
 
         // Chiudi dettagli giorno
         function closeDayDetails() {
             if (elements.dayDetailsPopup) {
                 elements.dayDetailsPopup.classList.remove('show');
+            }
+            // FIX-13: distruggi il focus trap e ripristina il focus sull'opener
+            if (currentFocusTrap) {
+                currentFocusTrap.destroy();
+                currentFocusTrap = null;
+            }
+            if (popupOpenerElement && typeof popupOpenerElement.focus === 'function') {
+                popupOpenerElement.focus();
+                popupOpenerElement = null;
             }
         }
 
@@ -1470,7 +1553,7 @@
                     elements.cantiere.appendChild(fragment);
                 }
             } catch (error) {
-                console.error('Errore cantieri:', error);
+                ProductionLogger.error('Errore cantieri:', error);
                 elements.cantiere.innerHTML = '<option value="">Errore caricamento cantieri</option>';
                 showNotification('Errore nel caricamento cantieri', 'error');
             }
@@ -1609,7 +1692,7 @@
                 }
                 
             } catch (error) {
-                console.error('Errore salvataggio:', error);
+                ProductionLogger.error('Errore salvataggio:', error);
                 showNotification('Errore nel salvataggio: ' + error.message, 'error');
             } finally {
                 elements.saveBtn.disabled = false;
@@ -1642,7 +1725,7 @@
         // Mostra notifica
         function showNotification(message, type = 'info', duration = 5000) {
             if (!Utils.showNotification) {
-                console.log(`${type.toUpperCase()}: ${message}`);
+                ProductionLogger.log(`${type.toUpperCase()}: ${message}`);
                 return;
             }
             Utils.showNotification(message, type, duration);

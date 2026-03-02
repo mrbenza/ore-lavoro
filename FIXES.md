@@ -6,7 +6,29 @@
 
 ## ALTA SEVERITÀ
 
-*(Nessun fix di alta severità in attesa)*
+---
+
+### ~~FIX-09 — XSS in `admin.html`: innerHTML con dati server non escapati~~ ✅ RISOLTO
+**Risolto il 2026-03-02.**
+Aggiunta `Utils.escapeHtml()` in `config.js`. Applicata in 5 punti di `admin.html`: `renderCantieri()`, `showDayDetails()`, `showDeleteConfirmation()`, `loadAllCantieriForEdit()`, `loadDipendenti()`.
+
+---
+
+### ~~FIX-10 — XSS in `dashboard.html`: innerHTML con dati server non escapati~~ ✅ RISOLTO
+**Risolto il 2026-03-02.**
+Applicata `Utils.escapeHtml()` in `showDayDetails()` di `dashboard.html` su `entry.cantiere`, `entry.ore`, `entry.note`.
+
+---
+
+### ~~FIX-11 — Password `.trim()` prima dell'invio in `index.html`~~ ✅ RISOLTO
+**Risolto il 2026-03-02.**
+Rimosso `.trim()` dal campo password in `index.html`. Trim mantenuto solo sullo username.
+
+---
+
+### ~~FIX-12 — `console.log` con dati sensibili in produzione~~ ✅ RISOLTO
+**Risolto il 2026-03-02.**
+Sostituiti 30 `console.*` totali con `ProductionLogger` in `index.html` (9), `admin.html` (16), `dashboard.html` (5), `config.js` (9 nelle utility). Rimosso `window.getAdminState` da `admin.html`.
 
 ---
 
@@ -39,6 +61,31 @@ Aggiunto `SHEET_NAMES` in `Config.gs`. Sostituite tutte le 10 occorrenze hardcod
 ### ~~FIX-03 — Funzioni duplicate tra `Config.gs` e `UtilsMenu.gs`~~ ✅ RISOLTO
 **Risolto il 2026-03-02.**
 Eliminati da `UtilsMenu.gs`: `generatePasswordHash()`, `formatFileName()`, `getCurrentDateFormatted()`. Versioni canoniche mantenute in `Utils.gs` e `Config.gs`.
+
+---
+
+### ~~FIX-13 — Modal senza attributi ARIA e senza focus trap~~ ✅ RISOLTO
+**Risolto il 2026-03-02.**
+Aggiunti `role="dialog"`, `aria-modal="true"`, `aria-labelledby` a `#dayDetailsPopup` (entrambe le pagine) e `#deleteConfirmModal` (admin). Implementata utility `createFocusTrap()` in entrambi i file: focus trap attivo all'apertura, Escape per chiudere, ripristino del focus all'elemento originale alla chiusura.
+
+---
+
+### ~~FIX-14 — Elementi interattivi implementati come `<div>` non accessibili da tastiera~~ ✅ RISOLTO
+**Risolto il 2026-03-02.**
+`dashboard.html`: `.footer-item` ricevono `role="button"`, `tabindex="0"`, `aria-label`, `aria-current="page"` e handler keydown Enter/Space. `admin.html`: `.toggle-option` ricevono `role="button"`, `tabindex="0"`, `aria-pressed` dinamico e handler keydown Enter/Space.
+
+---
+
+### FIX-15 — `sessionToken` inviato come query param GET
+**File:** `config.js` (funzione `Utils.callAPI()`)
+**Problema:** Il token di sessione viene appeso all'URL come query param. Viene registrato nei log del proxy Vercel, salvato nella history del browser e potenzialmente esposto nell'header `Referer`.
+**Intervento:** Valutare passaggio a POST con body JSON per tutte le chiamate autenticate, o almeno spostare il token in un header HTTP custom.
+
+---
+
+### ~~FIX-16 — Bug campo `workDay.ore` in `admin.html`~~ ✅ RISOLTO
+**Risolto il 2026-03-02.**
+Bug puntuale: `admin.html` riga 542 leggeva `workDay.ore` (inesistente) invece di `workDay.totalOre` (campo corretto restituito da `getOtherUserMonthlyData`). Le ore non apparivano mai nelle celle del calendario admin. Le due API hanno strutture intenzionalmente diverse — nessuna modifica backend necessaria.
 
 ---
 
