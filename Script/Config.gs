@@ -1,8 +1,20 @@
-// ===== CONFIG.GS - CONFIGURAZIONI CENTRALI =====
+// ===== CONFIG.GS - CONFIGURAZIONI CENTRALI UNIFICATE =====
+// Versione unificata: Menu GSheet + API Web
 
-/**
- * Configurazioni globali del sistema
- */
+// ========================================
+// CONFIGURAZIONE PRODUZIONE (per API)
+// ========================================
+const PRODUCTION_CONFIG = {
+  DEBUG_MODE: false,
+  LOG_LEVEL: 'ERROR',
+  LOG_AUTH: true,
+  LOG_CRITICAL_ERRORS: true,
+  LOG_SAVE_OPERATIONS: true
+};
+// ========================================
+// CONFIGURAZIONE PRINCIPALE
+// ========================================
+
 const CONFIG = {
   // Database principale
   SPREADSHEET_ID: PropertiesService.getScriptProperties().getProperty('MAIN_SHEET_ID') || SpreadsheetApp.getActiveSpreadsheet().getId(),
@@ -37,11 +49,11 @@ const CONFIG = {
   DATA_STRUCTURE: {
     HEADER_ROWS: 4,
     COLUMNS: {
-      DATA: 0,      // Colonna A - Data
-      CANTIERE_ID: 1, // Colonna B - ID Cantiere
+      DATA: 0,          // Colonna A - Data
+      CANTIERE_ID: 1,   // Colonna B - ID Cantiere
       CANTIERE_NOME: 2, // Colonna C - Nome Cantiere
-      ORE: 3,       // Colonna D - Ore lavorate
-      NOTE: 4       // Colonna E - Note
+      ORE: 3,           // Colonna D - Ore lavorate
+      NOTE: 4           // Colonna E - Note
     }
   },
   
@@ -62,65 +74,84 @@ const CONFIG = {
   VALIDATION: {
     MIN_PASSWORD_LENGTH: 4,
     MIN_YEAR: 2020,
-    MAX_YEAR: 2030
+    MAX_YEAR: 2030,
+    MIN_HOURS: 0,
+    MAX_HOURS: 24,
+    MAX_WORK_DESCRIPTION: 500,
+    MAX_NOTES: 200
   }
 };
 
-// ============================ MAPPING COLONNE ================================
-// Mappa colonne foglio "Utenti" (0-based per coerenza con getValues)
-/*const COLUMNS = {
-  ID_UTENTE: 0,
-  NOME: 1,
-  EMAIL: 2,
-  TELEFONO: 3,
-  DATA_ASSUNZIONE: 4,
-  USER_ID: 5,
-  PASSWORD: 6,
-  PASSWORD_HASH: 7,
-  ATTIVO: 8
-};*/
+// ========================================
+// NOMI FOGLI (per API)
+// ========================================
+const USER_SHEET_NAME = 'Utenti';
 
+// ========================================
+// INFO SISTEMA (per API)
+// ========================================
+const SYSTEM_INFO = {
+  version: '2.3',
+  build: '2025.01.10 - Modulare',
+  mode: PRODUCTION_CONFIG.DEBUG_MODE ? 'DEVELOPMENT' : 'PRODUCTION',
+  description: 'Container-bound script modulare',
+  features: ['Hash Password SHA-256', 'CORS Headers', 'Calendario', 'Admin Dashboard'],
+  installType: 'CONTAINER_BOUND_MODULAR'
+};
+
+// ========================================
+// MAPPING COLONNE FOGLIO UTENTI
+// ========================================
 const COLUMNS = {
   ID_UTENTE: 0,        // Colonna A
   NOME: 1,             // Colonna B  
   EMAIL: 2,            // Colonna C
   TELEFONO: 3,         // Colonna D
-  DATA_ASSUNZIONE: 4,  // Colonna E ← MANTENIAMO
-  RUOLO: 5,            // Colonna F ← NUOVA
-  USER_ID: 6,          // Colonna G ← SPOSTATA da F
-  PASSWORD: 7,         // Colonna H ← SPOSTATA da G
-  PASSWORD_HASH: 8,    // Colonna I ← SPOSTATA da H
-  ATTIVO: 9            // Colonna J ← SPOSTATA da I
+  DATA_ASSUNZIONE: 4,  // Colonna E
+  RUOLO: 5,            // Colonna F
+  USER_ID: 6,          // Colonna G - Username
+  PASSWORD: 7,         // Colonna H
+  PASSWORD_HASH: 8,    // Colonna I
+  ATTIVO: 9            // Colonna J
 };
 
-// Mappa colonne foglio "Cantieri" (0-based)
-// Struttura attesa (minima):
-// 0=ID, 1=Nome, 2=Indirizzo, 3=Stato, ... 6=OreTotali, 7=UltimoAggiornamento, 8=UltimoDipendente, 9=NumeroInserimenti
+// ========================================
+// MAPPING COLONNE FOGLIO CANTIERI
+// ========================================
 const COLUMNS_CANTIERI = {
   ID: 0,
   NOME: 1,
   INDIRIZZO: 2,
   STATO: 3,
+  DATA_INIZIO: 4,
+  DATA_FINE: 5,
   ORE_TOTALI: 6,
   ULTIMO_UPDATE: 7,
   ULTIMO_DIPENDENTE: 8,
   NUM_INSERIMENTI: 9
 };
 
-// ============================== CELLE ORE ====================================
+// ========================================
+// CELLE ORE UTENTE
+// ========================================
 const USER_SHEET_CELLS = {
-  ORE_MESE_CORRENTE: 'F3',
-  ORE_MESE_PRECEDENTE: 'G3',
-  ANNO_CORRENTE: 'H3'
+  ORE_MESE_CORRENTE: 'F2',
+  ORE_MESE_PRECEDENTE: 'G2',
+  ANNO_CORRENTE: 'H2'
 };
-// ============================ RUOLI UTENTE (NUOVO) ============================
+
+// ========================================
+// RUOLI UTENTE
+// ========================================
 const USER_ROLES = {
   ADMIN: 'Admin',
   ADMINISTRATOR: 'Administrator',
   DIPENDENTE: 'Dipendente'
 };
 
-// ============================ CONFIGURAZIONE ADMIN (NUOVO) ============================
+// ========================================
+// CONFIGURAZIONE ADMIN
+// ========================================
 const ADMIN_CONFIG = {
   REQUIRED_ROLES: ['Admin', 'Administrator', 'admin', 'administrator'],
   REFRESH_INTERVAL: 300000, // 5 minuti
@@ -138,7 +169,9 @@ const ADMIN_CONFIG = {
   }
 };
 
-// ============================ VALIDAZIONI ADMIN (NUOVO) ============================
+// ========================================
+// VALIDAZIONI ADMIN
+// ========================================
 const ADMIN_VALIDATION = {
   VALID_TIMEFRAMES: ['30days', 'lastMonth', 'year'],
   VALID_CANTIERI_MODES: ['mese', 'totali'],
@@ -146,7 +179,7 @@ const ADMIN_VALIDATION = {
   
   isAdminRole: function(ruolo) {
     if (!ruolo) return false;
-    return this.REQUIRED_ROLES.includes(ruolo);
+    return this.REQUIRED_ROLES.some(r => r.toLowerCase() === ruolo.toLowerCase());
   },
   
   isValidTimeframe: function(timeframe) {
@@ -158,21 +191,26 @@ const ADMIN_VALIDATION = {
   }
 };
 
-// ============================ CACHE ADMIN (NUOVO) ============================
+// ========================================
+// CACHE ADMIN
+// ========================================
 const CACHE_CONFIG = {
-  CANTIERI_OVERVIEW: 180,    // 3 minuti
-  DIPENDENTI_LIST: 300,      // 5 minuti  
-  TIMELINE_DATA: 120,        // 2 minuti
+  CANTIERI_OVERVIEW: 1800,     // 30 minuti
+  DIPENDENTI_LIST: 300,        // 5 minuti  
+  USER_TIMELINE: 600,          // 10 minuti
+  TIMELINE_DATA: 120,          // 2 minuti
   
   CACHE_KEYS: {
+    CANTIERI_TOTALI: 'admin_cantieri_totali',
     CANTIERI_MESE: 'admin_cantieri_mese_',
-    CANTIERI_TOTALI: 'admin_cantieri_totali_',
     DIPENDENTI: 'admin_dipendenti_list',
     TIMELINE: 'admin_timeline_'
   }
 };
 
-// ============================ DEBUG ADMIN (NUOVO) ============================
+// ========================================
+// DEBUG ADMIN
+// ========================================
 const ADMIN_DEBUG = {
   ENABLED: true,
   LOG_PERFORMANCE: true,
@@ -190,6 +228,45 @@ const ADMIN_DEBUG = {
     }
   }
 };
+
+// ========================================
+// VALIDAZIONE ORE E NUMERI
+// ========================================
+const VALIDATION_RULES = {
+  MIN_HOURS: 0,
+  MAX_HOURS: 24,
+  MIN_PASSWORD_LENGTH: 4,
+  MAX_WORK_DESCRIPTION: 500,
+  MAX_NOTES: 200
+};
+
+// ========================================
+// MESSAGGI ERRORE
+// ========================================
+const ERROR_MESSAGES = {
+  NO_USERS: 'Nessun utente trovato nel sistema',
+  NO_EMPLOYEES: 'Nessun dipendente attivo trovato',
+  INVALID_YEAR: `Anno deve essere tra ${CONFIG.VALIDATION.MIN_YEAR} e ${CONFIG.VALIDATION.MAX_YEAR}`,
+  SHEET_NOT_FOUND: (name) => `Foglio "${name}" non trovato`,
+  PASSWORD_TOO_SHORT: `Password deve essere almeno ${CONFIG.VALIDATION.MIN_PASSWORD_LENGTH} caratteri`,
+  OPERATION_CANCELLED: 'Operazione annullata dall\'utente',
+  GENERIC_ERROR: 'Si è verificato un errore imprevisto'
+};
+
+// ========================================
+// MESSAGGI SUCCESSO
+// ========================================
+const SUCCESS_MESSAGES = {
+  SYSTEM_INITIALIZED: 'Sistema inizializzato correttamente',
+  ARCHIVE_COMPLETED: 'Archiviazione completata con successo',
+  PASSWORD_UPDATED: 'Password aggiornata correttamente',
+  REPORT_GENERATED: 'Report generato correttamente',
+  CALCULATION_COMPLETED: 'Calcolo totali completato'
+};
+
+// ========================================
+// FUNZIONI HELPER CONFIGURAZIONE
+// ========================================
 
 /**
  * Inizializza il sistema salvando l'ID dello spreadsheet
@@ -261,26 +338,49 @@ function getMonthName(monthNumber) {
 }
 
 /**
- * Costanti per messaggi di errore comuni
+ * Verifica configurazione valida
  */
-const ERROR_MESSAGES = {
-  NO_USERS: 'Nessun utente trovato nel sistema',
-  NO_EMPLOYEES: 'Nessun dipendente attivo trovato',
-  INVALID_YEAR: `Anno deve essere tra ${CONFIG.VALIDATION.MIN_YEAR} e ${CONFIG.VALIDATION.MAX_YEAR}`,
-  SHEET_NOT_FOUND: (name) => `Foglio "${name}" non trovato`,
-  PASSWORD_TOO_SHORT: `Password deve essere almeno ${CONFIG.VALIDATION.MIN_PASSWORD_LENGTH} caratteri`,
-  OPERATION_CANCELLED: 'Operazione annullata dall\'utente',
-  GENERIC_ERROR: 'Si è verificato un errore imprevisto'
-};
+function validateConfiguration() {
+  const errors = [];
+  
+  try {
+    const ss = getMainSpreadsheet();
+    
+    // Verifica foglio Utenti
+    if (!ss.getSheetByName(USER_SHEET_NAME)) {
+      errors.push('Foglio "' + USER_SHEET_NAME + '" non trovato');
+    }
+    
+    // Verifica foglio Cantieri
+    if (!ss.getSheetByName('Cantieri')) {
+      errors.push('Foglio "Cantieri" non trovato');
+    }
+    
+  } catch (error) {
+    errors.push('Errore accesso spreadsheet: ' + error.message);
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors: errors
+  };
+}
 
 /**
- * Costanti per messaggi di successo
+ * Test configurazione
  */
-const SUCCESS_MESSAGES = {
-  SYSTEM_INITIALIZED: 'Sistema inizializzato correttamente',
-  ARCHIVE_COMPLETED: 'Archiviazione completata con successo',
-  PASSWORD_UPDATED: 'Password aggiornata correttamente',
-  REPORT_GENERATED: 'Report generato correttamente',
-  CALCULATION_COMPLETED: 'Calcolo totali completato'
-};
-
+function testConfig() {
+  console.log('=== TEST CONFIGURAZIONE UNIFICATA ===');
+  console.log('Spreadsheet ID:', CONFIG.SPREADSHEET_ID);
+  console.log('Versione:', SYSTEM_INFO.version);
+  console.log('Build:', SYSTEM_INFO.build);
+  
+  const validation = validateConfiguration();
+  console.log('Configurazione valida:', validation.valid);
+  
+  if (!validation.valid) {
+    console.log('Errori:', validation.errors);
+  }
+  
+  console.log('=== TEST COMPLETATO ===');
+}
