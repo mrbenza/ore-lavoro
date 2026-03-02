@@ -29,7 +29,7 @@ function handlePing() {
     mode: SYSTEM_INFO.mode,
     installType: SYSTEM_INFO.installType,
     features: SYSTEM_INFO.features,
-    spreadsheetId: SPREADSHEET_ID,
+    spreadsheetId: CONFIG.SPREADSHEET_ID,
     cors: true,
     architecture: 'MODULAR'
   };
@@ -139,27 +139,14 @@ function doGet(e) {
     else if (action === 'updateWorkEntry') {
       // → AdminAPI.gs
       var updateData = {};
-      try { 
-        updateData = JSON.parse(e.parameter.updateData || '{}'); 
+      try {
+        updateData = JSON.parse(e.parameter.updateData || '{}');
       } catch (_) {}
       result = updateWorkEntry(
         e.parameter.sessionToken,
         e.parameter.targetUserId,
         e.parameter.dateStr,
         updateData
-      );
-    }
-    else if (action === 'updateWorkEntry') {
-        // → AdminAPI.gs
-        var updateData = {};
-        try { 
-          updateData = JSON.parse(e.parameter.updateData || '{}'); 
-        } catch (_) {}
-        result = updateWorkEntry(
-          e.parameter.sessionToken,
-          e.parameter.targetUserId,
-          e.parameter.dateStr,
-          updateData
       );
     }
     else if (action === 'deleteWorkEntry') {
@@ -323,9 +310,9 @@ function doPost(e) {
     else if (params.action === 'updateWorkEntry') {
       // → AdminAPI.gs
       var updateDataPost = {};
-      try { 
-        updateDataPost = JSON.parse(params.updateData || '{}'); 
-      } catch (_) {}    
+      try {
+        updateDataPost = JSON.parse(params.updateData || '{}');
+      } catch (_) {}
       result = updateWorkEntry(
         params.sessionToken,
         params.targetUserId,
@@ -333,20 +320,7 @@ function doPost(e) {
         updateDataPost
       );
     }
-    else if (params.action === 'updateWorkEntry') {
-      // → AdminAPI.gs
-      var updateDataPost = {};
-      try { 
-        updateDataPost = JSON.parse(params.updateData || '{}'); 
-      } catch (_) {}    
-      result = updateWorkEntry(
-        params.sessionToken,
-        params.targetUserId,
-        params.dateStr,
-        updateDataPost
-      );
-    }
-        else if (params.action === 'deleteWorkEntry') {
+    else if (params.action === 'deleteWorkEntry') {
       // → AdminAPI.gs
       result = deleteWorkEntry(
         params.sessionToken,
@@ -406,11 +380,11 @@ function doPost(e) {
 function testConfiguration() {
   console.log('=== TEST CONFIGURAZIONE SISTEMA V2.3 MODULARE ===');
   try {
-    console.log('Spreadsheet ID:', SPREADSHEET_ID);
+    console.log('Spreadsheet ID:', CONFIG.SPREADSHEET_ID);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     console.log('Spreadsheet Nome:', ss.getName());
 
-    var requiredSheets = ['Utenti', 'Cantieri'];
+    var requiredSheets = [SHEET_NAMES.UTENTI, SHEET_NAMES.CANTIERI];
     var availableSheets = ss.getSheets().map(s => s.getName());
     console.log('Fogli disponibili:', availableSheets);
     
@@ -440,7 +414,7 @@ function testConfiguration() {
     }
 
     try {
-      var cantieriSheet = getSheetSafely(ss, 'Cantieri');
+      var cantieriSheet = getSheetSafely(ss, SHEET_NAMES.CANTIERI);
       if (cantieriSheet) {
         var cantieriHeaders = cantieriSheet.getRange(1, 1, 1, Math.max(cantieriSheet.getLastColumn(), 10)).getValues()[0];
         console.log('Headers foglio Cantieri:', cantieriHeaders);

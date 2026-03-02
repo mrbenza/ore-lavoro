@@ -108,7 +108,7 @@ function saveWorkEntry(sessionToken, workData) {
     // Ricava nome cantiere (se disponibile)
     var nomeCantiere = 'Lavoro registrato via dashboard';
     try {
-      var cantieriSheet = getSheetSafely(ss, 'Cantieri');
+      var cantieriSheet = getSheetSafely(ss, SHEET_NAMES.CANTIERI);
       if (cantieriSheet) {
         var lastRowCant = cantieriSheet.getLastRow();
         if (lastRowCant >= 2) {

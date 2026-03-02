@@ -210,7 +210,7 @@ function performConstructionSitesRecalculation() {
     debugLog('Inizio ricalcolo totali cantieri');
     
     const spreadsheet = getMainSpreadsheet();
-    const constructionSitesSheet = getSheetSafe(spreadsheet, 'Cantieri');
+    const constructionSitesSheet = getSheetSafe(spreadsheet, SHEET_NAMES.CANTIERI);
     const employeeNames = getActiveEmployeeNames();
     
     if (employeeNames.length === 0) {
@@ -332,8 +332,8 @@ function performDataAlignmentVerification() {
     debugLog('Inizio verifica allineamento dati');
     
     const spreadsheet = getMainSpreadsheet();
-    const constructionSitesSheet = getSheetSafe(spreadsheet, 'Cantieri');
-    
+    const constructionSitesSheet = getSheetSafe(spreadsheet, SHEET_NAMES.CANTIERI);
+
     const constructionSitesData = constructionSitesSheet.getDataRange().getValues();
     const existingSites = new Map();
     

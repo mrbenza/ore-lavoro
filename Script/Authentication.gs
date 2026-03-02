@@ -15,7 +15,7 @@
  */
 function authenticateUser(userId, password) {
   try {
-    console.log('Tentativo autenticazione per:', userId);
+    Logger.auth('Tentativo autenticazione per:', userId);
     
     const sheet = getWorksheet();
     const lastRow = sheet.getLastRow();
@@ -58,7 +58,7 @@ function authenticateUser(userId, password) {
     }
     
     if (!userRow) {
-      console.log('Credenziali non valide per:', userId);
+      Logger.warn('Credenziali non valide per:', userId);
       return { success: false, message: 'Credenziali non valide o utente inattivo' };
     }
     
@@ -72,7 +72,7 @@ function authenticateUser(userId, password) {
     const passwordResult = verifyUserPassword(userRow, password, columnMap);
     
     if (!passwordResult.valid) {
-      console.log('Password non valida per utente:', userId);
+      Logger.warn('Password non valida per utente:', userId);
       return { success: false, message: 'Credenziali non valide o utente inattivo' };
     }
     
@@ -84,11 +84,11 @@ function authenticateUser(userId, password) {
         
         if (hashColumn !== undefined) {
           sheet.getRange(userRowIndex, hashColumn + 1).setValue(newHash);
-          console.log('Hash auto-generato e salvato per utente:', userId);
+          Logger.info('Hash auto-generato e salvato per utente:', userId);
           passwordResult.authMethod = 'plain_migrated';
         }
       } catch (e) {
-        console.warn('Errore auto-migrazione hash (non critico):', e.message);
+        Logger.warn('Errore auto-migrazione hash (non critico):', e.message);
       }
     }
     
@@ -152,7 +152,7 @@ function verifyUserPassword(userRow, password, columnMap) {
     
     // Caso 1: Verifica con hash (metodo sicuro)
     if (passwordHash && passwordHash !== '') {
-      console.log('Verificando con password hash (SICURO)...');
+      Logger.debug('Verificando con password hash (SICURO)...');
       
       const hashValid = (passwordHash === inputPasswordHash);
       
@@ -165,7 +165,7 @@ function verifyUserPassword(userRow, password, columnMap) {
     
     // Caso 2: Fallback con password plain text
     if (passwordPlain && passwordPlain !== '') {
-      console.log('FALLBACK: Verificando con password plain text...');
+      Logger.warn('FALLBACK: Verificando con password plain text...');
       
       const plainValid = (passwordPlain.toString() === password.toString());
       
@@ -177,7 +177,7 @@ function verifyUserPassword(userRow, password, columnMap) {
     }
     
     // Caso 3: Nessuna password configurata
-    console.log('PROBLEMA: Utente senza password configurata');
+    Logger.warn('PROBLEMA: Utente senza password configurata');
     return {
       valid: false,
       authMethod: 'no_password',
@@ -185,7 +185,7 @@ function verifyUserPassword(userRow, password, columnMap) {
     };
     
   } catch (error) {
-    console.error('Errore verifica password:', error);
+    Logger.error('Errore verifica password:', error);
     return {
       valid: false,
       authMethod: 'error',
@@ -262,8 +262,8 @@ function validateAdmin(sessionToken, userId) {
     
     // 3. Verifica se l'utente è admin nel foglio
     const spreadsheet = getMainSpreadsheet();
-    const userSheet = spreadsheet.getSheetByName('Utenti');
-    
+    const userSheet = spreadsheet.getSheetByName(SHEET_NAMES.UTENTI);
+
     if (!userSheet) {
       Logger.error('Foglio Utenti non trovato');
       return { success: false, message: 'Foglio Utenti non trovato' };
@@ -343,30 +343,30 @@ function validateAdmin(sessionToken, userId) {
  * Test autenticazione robusta
  */
 function testRobustAuthentication() {
-  console.log('=== TEST AUTENTICAZIONE ROBUSTA ===');
-  
+  Logger.debug('=== TEST AUTENTICAZIONE ROBUSTA ===');
+
   try {
     const sheet = getWorksheet();
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     const columnMap = buildColumnMap(headers);
-    
-    console.log('Headers trovati:', headers);
-    console.log('Mappatura colonne:', columnMap);
-    
+
+    Logger.debug('Headers trovati:', headers);
+    Logger.debug('Mappatura colonne:', columnMap);
+
     // Test autenticazione con utente di esempio
     const authResult = authenticateUser('test', 'test123');
-    console.log('Risultato autenticazione:', authResult);
-    
+    Logger.debug('Risultato autenticazione:', authResult);
+
     if (authResult.success) {
-      console.log('✅ Autenticazione funzionante!');
-      console.log('Metodo auth:', authResult.systemInfo.authMethod);
-      console.log('Dati utente:', authResult.data.name);
+      Logger.info('Autenticazione funzionante!');
+      Logger.debug('Metodo auth:', authResult.systemInfo.authMethod);
+      Logger.debug('Dati utente:', authResult.data.name);
     } else {
-      console.log('❌ Autenticazione fallita:', authResult.message);
+      Logger.warn('Autenticazione fallita:', authResult.message);
     }
-    
+
   } catch (error) {
-    console.error('Errore test:', error);
+    Logger.error('Errore test:', error);
   }
 }
 
@@ -375,34 +375,34 @@ function testRobustAuthentication() {
  */
 function diagnoseSheetStructure() {
   try {
-    console.log('=== DIAGNOSTICA STRUTTURA FOGLIO ===');
-    
+    Logger.debug('=== DIAGNOSTICA STRUTTURA FOGLIO ===');
+
     const sheet = getWorksheet();
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     const columnMap = buildColumnMap(headers);
-    
-    console.log('Headers del foglio:');
+
+    Logger.debug('Headers del foglio:');
     headers.forEach((header, index) => {
-      console.log(`  ${String.fromCharCode(65 + index)} (${index}): "${header}"`);
+      Logger.debug(`  ${String.fromCharCode(65 + index)} (${index}): "${header}"`);
     });
-    
-    console.log('\nMappatura riconosciuta:');
+
+    Logger.debug('Mappatura riconosciuta:');
     Object.keys(columnMap).forEach(key => {
       const index = columnMap[key];
       const letter = String.fromCharCode(65 + index);
-      console.log(`  ${key} -> Colonna ${letter} (${index}): "${headers[index]}"`);
+      Logger.debug(`  ${key} -> Colonna ${letter} (${index}): "${headers[index]}"`);
     });
-    
+
     const required = ['Username', 'Nome Completo', 'Password', 'Attivo'];
     const missing = required.filter(col => columnMap[col] === undefined);
-    
+
     if (missing.length === 0) {
-      console.log('\n✅ Tutte le colonne essenziali sono presenti');
+      Logger.info('Tutte le colonne essenziali sono presenti');
     } else {
-      console.log('\n❌ Colonne mancanti:', missing.join(', '));
+      Logger.warn('Colonne mancanti:', missing.join(', '));
     }
-    
+
   } catch (error) {
-    console.error('Errore diagnostica:', error);
+    Logger.error('Errore diagnostica:', error);
   }
 }

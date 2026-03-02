@@ -20,8 +20,8 @@ function updateCantiereHours(cantiereId, oreAggiunte, dipendente) {
     Logger.save('Aggiornando cantiere ' + cantiereId + ' con +' + oreAggiunte + ' ore');
     
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var cantieriSheet = getSheetSafely(ss, 'Cantieri');
-    
+    var cantieriSheet = getSheetSafely(ss, SHEET_NAMES.CANTIERI);
+
     if (!cantieriSheet) {
       return { success: false, message: 'Foglio Cantieri non trovato' };
     }
@@ -102,8 +102,8 @@ function getCantieri(sessionToken) {
   
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var cantieriSheet = getSheetSafely(ss, 'Cantieri');
-    
+    var cantieriSheet = getSheetSafely(ss, SHEET_NAMES.CANTIERI);
+
     if (!cantieriSheet) {
       return { success: false, message: 'Foglio "Cantieri" non trovato' };
     }
@@ -154,7 +154,7 @@ function getAllCantieriForAdmin(sessionToken) {
     }
     
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var cantieriSheet = ss.getSheetByName('Cantieri');
+    var cantieriSheet = ss.getSheetByName(SHEET_NAMES.CANTIERI);
     
     if (!cantieriSheet) {
       return { success: false, message: 'Foglio Cantieri non trovato' };

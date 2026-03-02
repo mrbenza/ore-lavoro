@@ -87,12 +87,18 @@ const CONFIG = {
 // ========================================
 const USER_SHEET_NAME = 'Utenti';
 
+const SHEET_NAMES = {
+  UTENTI: 'Utenti',
+  CANTIERI: 'Cantieri',
+  AMMINISTRAZIONE: 'Amministrazione'
+};
+
 // ========================================
 // INFO SISTEMA (per API)
 // ========================================
 const SYSTEM_INFO = {
-  version: '2.3',
-  build: '2025.01.10 - Modulare',
+  version: '2.0',
+  build: '2026.03.02 - Modulare',
   mode: PRODUCTION_CONFIG.DEBUG_MODE ? 'DEVELOPMENT' : 'PRODUCTION',
   description: 'Container-bound script modulare',
   features: ['Hash Password SHA-256', 'CORS Headers', 'Calendario', 'Admin Dashboard'],
@@ -352,7 +358,7 @@ function validateConfiguration() {
     }
     
     // Verifica foglio Cantieri
-    if (!ss.getSheetByName('Cantieri')) {
+    if (!ss.getSheetByName(SHEET_NAMES.CANTIERI)) {
       errors.push('Foglio "Cantieri" non trovato');
     }
     

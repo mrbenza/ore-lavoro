@@ -1,5 +1,5 @@
 # CLAUDE.md — Sistema Multi-Agente
-## Progetto: Sistema Gestione Ore Lavoro v2.3
+## Progetto: Sistema Gestione Ore Lavoro v2.0
 **Stack:** Vercel (frontend) + Google Apps Script (backend) + Google Sheets (database)
 
 ---
@@ -22,7 +22,7 @@ ore-lavoro/
 │   ├── CalcoloCantieri.gs         ← ricalcolo totali ore per cantiere
 │   ├── ReportCommercialista.gs    ← report PDF/Excel mensile e annuale
 │   ├── SystemDiagnostic.gs        ← health check e diagnostica
-│   └── SheetsDAO/                 ← data access layer per Google Sheets
+│   └── SheetsDAO.gs               ← data access layer per Google Sheets
 │
 ├── backend/
 │   └── backupOLDcode.gs           ← backup codice precedente (NON modificare)
@@ -130,26 +130,37 @@ Gestisce qualsiasi richiesta in ingresso e coordina gli altri agenti.
 
 ## Regole di coordinamento
 
-1. **Separazione dei file** — Ogni agente tocca esclusivamente i propri file di competenza.
+1. **Separazione dei file — OBBLIGATORIA**
+   Ogni agente tocca esclusivamente i propri file di competenza. L'Orchestrator non modifica mai file direttamente: delega sempre all'agente corretto tramite il tool `Agent`.
 
-2. **Test obbligatori** — Test Agent viene sempre chiamato dopo Code Agent e dopo UI Agent, prima di considerare la modifica completata.
+2. **Uso degli agenti — OBBLIGATORIO**
+   Qualsiasi modifica a file `.gs` deve essere eseguita dal `gas-code-agent`.
+   Qualsiasi modifica a file `.html` deve essere eseguita dal `ui-frontend-developer`.
+   Qualsiasi modifica allo schema Sheets deve essere eseguita dallo `sheet-schema-expert`.
+   L'Orchestrator non scrive codice direttamente: analizza, decide, delega.
 
-3. **Documentazione per ultima** — Docs Agent viene sempre chiamato come ultimo step.
+3. **Test obbligatori** — Il `gas-code-agent` (o un agente test dedicato) verifica le modifiche prima di considerarle completate.
 
-4. **Flusso standard:**
+4. **Documentazione condizionale** — Il `code-review-docs` viene chiamato come ultimo step **solo se** le modifiche sono rilevanti per README, CLAUDE.md o roadmap. Per fix minori può essere omesso.
+
+5. **Flusso standard:**
    ```
-   Richiesta → ORCHESTRATOR
+   Richiesta → ORCHESTRATOR (analizza e delega via Agent tool)
                     │
-                    ├─► CODE AGENT  e/o  UI AGENT  e/o  SHEET AGENT
+                    ├─► gas-code-agent       (modifica *.gs, api/proxy.js, config.js)
+                    │     e/o
+                    ├─► ui-frontend-developer (modifica *.html)
+                    │     e/o
+                    ├─► sheet-schema-expert  (modifica schema Sheets)
                     │
-                    ├─► TEST AGENT        (sempre, dopo ogni modifica)
+                    ├─► gas-code-agent       (verifica/test delle modifiche)
                     │
-                    └─► DOCS AGENT        (sempre, per ultimo)
+                    └─► code-review-docs     (documentazione, se necessario)
    ```
 
-5. **Conflitti di schema** — Se Code Agent deve modificare colonne referenziate, coordina prima con Sheet Agent tramite l'Orchestrator.
+6. **Conflitti di schema** — Se `gas-code-agent` necessita di modifiche allo schema Sheets, l'Orchestrator coinvolge prima `sheet-schema-expert`.
 
-6. **`backend/backupOLDcode.gs` è read-only** — nessun agente deve modificarlo.
+7. **`backend/backupOLDcode.gs` è read-only** — nessun agente deve modificarlo.
 
 ---
 

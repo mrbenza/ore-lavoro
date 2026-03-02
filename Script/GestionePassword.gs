@@ -61,8 +61,8 @@ function executeChangeEmployeePassword() {
  */
 function getUsersList() {
   const spreadsheet = getMainSpreadsheet();
-  const usersSheet = getSheetSafe(spreadsheet, 'Utenti');
-  
+  const usersSheet = getSheetSafe(spreadsheet, SHEET_NAMES.UTENTI);
+
   // Leggi mappa colonne dagli header
   const colMap = getColumnMapping(usersSheet);
   
@@ -174,8 +174,8 @@ function showNewPasswordDialog(utente) {
 function updateUserPassword(utente, nuovaPassword) {
   try {
     const spreadsheet = getMainSpreadsheet();
-    const usersSheet = getSheetSafe(spreadsheet, 'Utenti');
-    
+    const usersSheet = getSheetSafe(spreadsheet, SHEET_NAMES.UTENTI);
+
     // Rileggi la mappa colonne (per sicurezza)
     const colMap = getColumnMapping(usersSheet);
     

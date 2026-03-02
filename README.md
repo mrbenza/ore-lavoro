@@ -2,7 +2,7 @@
 
 Sistema per la gestione delle ore di lavoro dei dipendenti con autenticazione, dashboard admin e integrazione Google Sheets.
 
-**Versione:** backend v2.3 · frontend v2.2
+**Versione:** v2.0
 **Status:** Operativo
 
 ---
@@ -39,35 +39,98 @@ Lo script `backend/code.gs` è **container-bound**: va incollato nell'editor Scr
 
 ```
 ore-lavoro/
-├── index.html              # Login (V2.2)
+├── index.html              # Login
 ├── dashboard.html          # Dashboard dipendente
 ├── admin.html              # Dashboard admin
 ├── config.js               # Config + Utils + PageGuard (frontend)
 ├── vercel.json             # Configurazione deploy Vercel
 ├── package.json            # Metadati progetto
-├── backend/
-│   └── code.gs            # API Google Apps Script (V2.3)
 ├── api/
 │   └── proxy.js           # Proxy Vercel → Apps Script (CORS)
-└── Script/                 # Script menu interno Google Sheets
-    ├── Config.gs           # Costanti e configurazione backend
+└── Script/                 # Tutti gli script Google Apps Script
+    ├── Config.gs           # Costanti globali (ID foglio, azienda, validazione)
     ├── Main.gs             # Menu onOpen() nel foglio
-    ├── Utils.gs            # Funzioni utility condivise
+    ├── ApiRouter.gs        # doGet/doPost, routing verso moduli API
+    ├── Authentication.gs   # Login, session token, hash SHA-256
+    ├── UserAPI.gs          # API utenti (salvataggio ore, lettura mensile)
+    ├── AdminAPI.gs         # API admin (cantieri, dipendenti, edit/delete)
+    ├── SheetsDAO.gs        # Data access layer per Google Sheets
+    ├── Utils.gs            # Logger, date, helper condivisi
+    ├── UtilsMenu.gs        # Dialog e input da menu Sheets
+    ├── ArchivioOre.gs      # Archiviazione annuale su Drive
     ├── GestionePassword.gs # Cambio password da menu Sheets
-    ├── ReportCommercialista.gs # Generazione PDF/Excel su Drive
     ├── CalcoloCantieri.gs  # Ricalcolo totali ore cantieri
+    ├── ReportCommercialista.gs # Generazione PDF/Excel su Drive
     └── SystemDiagnostic.gs # Diagnostica e health check
 ```
 
-### Differenza tra `backend/code.gs` e `Script/`
+### Struttura degli script in `Script/`
 
-| | `backend/code.gs` | `Script/*.gs` |
-|---|---|---|
-| Scopo | API HTTP per il frontend web | Menu interattivo dentro Google Sheets |
-| Chiamato da | Browser via proxy Vercel | Utente che apre il foglio Google Sheets |
-| Funzioni | Login, salva ore, lettura cantieri | Archivia dati, cambia password, genera report |
+| Gruppo | File | Chiamato da |
+|--------|------|-------------|
+| API HTTP (frontend) | `ApiRouter.gs`, `Authentication.gs`, `UserAPI.gs`, `AdminAPI.gs`, `SheetsDAO.gs` | Browser via proxy Vercel |
+| Menu Sheets | `Main.gs`, `UtilsMenu.gs`, `GestionePassword.gs`, `ArchivioOre.gs`, `CalcoloCantieri.gs`, `ReportCommercialista.gs`, `SystemDiagnostic.gs` | Utente che apre il foglio Google Sheets |
+| Condivisi | `Config.gs`, `Utils.gs` | Tutti gli script sopra |
 
-Entrambi vanno nello stesso progetto Apps Script del foglio.
+Tutti i file vanno nello stesso progetto Apps Script del foglio.
+
+### Descrizione degli script
+
+#### `Config.gs`
+Costanti globali condivise da tutti gli altri script. Contiene:
+- `CONFIG` — ID spreadsheet, fogli di sistema, dati azienda, cartelle Drive, struttura dati, validazioni
+- `SHEET_NAMES` — nomi canonici dei fogli di sistema (es. `SHEET_NAMES.UTENTI`, `SHEET_NAMES.CANTIERI`); tutti gli script usano questa costante invece di stringhe hardcoded
+- `COLUMNS` / `COLUMNS_CANTIERI` — mapping colonne per indice (0-based)
+- `USER_SHEET_CELLS` — riferimenti celle riepilogative (`F2`, `G2`, `H2`)
+- `ADMIN_CONFIG` / `CACHE_CONFIG` — configurazione admin e cache
+- `ERROR_MESSAGES` / `SUCCESS_MESSAGES` — messaggi centralizzati
+- Funzioni helper: `initializeSystem()`, `getMainSpreadsheet()`, `isSystemSheet()`, `validateConfiguration()`
+
+#### `Main.gs`
+Entry point del foglio Google Sheets. Registra il trigger `onOpen()` che costruisce il menu **🏢 Sistema Gestionale** con 4 sottomenu (Archivio, Gestione Password, Report Commercialista, Gestione Cantieri). Contiene anche le voci dinamiche basate sullo stato di salute del sistema (primo setup, conflitto, sistema ok). Espone wrapper leggeri per tutte le azioni del menu che delegano alle funzioni `execute*` dei moduli specializzati.
+
+#### `ApiRouter.gs`
+Entry point HTTP della web app. Implementa `doGet()` e `doPost()` che ricevono le richieste dal proxy Vercel e le smistano ai moduli corretti in base al parametro `action`. Gestisce 16 azioni suddivise in tre categorie: endpoint pubblici (`ping`, `authenticate`), endpoint utente (`saveWorkEntry`, `getCantieri`, `getUserInfo`, `getMonthlyWorkData`) e endpoint admin (`validateAdmin`, `getCantieriOverview`, `getDipendentiList`, `getDipendenteTimeline`, `getOtherUserInfo`, `getOtherUserMonthlyData`, `getAllCantieriForAdmin`, `updateWorkEntry`, `deleteWorkEntry`, `invalidateCache`).
+
+#### `Authentication.gs`
+Gestione login e sessioni. `authenticateUser()` legge gli header del foglio Utenti in modo dinamico, verifica la password (plain text o SHA-256), esegue la migrazione automatica a hash al primo login e genera il session token. `validateSessionToken()` verifica la validità del token. `validateAdmin()` controlla che il token appartenga a un ruolo admin. `generatePasswordHash()` implementa SHA-256 con salt fisso.
+
+#### `UserAPI.gs`
+API per i dipendenti. `saveWorkEntry()` valida e salva una riga ore nel foglio del dipendente (colonne A-E), poi aggiorna i totali nel foglio Cantieri via `SheetsDAO.gs`. `getMonthlyWorkData()` restituisce il calendario mensile del dipendente con tutte le registrazioni del mese richiesto.
+
+#### `AdminAPI.gs`
+API riservate agli amministratori, tutte con verifica token admin obbligatoria. `getCantieriAdminOverview()` restituisce la panoramica cantieri in due modalità (`mese` o `totali`) con cache CacheService. `getDipendentiListAdmin()` restituisce la lista dipendenti con ore e stato. `getDipendenteTimelineAdmin()` e `getOtherUserMonthlyData()` permettono di vedere i dati di un dipendente specifico. `updateWorkEntry()` e `deleteWorkEntry()` consentono la modifica o cancellazione di registrazioni. `invalidateAdminCache()` svuota la cache manualmente.
+
+#### `SheetsDAO.gs`
+Data Access Layer. Centralizza le letture/scritture dirette sui fogli Google Sheets usate da più moduli. Tutte le funzioni accedono ai fogli tramite la costante `SHEET_NAMES` (definita in `Config.gs`) invece di stringhe hardcoded, garantendo coerenza con il resto del backend. `updateCantiereHours()` aggiorna le colonne G-J (ore totali, ultimo aggiornamento, ultimo dipendente, contatore) del foglio `SHEET_NAMES.CANTIERI`. `getCantieri()` restituisce la lista cantieri con stato `Aperto` leggendo da `SHEET_NAMES.CANTIERI`. `getUserInfo()` e `getOtherUserInfo()` leggono i dati utente dal foglio Utenti. `getAllCantieriForAdmin()` restituisce tutti i cantieri senza filtro di stato, anch'essa tramite `SHEET_NAMES.CANTIERI`.
+
+#### `Utils.gs`
+Funzioni di supporto condivise da tutti i moduli API. Fornisce:
+- `Logger` — oggetto con metodi `debug`, `info`, `warn`, `error`, `auth`, `save`, `critical` (filtrati da `PRODUCTION_CONFIG`)
+- `handleError()` — gestione errori centralizzata con risposta strutturata
+- `getSheetSafely()` / `getWorksheet()` — accesso sicuro ai fogli
+- `parseDateFlexible()` — parsing date in formato italiano o ISO
+- `validateHours()` — validazione valore ore (0-24)
+- `createCORSResponse()` — costruisce la risposta HTTP con header CORS
+- `generateSessionToken()` / `buildColumnMap()` — token di sessione e mapping dinamico colonne
+
+#### `UtilsMenu.gs`
+Funzioni di supporto per gli script del menu Sheets (non usate dalle API). Contiene utility per date (`formatDateItalian`, `parseItalianDate`, `extractYear`, `dateMatches`), validazioni (`validateNumber`, `validateYear`), lettura dipendenti attivi (`getActiveEmployeeNames()`), e funzioni dialog per interazione utente dal menu Sheets (`showConfirmDialog`, `showInputDialog`, `showErrorMessage`, `showSuccessMessage`).
+
+#### `ArchivioOre.gs`
+Archiviazione annuale delle ore. Copia il foglio di un dipendente in un nuovo spreadsheet su Google Drive (cartella `Archivi Ore Lavorate/ANNO/`), genera i file Excel e PDF, poi elimina dal foglio originale le righe dell'anno archiviato. Funzioni principali: `executeArchiveAllPreviousYear()` (tutti i dipendenti), `executeArchiveSingleEmployee()` (singolo con selezione), `executeArchiveWithCustomYear()` (anno personalizzato), `displayArchiveStatus()` (stato archivi su Drive).
+
+#### `GestionePassword.gs`
+Cambio password da menu Sheets. `executeChangeEmployeePassword()` guida l'admin attraverso un flusso in tre passi: selezione utente, inserimento nuova password, aggiornamento nel foglio Utenti con hash SHA-256. Legge le colonne in modo dinamico tramite mapping header. Funzione `getUsersList()` per lista utenti attivi.
+
+#### `CalcoloCantieri.gs`
+Ricalcolo totali ore cantieri. `executeRecalculateConstructionSites()` percorre tutti i fogli dipendente, somma le ore per cantiere e riscrive le colonne G-J del foglio Cantieri. Mostra un riepilogo delle correzioni effettuate. Utile per correggere disallineamenti tra i totali e i dati effettivi.
+
+#### `ReportCommercialista.gs`
+Generazione report su Google Drive. `executeGenerateMonthlyReport()` genera un file Excel per il mese selezionato con le ore di tutti i dipendenti. `executeGenerateYearlyReport()` produce il riepilogo annuale. I file vengono salvati nella cartella `Report Commercialista` configurata in `Config.gs`. I dati aziendali nel report (nome, P.IVA, ecc.) si configurano in `CONFIG.COMPANY`.
+
+#### `SystemDiagnostic.gs`
+Diagnostica e health check. `checkSystemHealth()` esegue controlli rapidi (< 2 secondi) usati da `Main.gs` per il menu dinamico: verifica connessione database, ID spreadsheet, fogli obbligatori, permessi. `runSystemDiagnostics()` esegue una diagnostica completa con report dettagliato. Restituisce stato `healthy`, `needs_setup` o `conflict`.
 
 ---
 
@@ -133,33 +196,28 @@ A1: Data    B1: Cantiere ID    C1: Nome Cantiere    D1: Ore    E1: Note
 ```
 
 Celle riepilogative (lette dal backend):
-- `F3` → ore mese corrente
-- `G3` → ore mese precedente
-- `H3` → ore anno corrente
+- `F2` → ore mese corrente
+- `G2` → ore mese precedente
+- `H2` → ore anno corrente
 
-Formule per F3, G3, H3:
+Formule per F2, G2, H2:
 
 ```excel
-F3 =SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY()),1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY())+1,1))
+F2 =SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY()),1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY())+1,1))
 
-G3 =SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY())-1,1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY()),1))
+G2 =SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY())-1,1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY()),1))
 
-H3 =SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),1,1),A:A,"<"&DATE(YEAR(TODAY())+1,1,1))
+H2 =SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),1,1),A:A,"<"&DATE(YEAR(TODAY())+1,1,1))
 ```
 
 ### 2. Google Apps Script
 
 1. Apri il Google Sheets → **Estensioni** → **Apps Script**
-2. Crea i seguenti file nel progetto (copia i contenuti dalla cartella `Script/`):
-   - `Config.gs`
-   - `Main.gs`
-   - `Utils.gs`
-   - `GestionePassword.gs`
-   - `ReportCommercialista.gs`
-   - `CalcoloCantieri.gs`
-   - `SystemDiagnostic.gs`
-3. Crea un file aggiuntivo e incolla il contenuto di `backend/code.gs`
-4. Dal menu del foglio: **Sistema Gestionale** → **Inizializza sistema** (prima esecuzione)
+2. Crea un file per ognuno dei 14 script nella cartella `Script/` e copia il relativo contenuto:
+   - `Config.gs`, `Main.gs`, `Utils.gs`, `UtilsMenu.gs`
+   - `ApiRouter.gs`, `Authentication.gs`, `UserAPI.gs`, `AdminAPI.gs`, `SheetsDAO.gs`
+   - `ArchivioOre.gs`, `GestionePassword.gs`, `CalcoloCantieri.gs`, `ReportCommercialista.gs`, `SystemDiagnostic.gs`
+3. Dal menu del foglio: **Sistema Gestionale** → **Inizializza sistema** (prima esecuzione)
 5. **Deploy** → **Nuova distribuzione** → **App web**
    - Esegui come: **Me**
    - Accesso: **Chiunque**
@@ -274,17 +332,36 @@ COMPANY: {
 
 ---
 
+## Changelog
+
+### 2026-03-02 — code-review-docs — Rilascio versione 2.0
+
+- La codebase attuale con tutte le fix applicate viene formalmente denominata **v2.0**.
+- Il backup del codice precedente in produzione (`backend/backupOLDcode.gs`) rappresenta la **v1.0** e rimane read-only come riferimento storico.
+
+---
+
+### 2026-03-02 — gas-code-agent — Refactoring qualita codice backend
+
+- **FIX-02**: Tutti i nomi foglio hardcoded nei file `AdminAPI.gs`, `ApiRouter.gs`, `Authentication.gs`, `CalcoloCantieri.gs`, `GestionePassword.gs`, `UserAPI.gs` sostituiti con le costanti `SHEET_NAMES` di `Config.gs`.
+- **FIX-03**: Funzioni duplicate (`generatePasswordHash`, `formatFileName`, `getCurrentDateFormatted`) rimosse da `UtilsMenu.gs`; versioni canoniche mantenute in `Utils.gs` e `Config.gs`.
+- **FIX-05**: Risposte API di `AdminAPI.gs` uniformate al formato `{ success, message, data }` (rimossi campi `modalita` e `loadTime`).
+- **FIX-06**: Sostituiti tutti i `console.log/warn/error` in `Authentication.gs` con il logger centralizzato (`Logger.auth`, `Logger.debug`, `Logger.info`, `Logger.warn`, `Logger.error`).
+- **FIX-07**: 3 occorrenze della stringa hardcoded `'Cantieri'` in `SheetsDAO.gs` sostituite con `SHEET_NAMES.CANTIERI` nelle funzioni `updateCantiereHours()` (riga 23), `getCantieri()` (riga 105) e `getAllCantieriForAdmin()` (riga 157). `SheetsDAO.gs` è ora completamente allineato alla convenzione `SHEET_NAMES` condivisa da tutto il backend.
+
+---
+
 ## Aggiornamenti
 
 ### Frontend (index, dashboard, admin, config.js)
 1. Modifica i file nel repository GitHub
 2. Push → Vercel rideploya automaticamente
 
-### Backend API (backend/code.gs)
-1. Modifica il file in **Estensioni** → **Apps Script**
+### Script API (`ApiRouter.gs`, `Authentication.gs`, `UserAPI.gs`, `AdminAPI.gs`, `SheetsDAO.gs`)
+1. Modifica i file in **Estensioni** → **Apps Script**
 2. **Deploy** → **Gestisci distribuzioni** → **Modifica** → **Versione: Nuova**
 
-### Script menu (Script/*.gs)
+### Script menu (`Main.gs`, `GestionePassword.gs`, `CalcoloCantieri.gs`, ecc.)
 1. Modifica i file in Apps Script
 2. Le modifiche sono attive immediatamente (nessun deploy necessario)
 

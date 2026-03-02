@@ -40,8 +40,8 @@ function getCantieriAdminOverview(sessionToken, modalita) {
     Logger.debug('Cache miss - calcolo da foglio');
     
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    const cantieriSheet = spreadsheet.getSheetByName('Cantieri');
-    
+    const cantieriSheet = spreadsheet.getSheetByName(SHEET_NAMES.CANTIERI);
+
     if (!cantieriSheet) {
       return { success: false, message: 'Foglio Cantieri non trovato' };
     }
@@ -95,17 +95,15 @@ function getCantieriAdminOverview(sessionToken, modalita) {
     
     const result = {
       success: true,
-      data: cantieri,
       message: cantieri.length + ' cantieri caricati',
-      modalita: modalita,
-      loadTime: Date.now() - startTime
+      data: cantieri
     };
-    
+
     // Cache: 5 min mese, 30 min totali
     const cacheDuration = modalita === 'mese' ? 300 : 1800;
     cache.put(cacheKey, JSON.stringify(result), cacheDuration);
-    
-    Logger.debug('Caricati in ' + result.loadTime + 'ms (' + modalita + ')');
+
+    Logger.debug('Caricati in ' + (Date.now() - startTime) + 'ms (' + modalita + ')');
     
     return result;
     
@@ -136,7 +134,7 @@ function calcolaOreMeseCorrenteOttimizzato(spreadsheet) {
     const sheetName = sheet.getName();
     
     // Salta fogli sistema
-    if (sheetName === 'Utenti' || sheetName === 'Cantieri' || sheetName === 'Configurazione') {
+    if (sheetName === SHEET_NAMES.UTENTI || sheetName === SHEET_NAMES.CANTIERI || sheetName === 'Configurazione') {
       continue;
     }
     
@@ -190,7 +188,7 @@ function getDipendentiListAdmin(sessionToken) {
     Logger.debug('getDipendentiListAdmin');
     
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    const userSheet = spreadsheet.getSheetByName('Utenti');
+    const userSheet = spreadsheet.getSheetByName(SHEET_NAMES.UTENTI);
     const data = userSheet.getDataRange().getValues();
     const dipendenti = [];
     
@@ -214,8 +212,8 @@ function getDipendentiListAdmin(sessionToken) {
     
     return {
       success: true,
-      data: dipendenti,
-      loadTime: Date.now() - startTime
+      message: dipendenti.length + ' dipendenti trovati',
+      data: dipendenti
     };
     
   } catch (error) {
@@ -248,9 +246,9 @@ function getDipendenteTimelineAdmin(sessionToken, userId, timeframe) {
     
     // Trova nome dipendente
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    const userSheet = spreadsheet.getSheetByName('Utenti');
+    const userSheet = spreadsheet.getSheetByName(SHEET_NAMES.UTENTI);
     const userData = userSheet.getDataRange().getValues();
-    
+
     let nomeCompleto = null;
     let ruoloDipendente = null;
     
@@ -354,6 +352,7 @@ function getDipendenteTimelineAdmin(sessionToken, userId, timeframe) {
     
     const result = {
       success: true,
+      message: 'Timeline caricata per ' + nomeCompleto,
       data: {
         userId: userId,
         nome: nomeCompleto,
@@ -367,11 +366,10 @@ function getDipendenteTimelineAdmin(sessionToken, userId, timeframe) {
         oreMeseCorrente: oreMeseCorrente,
         oreMesePrecedente: oreMesePrecedente,
         oreAnnoCorrente: oreAnnoCorrente
-      },
-      loadTime: Date.now() - startTime
+      }
     };
-    
-    Logger.debug('Timeline caricata in ' + result.loadTime + 'ms');
+
+    Logger.debug('Timeline caricata in ' + (Date.now() - startTime) + 'ms');
     return result;
     
   } catch (error) {
@@ -609,7 +607,7 @@ function updateWorkEntry(sessionToken, targetUserId, dateStr, updateData) {
     }
     
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var cantieriSheet = ss.getSheetByName('Cantieri');
+    var cantieriSheet = ss.getSheetByName(SHEET_NAMES.CANTIERI);
     var nomeCantiere = 'Cantiere sconosciuto';
     var cantiereExists = false;
     

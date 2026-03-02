@@ -64,11 +64,11 @@ Un foglio per ogni dipendente attivo. Il nome del foglio corrisponde al valore n
 
 | Cella | Contenuto | Formula di esempio |
 |-------|-----------|-------------------|
-| F3 | Ore mese corrente | `=SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY()),1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY())+1,1))` |
-| G3 | Ore mese precedente | `=SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY())-1,1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY()),1))` |
-| H3 | Ore anno corrente | `=SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),1,1),A:A,"<"&DATE(YEAR(TODAY())+1,1,1))` |
+| F2 | Ore mese corrente | `=SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY()),1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY())+1,1))` |
+| G2 | Ore mese precedente | `=SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY())-1,1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY()),1))` |
+| H2 | Ore anno corrente | `=SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),1,1),A:A,"<"&DATE(YEAR(TODAY())+1,1,1))` |
 
-**Attenzione:** Le righe dati iniziano dalla riga 2. La riga 1 contiene gli header. Le celle F3, G3, H3 devono restare libere da inserimenti manuali.
+**Attenzione:** Le righe dati iniziano dalla riga 2. La riga 1 contiene gli header. Le celle F2, G2, H2 devono restare libere da inserimenti manuali (non inserire mai dati nella riga 2 delle colonne F-H).
 
 ---
 
@@ -84,11 +84,15 @@ Foglio di sistema per tracking operazioni. Gestito internamente da GAS.
 
 I seguenti fogli sono esclusi dal processing automatico dei dipendenti (definiti in `Config.gs → SYSTEM_SHEETS`):
 
-- `Amministrazione`
-- `Utenti`
-- `Cantieri`
-- `Foglio Cantieri Base`
-- (eventuali altri fogli di template o sistema)
+- `Amministrazione` — tracking operazioni interne
+- `Utenti` — anagrafica e credenziali
+- `Cantieri` — anagrafica progetti
+- `Foglio Cantieri Base` — template foglio cantiere
+- `Foglio utente Base` — template foglio dipendente (minuscolo)
+- `Foglio Utenti Base` — template foglio dipendente (maiuscolo)
+- `Tracking Archivi` — log delle operazioni di archiviazione
+
+Oltre ai nomi espliciti, `isSystemSheet()` in `Config.gs` esclude automaticamente qualsiasi foglio il cui nome contiene `Base` o `_20` (pattern anni archiviati).
 
 ---
 

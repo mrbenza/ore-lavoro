@@ -258,26 +258,6 @@ function groupRowsByConstructionSite(rows) {
   return grouped;
 }
 
-// ===== GENERAZIONE HASH PASSWORD =====
-
-/**
- * Genera hash sicuro per password
- */
-function generatePasswordHash(password) {
-  const salt = "OreLavoro2025_Salt_";
-  const dataToHash = salt + password + salt;
-  
-  const hash = Utilities.computeDigest(
-    Utilities.DigestAlgorithm.SHA_256, 
-    dataToHash,
-    Utilities.Charset.UTF_8
-  );
-  
-  return hash.map(byte => {
-    return (byte < 0 ? byte + 256 : byte).toString(16).padStart(2, '0');
-  }).join('');
-}
-
 // ===== EXPORT E CREAZIONE FILE =====
 
 /**
@@ -418,20 +398,6 @@ function formatNumberItalian(number, decimals = 2) {
     minimumFractionDigits: decimals, 
     maximumFractionDigits: decimals 
   });
-}
-
-/**
- * Formatta nome file rimuovendo caratteri speciali
- */
-function formatFileName(name) {
-  return name.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_');
-}
-
-/**
- * Ottiene data corrente formattata
- */
-function getCurrentDateFormatted() {
-  return new Date().toLocaleDateString('it-IT');
 }
 
 /**
