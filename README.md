@@ -1,283 +1,307 @@
-# 🏗️ Sistema Gestione Ore Lavoro
+# Sistema Gestione Ore Lavoro
 
-Sistema completo per la gestione delle ore di lavoro dei dipendenti con autenticazione sicura e integrazione Google Sheets.
+Sistema per la gestione delle ore di lavoro dei dipendenti con autenticazione, dashboard admin e integrazione Google Sheets.
 
-## 🎯 Overview
+**Versione:** backend v2.3 · frontend v2.2
+**Status:** Operativo
 
-**Sistema production-ready** per gestione ore lavoro, progettato per aziende 5-10 dipendenti. Architettura serverless con Google Sheets come database e GitHub Pages per hosting gratuito.
+---
 
-**Status:** ✅ **COMPLETAMENTE FUNZIONANTE** | Testato in produzione | Zero costi operativi
-
-**🔗 Demo Live:** [Accedi al Sistema](https://tuo-username.github.io/work-hours-system/)
-
-### Credenziali di Test
-- **Username:** mario.rossi
-- **Password:** nuovapassword123
-
-## 🏗️ Architettura
+## Architettura Reale
 
 ```
-Frontend (GitHub Pages) ←→ Google Apps Script ←→ Google Sheets
+Browser
+  └── Vercel (hosting statico)
+        ├── index.html       (login)
+        ├── dashboard.html   (dipendente)
+        ├── admin.html       (admin)
+        ├── config.js        (logica frontend)
+        └── /api/proxy       (proxy serverless)
+                │
+                │  HTTP GET con parametri query string
+                ▼
+        Google Apps Script   (backend/code.gs, container-bound)
+                │
+                ▼
+        Google Sheets        (database)
+                ├── Foglio "Utenti"
+                ├── Foglio "Cantieri"
+                └── Foglio "[Nome Dipendente]" × N
 ```
 
-- **Frontend:** HTML/CSS/JS puro, responsive design
-- **Backend:** Google Apps Script (serverless)
-- **Database:** Google Sheets con formule automatiche
-- **Deploy:** GitHub Pages (gratuito)
+Il frontend non chiama direttamente Google Apps Script. Tutte le richieste passano per il proxy Vercel (`api/proxy.js`) che aggiunge gli header CORS necessari.
 
-## ✨ Stato Funzionalità
+Lo script `backend/code.gs` è **container-bound**: va incollato nell'editor Script del Google Sheets, non creato come progetto standalone.
 
-### 🎯 **COMPLETATE E FUNZIONANTI** ✅
-#### Per i Dipendenti
-- 🔐 **Login sicuro** con sessione e validazione
-- ⏰ **Inserimento ore** per data e cantiere selezionabile
-- 📊 **Dashboard statistiche** ore mese corrente/precedente/anno
-- 📱 **Design responsive** - funziona perfettamente su mobile
-- 📝 **Note opzionali** per ogni inserimento
-- 🔄 **Auto-logout** per sicurezza (30 min inattività)
+---
 
-#### Calcoli Automatici (Formule Excel)
-- 📈 **Ore totali mese corrente** - aggiornate in tempo reale
-- 📉 **Ore mese precedente** - storico automatico
-- 🔢 **Statistiche derivate** (media giornaliera, giorni lavorati)
-- 📊 **Dashboard visual** con indicatori colorati
-- 💰 **Calcolo compensi** automatico (se configurato)
-
-#### Sistema e Sicurezza
-- ✅ **Autenticazione robusta** con token temporanei
-- ✅ **Validazione completa** input lato client e server
-- ✅ **Protezione dati** - righe sicure sempre ≥5
-- ✅ **CORS gestito** per chiamate API cross-origin
-- ✅ **Error handling** completo con feedback utente
-- ✅ **Versioning sistema** con info build e debug
-
-#### Gestione Cantieri
-- 🏗️ **Lista cantieri dinamica** da Google Sheets
-- 🏗️ **Filtro cantieri aperti** automatico
-- 🏗️ **Associazione automatica** nome cantiere da ID
-
-#### Architettura
-- ⚡ **Zero server costs** - GitHub Pages + Google Apps Script
-- ⚡ **Deploy automatico** via GitHub Actions
-- ⚡ **Backup nativo** Google Sheets con versioning
-- ⚡ **Scalabilità testata** fino a 10 dipendenti
-- ⚡ **Performance ottimizzate** con supporto 1000+ inserimenti
-
-### 🚧 **IN SVILUPPO** (Prossimi Sprint)
-- 🔐 **Hash password** - migrazione da password plain text
-- 📧 **Backup automatico settimanale** con email notification
-- 📊 **Log accessi sistema** per audit e debug
-- 🛡️ **Validazione avanzata** ore duplicate e overlap
-- 📱 **PWA support** per installazione mobile
-
-### 💡 **ROADMAP FUTURA** (Nice to Have)
-#### Funzionalità Business
-- 📈 **Dashboard admin** - vista globale tutti i dipendenti
-- 📊 **Export Excel mensile** per commercialista/HR
-- 📧 **Notifiche automatiche** ore mancanti fine mese
-- 📋 **Gestione ferie/permessi** integrata
-- 💰 **Calcolo buste paga** con ore straordinario
-- 🎯 **Target ore mensili** per dipendente
-
-#### Miglioramenti UX
-- 🔍 **Ricerca storico** inserimenti per periodo
-- 📅 **Calendar view** ore lavorate
-- 🎨 **Temi personalizzabili** aziendali
-- 📱 **App nativa mobile** (se necessario)
-- 🔄 **Sync offline** per lavoro senza connessione
-
-#### Integrazioni
-- 📊 **Google Analytics** per usage tracking
-- 📧 **Gmail integration** per report automatici
-- 📅 **Google Calendar** sync giorni lavorativi
-- 💾 **Drive backup** automatico documenti
-- 🔗 **API esterna** per sistemi payroll
-
-#### Enterprise Features (se cresce l'azienda)
-- 👥 **Gestione team/progetti** gerarchica
-- 🔐 **SSO integration** (Google Workspace)
-- 📋 **Approval workflow** ore straordinario
-- 📊 **Business Intelligence** reporting avanzato
-- 🌍 **Multi-lingua** per dipendenti internazionali
-
-## 🚀 Setup Iniziale
-
-### 1. Preparazione Google Sheets
-
-1. Crea un nuovo Google Sheets
-2. Rinomina il primo foglio in "Utenti"
-3. Crea la struttura:
-
-| A | B | C | D | E | F | G | H | I |
-|---|---|---|---|---|---|---|---|---|
-| ID Utente | Nome Completo | Email | Telefono | Data Assunzione | Username | Password | Password Hash | Attivo |
-| U001 | Mario Rossi | mario@email.com | 123456789 | 01/01/2024 | mario.rossi | nuovapassword123 | | Si |
-
-4. Crea un foglio "Cantieri":
-
-| A | B | C | D |
-|---|---|---|---|
-| ID Cantiere | Nome Progetto | Indirizzo | Stato Lavori |
-| C001 | Costruzione Villa | Via Roma 123 | Aperto |
-
-5. Per ogni dipendente, crea un foglio con il suo **Nome Completo** (es. "Mario Rossi")
-6. Nel foglio dipendente, aggiungi nelle celle F3 e G3 le formule per calcolare ore mese corrente e precedente
-
-### 2. Setup Google Apps Script
-
-1. Vai su [script.google.com](https://script.google.com)
-2. Crea nuovo progetto "Sistema Gestione Ore"
-3. Incolla il codice da `backend/code.gs`
-4. Aggiorna `SPREADSHEET_ID` con l'ID del tuo foglio
-5. **Deploy** → **New deployment** → **Web app**
-   - Execute as: **Me**
-   - Who has access: **Anyone**
-6. Copia l'URL del deployment
-
-### 3. Configurazione Frontend
-
-1. Apri `config.js`
-2. Aggiorna `APPS_SCRIPT_URL` con l'URL copiato al passo precedente
-
-### 4. Deploy su GitHub Pages
-
-1. Crea repository GitHub
-2. Carica tutti i file del progetto
-3. **Settings** → **Pages** → **Deploy from branch: main**
-4. Il sito sarà disponibile su `https://username.github.io/repository-name/`
-
-## 📁 Struttura File
+## Struttura File
 
 ```
-work-hours-system/
-├── index.html              # Pagina login
-├── dashboard.html          # Dashboard principale  
-├── config.js               # Configurazione sistema
+ore-lavoro/
+├── index.html              # Login (V2.2)
+├── dashboard.html          # Dashboard dipendente
+├── admin.html              # Dashboard admin
+├── config.js               # Config + Utils + PageGuard (frontend)
+├── vercel.json             # Configurazione deploy Vercel
 ├── package.json            # Metadati progetto
-├── README.md               # Questa documentazione
 ├── backend/
-│   └── code.gs            # Codice Google Apps Script
+│   └── code.gs            # API Google Apps Script (V2.3)
 ├── api/
-│   └── proxy.js           # Proxy Vercel (opzionale)
-└── vercel.json            # Config Vercel (opzionale)
+│   └── proxy.js           # Proxy Vercel → Apps Script (CORS)
+└── Script/                 # Script menu interno Google Sheets
+    ├── Config.gs           # Costanti e configurazione backend
+    ├── Main.gs             # Menu onOpen() nel foglio
+    ├── Utils.gs            # Funzioni utility condivise
+    ├── GestionePassword.gs # Cambio password da menu Sheets
+    ├── ReportCommercialista.gs # Generazione PDF/Excel su Drive
+    ├── CalcoloCantieri.gs  # Ricalcolo totali ore cantieri
+    └── SystemDiagnostic.gs # Diagnostica e health check
 ```
 
-## 🔧 Gestione Utenti
+### Differenza tra `backend/code.gs` e `Script/`
 
-### Aggiungere un Nuovo Dipendente
+| | `backend/code.gs` | `Script/*.gs` |
+|---|---|---|
+| Scopo | API HTTP per il frontend web | Menu interattivo dentro Google Sheets |
+| Chiamato da | Browser via proxy Vercel | Utente che apre il foglio Google Sheets |
+| Funzioni | Login, salva ore, lettura cantieri | Archivia dati, cambia password, genera report |
 
-1. **Nel foglio "Utenti"** aggiungi riga:
+Entrambi vanno nello stesso progetto Apps Script del foglio.
+
+---
+
+## Funzionalità Implementate
+
+### Per i dipendenti (dashboard.html)
+- Login con hash SHA-256 (auto-migrazione da plain text al primo accesso)
+- Inserimento ore per data e cantiere
+- Statistiche mese corrente, mese precedente, anno corrente
+- Auto-logout dopo 30 minuti di inattività
+- Design responsive
+
+### Per gli admin (admin.html)
+- Accesso automatico dopo login se ruolo = `Admin` o `Administrator`
+- Vista globale cantieri con toggle "mese corrente / totali assoluti"
+- Lista dipendenti con ore e stato
+- Calendario mensile per singolo dipendente
+- Auto-refresh ogni 30 minuti
+
+### Menu Google Sheets (Script/)
+- **Archivio:** archivia anni precedenti per tutti o per singolo dipendente
+- **Gestione Password:** cambio password con dialog interattivo
+- **Report Commercialista:** genera PDF ed Excel mensili/annuali su Google Drive
+- **Gestione Cantieri:** ricalcolo totali ore con report correzioni
+- **Diagnostica:** health check del sistema (configurazione, fogli, permessi)
+
+### Sicurezza
+- Password hash SHA-256 con salt fisso (`OreLavoro2025_Salt_`)
+- Auto-migrazione: la prima volta che un utente plain-text effettua il login, la password viene convertita in hash
+- Mappatura colonne dinamica: il backend legge gli header per nome, non per posizione fissa
+- Token di sessione generato lato server ad ogni login
+
+---
+
+## Setup
+
+### 1. Google Sheets — struttura fogli
+
+**Foglio "Utenti"** (10 colonne, A→J):
+
+| A | B | C | D | E | F | G | H | I | J |
+|---|---|---|---|---|---|---|---|---|---|
+| ID Utente | Nome Completo | Email | Telefono | Data Assunzione | Ruolo | Username | Password | Password Hash | Attivo |
+| U001 | Mario Rossi | mario@email.com | 123456789 | 01/01/2024 | Dipendente | mario.rossi | password123 | | Si |
+| U002 | Anna Verdi | anna@email.com | 987654321 | 01/03/2024 | Admin | anna.verdi | admin123 | | Si |
+
+Valori validi per **Ruolo**: `Dipendente`, `Admin`, `Administrator`
+Valori validi per **Attivo**: `Si`, `SI`, `si`
+
+**Foglio "Cantieri"** (minimo 4 colonne, fino a J):
+
+| A | B | C | D | ... | G | H | I | J |
+|---|---|---|---|---|---|---|---|---|
+| ID Cantiere | Nome Progetto | Indirizzo | Stato Lavori | ... | Ore Totali | Ultimo Aggiornamento | Ultimo Dipendente | N. Inserimenti |
+| C001 | Costruzione Villa | Via Roma 123 | Aperto | | 0 | | | 0 |
+
+Le colonne G→J vengono aggiornate automaticamente dal backend ad ogni inserimento ore.
+
+**Foglio per ogni dipendente** (nome = "Nome Completo" del foglio Utenti):
+
+```
+A1: Data    B1: Cantiere ID    C1: Nome Cantiere    D1: Ore    E1: Note
+```
+
+Celle riepilogative (lette dal backend):
+- `F3` → ore mese corrente
+- `G3` → ore mese precedente
+- `H3` → ore anno corrente
+
+Formule per F3, G3, H3:
+
+```excel
+F3 =SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY()),1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY())+1,1))
+
+G3 =SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY())-1,1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY()),1))
+
+H3 =SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),1,1),A:A,"<"&DATE(YEAR(TODAY())+1,1,1))
+```
+
+### 2. Google Apps Script
+
+1. Apri il Google Sheets → **Estensioni** → **Apps Script**
+2. Crea i seguenti file nel progetto (copia i contenuti dalla cartella `Script/`):
+   - `Config.gs`
+   - `Main.gs`
+   - `Utils.gs`
+   - `GestionePassword.gs`
+   - `ReportCommercialista.gs`
+   - `CalcoloCantieri.gs`
+   - `SystemDiagnostic.gs`
+3. Crea un file aggiuntivo e incolla il contenuto di `backend/code.gs`
+4. Dal menu del foglio: **Sistema Gestionale** → **Inizializza sistema** (prima esecuzione)
+5. **Deploy** → **Nuova distribuzione** → **App web**
+   - Esegui come: **Me**
+   - Accesso: **Chiunque**
+6. Copia l'URL generato
+
+### 3. Proxy Vercel
+
+Apri `api/proxy.js` e aggiorna la costante con l'URL copiato al passo precedente:
+
+```js
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/TUO_ID/exec';
+```
+
+> Alternativa: usa una variabile d'ambiente Vercel (`process.env.APPS_SCRIPT_URL`) per non esporre l'URL nel codice.
+
+### 4. Deploy su Vercel
+
+1. Crea repository GitHub e carica il progetto
+2. Importa il repository su [vercel.com](https://vercel.com)
+3. Nessun build command — il progetto è statico (già configurato in `vercel.json`)
+4. Il sito sarà disponibile su `https://nome-progetto.vercel.app`
+
+`config.js` è già configurato con URL relativo `/api/proxy`: non serve modificarlo.
+
+---
+
+## Gestione Utenti
+
+### Aggiungere un dipendente
+
+1. Nel foglio **Utenti** aggiungi una riga:
    ```
-   U005 | Giuseppe Bianchi | giuseppe@email.com | 987654321 | 15/06/2024 | giuseppe.bianchi | password123 | | Si
+   U003 | Giuseppe Bianchi | giuseppe@email.com | 345678901 | 15/06/2024 | Dipendente | giuseppe.bianchi | password123 | | Si
    ```
+2. Crea un foglio chiamato esattamente **Giuseppe Bianchi**
+3. Aggiungi intestazioni in riga 1 e le formule in F3, G3, H3
 
-2. **Crea foglio individuale** chiamato "Giuseppe Bianchi"
+### Disattivare un dipendente
 
-3. **Aggiungi structure base:**
-   ```
-   A1: Data | B1: Cantiere ID | C1: Nome Cantiere | D1: Ore | E1: Note
-   F3: =FORMULA_ORE_MESE_CORRENTE
-   G3: =FORMULA_ORE_MESE_PRECEDENTE
-   ```
+Nel foglio **Utenti**, colonna J (`Attivo`): cambia `Si` in `No`.
 
-### Disattivare un Dipendente
+### Cambiare password
 
-Nel foglio "Utenti" cambia la colonna I da "Si" a "No"
+Dal menu del foglio Google Sheets: **Sistema Gestionale** → **Gestione Password** → **Cambia password dipendente**
 
-## 🏗️ Gestione Cantieri
+---
 
-### Aggiungere Nuovo Cantiere
+## Gestione Cantieri
 
-Nel foglio "Cantieri":
+### Aggiungere un cantiere
+
+Nel foglio **Cantieri**:
 ```
 C005 | Ristrutturazione Ufficio | Via Milano 45 | Aperto
 ```
 
-### Chiudere un Cantiere
+### Chiudere un cantiere
 
-Cambia "Stato Lavori" da "Aperto" a "Chiuso"
+Colonna D (`Stato Lavori`): cambia `Aperto` in `Chiuso`. Il cantiere non apparirà più nella lista del frontend.
 
-## 🐛 Troubleshooting
+### Ricalcolare i totali
 
-### "Errore di connessione"
-- ✅ Verifica URL Google Apps Script in `config.js`
-- ✅ Controlla che il deployment sia pubblico
-- ✅ Verifica permessi del Google Sheets
+Dal menu Google Sheets: **Sistema Gestionale** → **Gestione Cantieri** → **Ricalcola totali ore cantieri**
 
-### "Login non funziona"
-- ✅ Controlla username/password nel foglio "Utenti"
-- ✅ Verifica che "Attivo" = "Si"
-- ✅ Controlla console browser per errori
-
-### "Cantieri non si caricano"
-- ✅ Verifica esistenza foglio "Cantieri"
-- ✅ Controlla che ci siano cantieri con "Stato Lavori" = "Aperto"
-
-### "Ore non si salvano"
-- ✅ Verifica esistenza foglio con nome dipendente
-- ✅ Controlla permessi di scrittura Google Sheets
-
-## 💡 Formule Excel Utili
-
-### Ore Mese Corrente (cella F3 nel foglio dipendente):
-```excel
-=SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY()),1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY())+1,1))
-```
-
-### Ore Mese Precedente (cella G3 nel foglio dipendente):
-```excel
-=SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY())-1,1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY()),1))
-```
-
-## 📊 Backup e Sicurezza
-
-### Backup Automatico
-- Google Sheets ha versioning automatico
-- **File** → **Cronologia versioni** per ripristinare
-
-### Backup Manuale
-1. **File** → **Scarica** → **Excel** (settimanale)
-2. Salva in Google Drive folder dedicato
-
-### Sicurezza
-- Condividi Google Sheets solo con utenti necessari
-- Usa password diverse per ogni dipendente
-- Cambia URL Google Apps Script se compromesso
-
-## 🔄 Aggiornamenti Sistema
-
-### Per aggiornare il frontend:
-1. Modifica files in repository GitHub
-2. Push → deployment automatico GitHub Pages
-
-### Per aggiornare il backend:
-1. Modifica `code.gs` in Google Apps Script
-2. **Deploy** → **Manage deployments** → **Edit** → **Version: New**
-
-## 📞 Supporto
-
-### Log e Debug
-- Console browser (F12) per errori frontend
-- Google Apps Script → **Executions** per errori backend
-- Google Sheets → **Cronologia versioni** per controllo modifiche
-
-### Limiti Conosciuti
-- **Max 10 dipendenti** (ottimale per performance)
-- **Google Sheets**: 10M celle totali
-- **Apps Script**: 6 min runtime per esecuzione
-- **Sessione**: 24 ore di durata
-
-## 📄 Licenza
-
-MIT License - Libero per uso commerciale e personale.
+Questo percorre tutti i fogli dipendente e riscrive i valori nelle colonne G→J del foglio Cantieri.
 
 ---
 
-**✨ Sistema progettato per semplicità e affidabilità. Principio KISS applicato con successo! ✨**
+## Troubleshooting
 
-**🏆 Achievement Unlocked:** *Production System con €0 operational costs*
+### "Errore di connessione" nel browser
+- Controlla che `api/proxy.js` contenga l'URL corretto di Apps Script
+- Verifica che il deployment Apps Script sia pubblico (`Anyone`)
+- Controlla il log delle funzioni in Vercel (tab **Functions**)
 
-**Versione:** 3.3.0 (Production-Stable)  
-**Status:** ✅ Fully Operational  
-**Ultima modifica:** Giugno 2025  
-**Battle-tested:** 10 dipendenti, 500+ ore inserite, 6 mesi uptime
+### "Login non funziona"
+- Controlla che username e password siano nel foglio **Utenti**
+- Verifica che la colonna J (`Attivo`) sia `Si`
+- Se la colonna H (`Password Hash`) è vuota, viene usata la password plain dalla colonna I — questo è il comportamento previsto al primo accesso
+
+### "Cantieri non si caricano"
+- Verifica che esista il foglio **Cantieri**
+- Verifica che almeno un cantiere abbia `Stato Lavori` = `Aperto`
+
+### "Ore non si salvano"
+- Verifica che esista un foglio col nome esatto del dipendente (uguale a "Nome Completo" nel foglio Utenti)
+- Controlla i permessi di scrittura del Google Sheets
+
+### "Menu non appare in Google Sheets"
+- Ricarica il foglio (il menu viene creato da `onOpen()`)
+- Controlla **Estensioni** → **Apps Script** → **Esecuzioni** per errori
+
+---
+
+## Report Commercialista
+
+Dal menu Google Sheets: **Sistema Gestionale** → **Report Commercialista**
+
+I report vengono salvati su Google Drive nella cartella `Report Commercialista`.
+Formati disponibili: PDF e Excel (.xlsx).
+
+Per configurare i dati aziendali che appaiono nel report, modifica `Script/Config.gs`:
+
+```js
+COMPANY: {
+  NAME: 'La Tua Azienda SRL',
+  ADDRESS: 'Via Roma 123, 00100 Roma',
+  VAT: 'IT12345678901',
+  ...
+}
+```
+
+---
+
+## Aggiornamenti
+
+### Frontend (index, dashboard, admin, config.js)
+1. Modifica i file nel repository GitHub
+2. Push → Vercel rideploya automaticamente
+
+### Backend API (backend/code.gs)
+1. Modifica il file in **Estensioni** → **Apps Script**
+2. **Deploy** → **Gestisci distribuzioni** → **Modifica** → **Versione: Nuova**
+
+### Script menu (Script/*.gs)
+1. Modifica i file in Apps Script
+2. Le modifiche sono attive immediatamente (nessun deploy necessario)
+
+---
+
+## Limiti del Sistema
+
+| Risorsa | Limite |
+|---|---|
+| Dipendenti | ~10 (ottimale per performance) |
+| Google Sheets | 10 milioni di celle totali |
+| Apps Script runtime | 6 minuti per esecuzione |
+| Sessione utente | 30 minuti di inattività |
+| Vercel proxy timeout | 30 secondi per richiesta |
+
+---
+
+## Licenza
+
+MIT License — libero per uso commerciale e personale.
