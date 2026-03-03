@@ -1438,11 +1438,11 @@
             if (!currentUser) return;
             
             if (elements.userName) elements.userName.textContent = currentUser.name;
-            if (elements.monthlyHours && Utils.formatHours) {
-                elements.monthlyHours.textContent = Utils.formatHours(currentUser.oreMese || 0);
+            if (elements.monthlyHours) {
+                elements.monthlyHours.textContent = '...';
             }
-            if (elements.previousMonthHours && Utils.formatHours) {
-                elements.previousMonthHours.textContent = Utils.formatHours(currentUser.oreMesePrecedente || 0);
+            if (elements.previousMonthHours) {
+                elements.previousMonthHours.textContent = '...';
             }
         }
 
@@ -1624,7 +1624,7 @@
                     action: 'getUserInfo',
                     sessionToken: sessionToken
                 });
-                
+
                 if (result.success && result.data) {
                     currentUser = { ...currentUser, ...result.data };
                     if (elements.monthlyHours && Utils.formatHours) {
@@ -1633,9 +1633,25 @@
                     if (elements.previousMonthHours && Utils.formatHours) {
                         elements.previousMonthHours.textContent = Utils.formatHours(result.data.oreMesePrecedente || 0);
                     }
+                } else {
+                    // Fallback ai dati sessione se l'API non restituisce dati validi
+                    console.warn('[refreshUserStats] API non ha restituito dati validi:', result?.message);
+                    if (elements.monthlyHours && Utils.formatHours) {
+                        elements.monthlyHours.textContent = Utils.formatHours(currentUser?.oreMese || 0);
+                    }
+                    if (elements.previousMonthHours && Utils.formatHours) {
+                        elements.previousMonthHours.textContent = Utils.formatHours(currentUser?.oreMesePrecedente || 0);
+                    }
                 }
             } catch (error) {
-                // Silent fail
+                console.error('[refreshUserStats] Errore caricamento dati:', error);
+                // Fallback ai dati sessione in caso di errore di rete
+                if (elements.monthlyHours && Utils.formatHours) {
+                    elements.monthlyHours.textContent = Utils.formatHours(currentUser?.oreMese || 0);
+                }
+                if (elements.previousMonthHours && Utils.formatHours) {
+                    elements.previousMonthHours.textContent = Utils.formatHours(currentUser?.oreMesePrecedente || 0);
+                }
             }
         }
 

@@ -200,47 +200,66 @@ function getAllCantieriForAdmin(sessionToken) {
 // ========================================
 
 /**
- * Ritorna info ore utente corrente
- * IDENTICO al tuo code.gs
+ * Ritorna info ore utente corrente.
+ * Usa mapping dinamico delle colonne (come Authentication.gs) per evitare
+ * dipendenza da indici fissi e garantire confronto robusto con .toString().trim().
+ *
+ * @param {string} sessionToken - Token di sessione nel formato "username_timestamp_hash"
+ * @returns {{success: boolean, data?: {oreMese, oreMesePrecedente, oreAnno}, message?: string}}
  */
 function getUserInfo(sessionToken) {
   if (!validateSessionToken(sessionToken)) {
     return { success: false, message: 'Token di sessione non valido' };
   }
-  
+
   try {
     var userId = String(sessionToken).split('_')[0];
     var userSheet = getWorksheet();
     var lastRow = userSheet.getLastRow();
-    
+
     if (lastRow < 2) {
       return { success: false, message: 'Utente non trovato' };
     }
 
-    var userIds = userSheet.getRange(2, COLUMNS.USER_ID + 1, lastRow - 1, 1)
-      .getValues()
-      .map(r => r[0]);
-    
-    var idx0 = indexOfValue(userIds, userId);
-    
-    if (idx0 === -1) {
+    // Mapping dinamico delle colonne (come Authentication.gs)
+    var headers = userSheet.getRange(1, 1, 1, userSheet.getLastColumn()).getValues()[0];
+    var columnMap = buildColumnMap(headers);
+
+    if (columnMap['Username'] === undefined) {
+      return { success: false, message: 'Colonna Username non trovata nel foglio' };
+    }
+
+    // Leggi tutti i dati e cerca l'utente con .toString().trim() (come Authentication.gs)
+    var userData = userSheet.getRange(2, 1, lastRow - 1, userSheet.getLastColumn()).getValues();
+
+    var userRow = null;
+    var rowIndex1 = -1;
+
+    for (var i = 0; i < userData.length; i++) {
+      var rowUsername = userData[i][columnMap['Username']];
+      if (rowUsername && rowUsername.toString().trim() === userId) {
+        userRow = userData[i];
+        rowIndex1 = i + 2;
+        break;
+      }
+    }
+
+    if (!userRow) {
       return { success: false, message: 'Utente non trovato' };
     }
 
-    var rowIndex1 = idx0 + 2;
-    var row = userSheet.getRange(rowIndex1, 1, 1, userSheet.getLastColumn()).getValues()[0];
-    var userName = row[COLUMNS.NOME];
+    var userName = userRow[columnMap['Nome Completo']];
     var oreData = getUserHoursFromSheet(userName);
 
-    return { 
-      success: true, 
-      data: { 
-        oreMese: oreData.oreMeseCorrente, 
-        oreMesePrecedente: oreData.oreMesePrecedente, 
-        oreAnno: oreData.oreAnnoCorrente 
-      } 
+    return {
+      success: true,
+      data: {
+        oreMese: oreData.oreMeseCorrente,
+        oreMesePrecedente: oreData.oreMesePrecedente,
+        oreAnno: oreData.oreAnnoCorrente
+      }
     };
-    
+
   } catch (error) {
     return handleError('getUserInfo', error);
   }
