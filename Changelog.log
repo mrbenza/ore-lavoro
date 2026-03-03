@@ -1,0 +1,49 @@
+## Changelog
+
+### 2026-03-03 — ui-frontend-developer — Fix caricamento dati e gestione errori dashboard
+
+- **FIX-08**: `loadUserData()` ora mostra `"..."` come placeholder per ore mese corrente e mese precedente al posto di leggere i valori dalla sessione (che potevano essere 0 errati). I valori reali vengono caricati esclusivamente da `refreshUserStats()` in un secondo momento.
+- **FIX-09**: `refreshUserStats()` rimosso il silent fail. Aggiunta gestione esplicita dei tre casi: `result.success === true` aggiorna i dati freschi dall'API; `result.success === false` usa fallback ai dati sessione con `console.warn`; eccezione di rete usa fallback ai dati sessione con `console.error`.
+- **FIX-10**: `loadCantieri()` rimosso il silent fail su `result.success === false`. Aggiunto blocco `else` che mostra "Nessun cantiere disponibile" nel dropdown e notifica l'utente con un messaggio di errore.
+
+---
+
+### 2026-03-03 — gas-code-agent — Fix accesso colonne e calcolo ore backend
+
+- **FIX-11**: `getUserInfo()` in `SheetsDAO.gs` — sostituito l'accesso tramite indice fisso di colonna (`COLUMNS.USER_ID = 6`) con mapping dinamico tramite `buildColumnMap(headers)`, allineando l'approccio a quello già usato in `Authentication.gs`. Aggiunta comparazione robusta `.toString().trim()` per la ricerca dell'username, eliminando mismatch causati da spazi trailing o tipo diverso di cella.
+- **FIX-12**: `getUserHoursFromSheet()` in `Authentication.gs` — aggiunto fallback a calcolo diretto a due stadi. Stage 1: lettura celle SUMIFS (`F2`, `G2`, `H2`) come path veloce se le formule sono presenti. Stage 2 (nuovo): se tutte e 3 le celle SUMIFS ritornano 0, scorre le righe dati dalla riga `CONFIG.DATA_STRUCTURE.HEADER_ROWS + 1` in poi e somma colonna D per mese corrente, mese precedente e anno corrente. Gestisce sia oggetti `Date` che stringhe di data e il caso bordo gennaio (mese precedente = dicembre dell'anno precedente).
+
+---
+
+### 2026-03-02 — code-review-docs — Rilascio versione 2.0
+
+- La codebase attuale con tutte le fix applicate viene formalmente denominata **v2.0**.
+- Il backup del codice precedente in produzione (`backend/backupOLDcode.gs`) rappresenta la **v1.0** e rimane read-only come riferimento storico.
+
+---
+
+### 2026-03-02 — gas-code-agent — Refactoring qualita codice backend
+
+- **FIX-02**: Tutti i nomi foglio hardcoded nei file `AdminAPI.gs`, `ApiRouter.gs`, `Authentication.gs`, `CalcoloCantieri.gs`, `GestionePassword.gs`, `UserAPI.gs` sostituiti con le costanti `SHEET_NAMES` di `Config.gs`.
+- **FIX-03**: Funzioni duplicate (`generatePasswordHash`, `formatFileName`, `getCurrentDateFormatted`) rimosse da `UtilsMenu.gs`; versioni canoniche mantenute in `Utils.gs` e `Config.gs`.
+- **FIX-05**: Risposte API di `AdminAPI.gs` uniformate al formato `{ success, message, data }` (rimossi campi `modalita` e `loadTime`).
+- **FIX-06**: Sostituiti tutti i `console.log/warn/error` in `Authentication.gs` con il logger centralizzato (`Logger.auth`, `Logger.debug`, `Logger.info`, `Logger.warn`, `Logger.error`).
+- **FIX-07**: 3 occorrenze della stringa hardcoded `'Cantieri'` in `SheetsDAO.gs` sostituite con `SHEET_NAMES.CANTIERI` nelle funzioni `updateCantiereHours()` (riga 23), `getCantieri()` (riga 105) e `getAllCantieriForAdmin()` (riga 157). `SheetsDAO.gs` è ora completamente allineato alla convenzione `SHEET_NAMES` condivisa da tutto il backend.
+
+---
+
+## Aggiornamenti
+
+### Frontend (index, dashboard, admin, config.js)
+1. Modifica i file nel repository GitHub
+2. Push → Vercel rideploya automaticamente
+
+### Script API (`ApiRouter.gs`, `Authentication.gs`, `UserAPI.gs`, `AdminAPI.gs`, `SheetsDAO.gs`)
+1. Modifica i file in **Estensioni** → **Apps Script**
+2. **Deploy** → **Gestisci distribuzioni** → **Modifica** → **Versione: Nuova**
+
+### Script menu (`Main.gs`, `GestionePassword.gs`, `CalcoloCantieri.gs`, ecc.)
+1. Modifica i file in Apps Script
+2. Le modifiche sono attive immediatamente (nessun deploy necessario)
+
+---

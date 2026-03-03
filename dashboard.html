@@ -1459,7 +1459,7 @@
                 if (result.success && result.data) {
                     cantieri = result.data;
                     elements.cantiere.innerHTML = '<option value="">-- Seleziona Cantiere --</option>';
-                    
+
                     const fragment = document.createDocumentFragment();
                     cantieri.forEach(cantiere => {
                         const option = document.createElement('option');
@@ -1468,6 +1468,10 @@
                         fragment.appendChild(option);
                     });
                     elements.cantiere.appendChild(fragment);
+                } else {
+                    console.warn('[loadCantieri] API non ha restituito dati validi:', result?.message);
+                    elements.cantiere.innerHTML = '<option value="">Nessun cantiere disponibile</option>';
+                    showNotification('Impossibile caricare i cantieri', 'error');
                 }
             } catch (error) {
                 console.error('Errore cantieri:', error);

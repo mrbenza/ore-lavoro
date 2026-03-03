@@ -199,35 +199,83 @@ function verifyUserPassword(userRow, password, columnMap) {
 // ========================================
 
 /**
- * Legge ore riepilogative dal foglio personale dell'utente
- * IDENTICO al tuo code.gs
+ * Legge ore riepilogative dal foglio personale dell'utente.
+ * Prima prova le celle SUMIFS (F2, G2, H2); se tutte a 0 (formule mancanti),
+ * calcola direttamente dalle righe dati (riga 5 in poi, HEADER_ROWS = 4).
+ *
+ * @param {string} userName - Nome completo utente (= nome foglio personale)
+ * @return {{oreMeseCorrente: number, oreMesePrecedente: number, oreAnnoCorrente: number}}
  */
 function getUserHoursFromSheet(userName) {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var userSheet = getSheetSafely(ss, userName);
-    
+
     if (!userSheet) {
       Logger.warn('Foglio "' + userName + '" non trovato');
       return { oreMeseCorrente: 0, oreMesePrecedente: 0, oreAnnoCorrente: 0 };
     }
-    
-    var oreMeseCorrente = userSheet.getRange(USER_SHEET_CELLS.ORE_MESE_CORRENTE).getValue() || 0;
-    var oreMesePrecedente = userSheet.getRange(USER_SHEET_CELLS.ORE_MESE_PRECEDENTE).getValue() || 0;
+
+    // Prima prova: leggi dalle celle SUMIFS (F2, G2, H2)
+    var oreMeseCorrente = parseFloat(userSheet.getRange(USER_SHEET_CELLS.ORE_MESE_CORRENTE).getValue()) || 0;
+    var oreMesePrecedente = parseFloat(userSheet.getRange(USER_SHEET_CELLS.ORE_MESE_PRECEDENTE).getValue()) || 0;
     var oreAnnoCorrente = 0;
-    
-    try { 
-      oreAnnoCorrente = userSheet.getRange(USER_SHEET_CELLS.ANNO_CORRENTE).getValue() || 0; 
-    } catch (e) { 
-      /* cella assente */ 
+    try {
+      oreAnnoCorrente = parseFloat(userSheet.getRange(USER_SHEET_CELLS.ANNO_CORRENTE).getValue()) || 0;
+    } catch (e) { /* cella assente */ }
+
+    // Fallback: se le celle SUMIFS sono tutte 0, calcola direttamente dai dati
+    if (oreMeseCorrente === 0 && oreMesePrecedente === 0 && oreAnnoCorrente === 0) {
+      var lastRow = userSheet.getLastRow();
+      var firstDataRow = CONFIG.DATA_STRUCTURE.HEADER_ROWS + 1; // riga 5
+
+      if (lastRow >= firstDataRow) {
+        var numRows = lastRow - firstDataRow + 1;
+        // Legge colonne A (Data) e D (Ore) — indici 0 e 3
+        var data = userSheet.getRange(firstDataRow, 1, numRows, 4).getValues();
+
+        var oggi = new Date();
+        var meseCorrente = oggi.getMonth();
+        var annoCorrente = oggi.getFullYear();
+        var mesePrecedente = meseCorrente === 0 ? 11 : meseCorrente - 1;
+        var annoPrecedente = meseCorrente === 0 ? annoCorrente - 1 : annoCorrente;
+
+        for (var i = 0; i < data.length; i++) {
+          var dataLavoro = data[i][0]; // colonna A
+          var ore = parseFloat(data[i][3]) || 0; // colonna D
+
+          if (!dataLavoro || ore <= 0) continue;
+
+          var d;
+          if (dataLavoro instanceof Date) {
+            d = dataLavoro;
+          } else {
+            d = new Date(dataLavoro);
+            if (isNaN(d.getTime())) continue;
+          }
+
+          var anno = d.getFullYear();
+          var mese = d.getMonth();
+
+          if (anno === annoCorrente && mese === meseCorrente) {
+            oreMeseCorrente += ore;
+          }
+          if (anno === annoPrecedente && mese === mesePrecedente) {
+            oreMesePrecedente += ore;
+          }
+          if (anno === annoCorrente) {
+            oreAnnoCorrente += ore;
+          }
+        }
+      }
     }
-    
+
     return {
-      oreMeseCorrente: parseFloat(oreMeseCorrente) || 0,
-      oreMesePrecedente: parseFloat(oreMesePrecedente) || 0,
-      oreAnnoCorrente: parseFloat(oreAnnoCorrente) || 0
+      oreMeseCorrente: oreMeseCorrente,
+      oreMesePrecedente: oreMesePrecedente,
+      oreAnnoCorrente: oreAnnoCorrente
     };
-    
+
   } catch (error) {
     Logger.error('Errore lettura ore per ' + userName + ':', error);
     return { oreMeseCorrente: 0, oreMesePrecedente: 0, oreAnnoCorrente: 0 };

@@ -332,40 +332,7 @@ COMPANY: {
 
 ---
 
-## Changelog
 
-### 2026-03-02 — code-review-docs — Rilascio versione 2.0
-
-- La codebase attuale con tutte le fix applicate viene formalmente denominata **v2.0**.
-- Il backup del codice precedente in produzione (`backend/backupOLDcode.gs`) rappresenta la **v1.0** e rimane read-only come riferimento storico.
-
----
-
-### 2026-03-02 — gas-code-agent — Refactoring qualita codice backend
-
-- **FIX-02**: Tutti i nomi foglio hardcoded nei file `AdminAPI.gs`, `ApiRouter.gs`, `Authentication.gs`, `CalcoloCantieri.gs`, `GestionePassword.gs`, `UserAPI.gs` sostituiti con le costanti `SHEET_NAMES` di `Config.gs`.
-- **FIX-03**: Funzioni duplicate (`generatePasswordHash`, `formatFileName`, `getCurrentDateFormatted`) rimosse da `UtilsMenu.gs`; versioni canoniche mantenute in `Utils.gs` e `Config.gs`.
-- **FIX-05**: Risposte API di `AdminAPI.gs` uniformate al formato `{ success, message, data }` (rimossi campi `modalita` e `loadTime`).
-- **FIX-06**: Sostituiti tutti i `console.log/warn/error` in `Authentication.gs` con il logger centralizzato (`Logger.auth`, `Logger.debug`, `Logger.info`, `Logger.warn`, `Logger.error`).
-- **FIX-07**: 3 occorrenze della stringa hardcoded `'Cantieri'` in `SheetsDAO.gs` sostituite con `SHEET_NAMES.CANTIERI` nelle funzioni `updateCantiereHours()` (riga 23), `getCantieri()` (riga 105) e `getAllCantieriForAdmin()` (riga 157). `SheetsDAO.gs` è ora completamente allineato alla convenzione `SHEET_NAMES` condivisa da tutto il backend.
-
----
-
-## Aggiornamenti
-
-### Frontend (index, dashboard, admin, config.js)
-1. Modifica i file nel repository GitHub
-2. Push → Vercel rideploya automaticamente
-
-### Script API (`ApiRouter.gs`, `Authentication.gs`, `UserAPI.gs`, `AdminAPI.gs`, `SheetsDAO.gs`)
-1. Modifica i file in **Estensioni** → **Apps Script**
-2. **Deploy** → **Gestisci distribuzioni** → **Modifica** → **Versione: Nuova**
-
-### Script menu (`Main.gs`, `GestionePassword.gs`, `CalcoloCantieri.gs`, ecc.)
-1. Modifica i file in Apps Script
-2. Le modifiche sono attive immediatamente (nessun deploy necessario)
-
----
 
 ## Limiti del Sistema
 
