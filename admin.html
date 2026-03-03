@@ -56,26 +56,86 @@
         .refresh-btn { background: #f3f4f6; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all 0.2s; color: #6b7280; }
         .refresh-btn:hover { background: #e5e7eb; transform: rotate(180deg); }
         
-        /* CALENDARIO - RIUTILIZZO STILE DASHBOARD */
+        /* COLLAPSIBLE */
+        .collapsible .section-header { cursor: pointer; }
+        .collapse-toggle { cursor: pointer; user-select: none; width: 100%; }
+        .collapse-toggle:hover { opacity: 0.8; }
+        .collapse-icon { margin-left: auto; transition: transform 0.3s ease; font-size: 14px; color: #6b7280; }
+        .collapsible.open .collapse-icon { transform: rotate(180deg); }
+        .collapsible-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+        .collapsible.open .collapsible-body { max-height: 2000px; }
+
+        /* CALENDARIO - STILE DASHBOARD */
         .calendar-wrapper { margin: 20px 0; }
-        .calendar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px; background: #f8fafc; border-radius: 10px; }
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
         .calendar-nav { display: flex; align-items: center; gap: 15px; }
-        .nav-btn { background: #4f46e5; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
-        .nav-btn:hover { background: #4338ca; transform: translateY(-1px); }
-        .nav-btn:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3); }
+        .nav-btn:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; box-shadow: none; opacity: 0.6; }
         .current-month { font-size: 16px; font-weight: 700; color: #1f2937; min-width: 150px; text-align: center; }
         .today-btn { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
         .today-btn:hover { background: #059669; }
-        
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .calendar-day-header { text-align: center; font-weight: 700; font-size: 12px; color: #6b7280; padding: 10px 5px; background: #f1f5f9; border-radius: 8px; }
-        .calendar-day { aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 2px solid #e5e7eb; border-radius: 10px; cursor: pointer; transition: all 0.2s; position: relative; background: white; }
-        .calendar-day:hover { border-color: #4f46e5; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15); transform: translateY(-2px); }
-        .calendar-day.other-month { opacity: 0.3; background: #f9fafb; }
-        .calendar-day.today { border-color: #10b981; border-width: 3px; background: #ecfdf5; }
-        .calendar-day.has-work { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-color: #3b82f6; font-weight: 700; }
-        .day-number { font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 2px; }
-        .day-hours { font-size: 11px; font-weight: 700; color: #3b82f6; background: rgba(59, 130, 246, 0.1); padding: 2px 6px; border-radius: 4px; }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e1e5e9;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        .calendar-day-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 5px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: 0;
+        }
+        .calendar-day {
+            background: white;
+            min-height: 70px;
+            padding: 8px;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+        }
+        .calendar-day:hover { background: rgba(102, 126, 234, 0.05); transform: none; box-shadow: none; }
+        .calendar-day.other-month { background: #f8f9fa; opacity: 1; }
+        .calendar-day.today { background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border: 2px solid #667eea; border-radius: 0; }
+        .calendar-day.has-work { background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1)); border: none; }
+        /* Mantieni compatibilità con classe day-number usata in renderCalendar */
+        .calendar-day-number, .day-number { font-weight: 600; font-size: 16px; margin-bottom: 5px; }
+        .day-number { font-size: 14px; }
+        .work-hours-admin { font-size: 11px; color: #28a745; font-weight: 600; }
+        .work-indicator { width: 8px; height: 8px; background: linear-gradient(135deg, #28a745, #20c997); border-radius: 50%; margin-bottom: 2px; }
+        /* Vecchie classi mantenute per retrocompatibilità */
+        .day-hours { font-size: 11px; font-weight: 700; color: #3b82f6; }
         
         /* TOTALI ORE */
         .stats-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb; }
@@ -125,11 +185,14 @@
             .admin-section { padding: 20px 15px; }
             .section-header { flex-direction: column; align-items: flex-start; gap: 15px; }
             .toggle-container { width: 100%; }
+            .collapse-toggle { width: 100%; }
             .cantieri-grid { grid-template-columns: 1fr; }
             .dipendenti-header { flex-direction: column; }
             .select-dipendente { width: 100%; }
             .calendar-day-header { font-size: 10px; padding: 8px 2px; }
-            .day-number { font-size: 12px; }
+            .calendar-day { min-height: 50px; padding: 5px; }
+            .calendar-day-number, .day-number { font-size: 13px; }
+            .work-hours-admin { font-size: 9px; }
             .day-hours { font-size: 9px; }
             .stats-summary { grid-template-columns: repeat(2, 1fr); }
         }
@@ -148,32 +211,12 @@
     </header>
 
     <div class="admin-container">
-        <!-- SEZIONE CANTIERI -->
-        <section class="admin-section fade-in">
-            <div class="section-header">
-                <h2 class="section-title"><i class="fas fa-building"></i>Panoramica Cantieri</h2>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <button class="refresh-btn" onclick="refreshCantieri()" title="Aggiorna dati"><i class="fas fa-sync-alt"></i></button>
-                    <div class="toggle-container">
-                        <div class="toggle-option active" data-mode="totali">Totali Assoluti</div>
-                        <div class="toggle-option" data-mode="mese">Mese Corrente</div>
-                    </div>
-                </div>
-            </div>
-            <div id="cantieriGrid" class="cantieri-grid">
-                <div class="spinner-container">
-                    <div class="loading-spinner"></div>
-                    <p class="spinner-text">Caricamento cantieri...</p>
-                </div>
-            </div>
-        </section>
-
         <!-- SEZIONE CALENDARIO DIPENDENTI -->
         <section class="admin-section fade-in">
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-calendar-alt"></i>Calendario Dipendente</h2>
             </div>
-            
+
             <div class="dipendenti-header">
                 <select class="select-dipendente" id="dipendentiSelect">
                     <option value="">Seleziona un dipendente...</option>
@@ -185,11 +228,11 @@
                 <div class="calendar-wrapper">
                     <div class="calendar-controls">
                         <div class="calendar-nav">
-                            <button class="nav-btn" id="prevMonthBtn" onclick="changeMonth(-1)">
+                            <button class="nav-btn" id="prevMonthBtn" onclick="changeMonth(-1)" aria-label="Mese precedente">
                                 <i class="fas fa-chevron-left"></i>
                             </button>
                             <div class="current-month" id="currentMonthDisplay">-</div>
-                            <button class="nav-btn" id="nextMonthBtn" onclick="changeMonth(1)">
+                            <button class="nav-btn" id="nextMonthBtn" onclick="changeMonth(1)" aria-label="Mese successivo">
                                 <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
@@ -197,7 +240,7 @@
                             <i class="fas fa-calendar-day"></i> Oggi
                         </button>
                     </div>
-                    
+
                     <div class="calendar-grid" id="calendarGrid">
                         <div class="spinner-container" style="grid-column: 1 / -1;">
                             <div class="loading-spinner"></div>
@@ -225,6 +268,31 @@
             <div id="noUserSelected" class="no-data-state">
                 <div class="no-data-icon"><i class="fas fa-user-clock"></i></div>
                 <p>Seleziona un dipendente per visualizzare il calendario</p>
+            </div>
+        </section>
+
+        <!-- SEZIONE CANTIERI (collassabile, inizialmente chiusa) -->
+        <section class="admin-section fade-in collapsible">
+            <div class="section-header">
+                <h2 class="section-title collapse-toggle" title="Espandi/Comprimi">
+                    <i class="fas fa-building"></i>Panoramica Cantieri
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="refresh-btn" onclick="refreshCantieri()" title="Aggiorna dati"><i class="fas fa-sync-alt"></i></button>
+                    <div class="toggle-container">
+                        <div class="toggle-option active" data-mode="totali">Totali Assoluti</div>
+                        <div class="toggle-option" data-mode="mese">Mese Corrente</div>
+                    </div>
+                </div>
+            </div>
+            <div class="collapsible-body">
+                <div id="cantieriGrid" class="cantieri-grid">
+                    <div class="spinner-container">
+                        <div class="loading-spinner"></div>
+                        <p class="spinner-text">Caricamento cantieri...</p>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
@@ -282,6 +350,18 @@
             if (session && session.user) {
                 document.getElementById('adminName').textContent = session.user.name;
             }
+            setupCollapsible();
+        }
+
+        function setupCollapsible() {
+            document.querySelectorAll('.collapse-toggle').forEach(function(toggle) {
+                toggle.addEventListener('click', function(e) {
+                    // Non chiudere se il click è su un button interno
+                    if (e.target.closest('button')) return;
+                    var section = this.closest('.collapsible');
+                    if (section) section.classList.toggle('open');
+                });
+            });
         }
 
         function setupListeners() {
@@ -525,7 +605,7 @@
             // Giorni mese precedente
             for (let i = firstDay - 1; i >= 0; i--) {
                 const day = daysInPrevMonth - i;
-                html += `<div class="calendar-day other-month"><span class="day-number">${day}</span></div>`;
+                html += `<div class="calendar-day other-month"><span class="calendar-day-number">${day}</span></div>`;
             }
 
             // Giorni mese corrente
@@ -533,25 +613,26 @@
                 const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const workDay = calendarData?.workDays?.[dateStr];
                 const isToday = isCurrentMonth && day === today.getDate();
-                
+
                 let classes = 'calendar-day';
                 if (isToday) classes += ' today';
                 if (workDay) classes += ' has-work';
-                
-                let content = `<span class="day-number">${day}</span>`;
+
+                let content = `<span class="calendar-day-number">${day}</span>`;
                 if (workDay && workDay.ore) {
-                    content += `<span class="day-hours">${workDay.ore}h</span>`;
+                    // Punto indicatore verde + ore con classe dashboard-style
+                    content += `<div class="work-indicator"></div><span class="work-hours-admin">${workDay.ore}h</span>`;
                 }
-                
+
                 // TUTTI i giorni sono cliccabili
                 html += `<div class="${classes}" onclick="currentEditDateStr='${dateStr}'; showDayDetails('${dateStr}')" data-date="${dateStr}">${content}</div>`;
             }
-			
-			// Giorni mese successivo
+
+            // Giorni mese successivo
             const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
             const remainingCells = totalCells - (firstDay + daysInMonth);
             for (let day = 1; day <= remainingCells; day++) {
-                html += `<div class="calendar-day other-month"><span class="day-number">${day}</span></div>`;
+                html += `<div class="calendar-day other-month"><span class="calendar-day-number">${day}</span></div>`;
             }
 
             grid.innerHTML = html;

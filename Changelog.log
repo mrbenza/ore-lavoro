@@ -1,5 +1,11 @@
 ## Changelog
 
+### 2026-03-03 — gas-code-agent — Fix inizializzazione Config.gs
+
+- **FIX-13**: `Config.gs` — `SPREADSHEET_ID` non chiama più `SpreadsheetApp.getActiveSpreadsheet()` a livello di modulo. Nel contesto web app quella chiamata poteva ritornare `null` → `TypeError` → blocco dell'inizializzazione di tutte le `const` successive (`SHEET_NAMES`, `COLUMNS`, ecc.) → `ReferenceError: SHEET_NAMES is not defined` su ogni API call. Fix: `SPREADSHEET_ID` vale ora `Properties || ''`; risoluzione lazy dell'ID spostata dentro `getMainSpreadsheet()` con try-catch.
+
+---
+
 ### 2026-03-03 — ui-frontend-developer — Fix caricamento dati e gestione errori dashboard
 
 - **FIX-08**: `loadUserData()` ora mostra `"..."` come placeholder per ore mese corrente e mese precedente al posto di leggere i valori dalla sessione (che potevano essere 0 errati). I valori reali vengono caricati esclusivamente da `refreshUserStats()` in un secondo momento.

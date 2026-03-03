@@ -17,7 +17,7 @@ const PRODUCTION_CONFIG = {
 
 const CONFIG = {
   // Database principale
-  SPREADSHEET_ID: PropertiesService.getScriptProperties().getProperty('MAIN_SHEET_ID') || SpreadsheetApp.getActiveSpreadsheet().getId(),
+  SPREADSHEET_ID: PropertiesService.getScriptProperties().getProperty('MAIN_SHEET_ID') || '',
   
   // Fogli di sistema (non processare come dipendenti)
   SYSTEM_SHEETS: [
@@ -294,7 +294,8 @@ function initializeSystem() {
  */
 function getMainSpreadsheet() {
   try {
-    return SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    var id = CONFIG.SPREADSHEET_ID || SpreadsheetApp.getActiveSpreadsheet().getId();
+    return SpreadsheetApp.openById(id);
   } catch (error) {
     console.error('Errore apertura spreadsheet principale:', error);
     throw new Error('Impossibile accedere al database principale');
