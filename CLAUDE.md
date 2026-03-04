@@ -200,3 +200,16 @@ Browser (Vercel)
 | Database | Google Sheets | Schema documentato in `SHEET_SCHEMA.md` |
 | Autenticazione | Session token + SHA-256 | Gestita da `Authentication.gs` |
 | Archiviazione | Google Drive | Report PDF/Excel tramite `ArchivioOre.gs` |
+| Documentazione codice | JSDoc ultra-dettagliato | Tutti i 14 file `.gs` e 4 file frontend documentati al 2026-03-04 |
+
+---
+
+## Note tecniche — Anomalie note (2026-03-04)
+
+Queste anomalie sono state identificate durante la code review del 2026-03-04 e documentate inline nel codice con `// ⚠️`. Non sono state corrette per non alterare comportamenti esistenti.
+
+1. `saveWorkEntry` transita anche via GET → dati in query string (sicurezza)
+2. `logAdminAction()` in `AdminAPI.gs` non chiamata → audit log admin inattivo
+3. `updateUserPassword()` scrive password in chiaro + hash nel foglio
+4. `invalidateAdminCache()` è uno stub → cache scade solo per timeout
+5. `ProductionLogger.api()` legge chiave config errata → API logging disabilitato

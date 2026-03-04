@@ -1,17 +1,60 @@
 /**
  * AdminAPI.gs - API Amministrative
- * 
- * ESTRATTO DA: code.gs (tutte le funzioni admin)
- * MODIFICHE: Nessuna - logica identica
+ *
+ * Espone le operazioni riservate agli amministratori:
+ * - Overview cantieri con ore totali o mensili (con cache)
+ * - Lista dipendenti per dropdown admin
+ * - Timeline ore dipendente per timeframe
+ * - Dati calendario mensile di un altro utente
+ * - Modifica/inserimento registrazioni ore (updateWorkEntry)
+ * - Eliminazione registrazioni ore (deleteWorkEntry)
+ * - Invalidazione cache (invalidateAdminCache)
+ * - Log audit operazioni admin (logAdminAction)
+ *
+ * Tutte le funzioni validano il session token. Le operazioni su altri utenti
+ * verificano anche che il richiedente abbia ruolo admin.
+ *
+ * USATO DA: ApiRouter.gs (endpoint admin)
  */
 
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 // OVERVIEW CANTIERI ADMIN
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Overview cantieri con cache ottimizzato
- * IDENTICO al tuo code.gs (righe ~2000-2100)
+ * Restituisce la panoramica cantieri per la dashboard admin con cache.
+ *
+ * Supporta due modalità:
+ *   - 'totali': legge direttamente la colonna ORE_TOTALI dal foglio Cantieri
+ *     (dati cumulativi storici, cache 30 minuti)
+ *   - 'mese' (default): calcola le ore del mese corrente scansionando tutti
+ *     i fogli dipendente tramite calcolaOreMeseCorrenteOttimizzato()
+ *     (cache 5 minuti, chiave dipende da anno+mese)
+ *
+ * FLUSSO INTERNO:
+ *   1. Valida sessionToken
+ *   2. Costruisce cache key in base alla modalità
+ *   3. Se cache hit → restituisce JSON parsato
+ *   4. Altrimenti legge foglio Cantieri e popola array cantieri
+ *   5. In modalità 'mese' chiama calcolaOreMeseCorrenteOttimizzato()
+ *   6. Mette in cache il risultato e lo restituisce
+ *
+ * CHIAMATA DA: ApiRouter.gs → doGet() (action='getCantieriOverview')
+ *              ApiRouter.gs → doPost() (action='getCantieriOverview')
+ * CHIAMA:      validateSessionToken(), calcolaOreMeseCorrenteOttimizzato(),
+ *              CacheService.getScriptCache(), Logger.debug/critical
+ *
+ * @param {string} sessionToken - Token sessione.
+ * @param {string} [modalita]   - 'totali' o 'mese' (default 'mese').
+ * @returns {{
+ *   success: boolean,
+ *   data?: Array<{ id, nome, indirizzo, stato, oreTotali, ultimoAggiornamento, ultimoDipendente, numeroInserimenti }>,
+ *   message?: string
+ * }} Lista cantieri con ore.
+ *
+ * @example
+ * getCantieriAdminOverview('admin_1709_abc', 'totali');
+ * // → { success: true, data: [{ id:'C001', nome:'Edificio A', oreTotali: 312, ... }] }
  */
 function getCantieriAdminOverview(sessionToken, modalita) {
   const startTime = Date.now();
@@ -114,8 +157,30 @@ function getCantieriAdminOverview(sessionToken, modalita) {
 }
 
 /**
- * Calcola ore mese corrente ottimizzato - 1 loop
- * IDENTICO al tuo code.gs
+ * Calcola le ore del mese corrente per cantiere scansionando tutti i fogli dipendente.
+ *
+ * Ottimizzato per minimizzare le chiamate API Sheets: legge ogni foglio dipendente
+ * una sola volta e aggrega le ore per cantiereId in una Map. Esclude i fogli di
+ * sistema (Utenti, Cantieri, Configurazione). I fogli che causano errori vengono
+ * saltati silenziosamente con un warning.
+ *
+ * FLUSSO INTERNO:
+ *   1. Calcola primoGiornoMese (1° del mese corrente)
+ *   2. Itera tutti i fogli dello spreadsheet
+ *   3. Salta fogli di sistema per nome
+ *   4. Per ogni foglio dipendente legge righe 5+ (5 colonne)
+ *   5. Filtra le righe con data >= primoGiornoMese e <= oggi
+ *   6. Accumula ore per cantiereId nella oreMap
+ *
+ * CHIAMATA DA: AdminAPI.gs → getCantieriAdminOverview() (modalità 'mese')
+ * CHIAMA:      Logger.debug/warn, Utilities.formatDate(), Session.getScriptTimeZone()
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} spreadsheet - Spreadsheet da scansionare.
+ * @returns {Object.<string, number>} Mappa {cantiereId: oreTotali} per il mese corrente.
+ *
+ * @example
+ * const mappa = calcolaOreMeseCorrenteOttimizzato(SpreadsheetApp.getActiveSpreadsheet());
+ * // mappa → { 'C001': 45.5, 'C002': 12.0, ... }
  */
 function calcolaOreMeseCorrenteOttimizzato(spreadsheet) {
   const oreMap = {};
@@ -169,13 +234,39 @@ function calcolaOreMeseCorrenteOttimizzato(spreadsheet) {
   return oreMap;
 }
 
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 // LISTA DIPENDENTI ADMIN
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Lista dipendenti per dropdown admin
- * IDENTICO al tuo code.gs
+ * Restituisce la lista dei dipendenti attivi (non admin) per il dropdown admin.
+ *
+ * Legge il foglio Utenti e filtra escludendo gli utenti con ruolo 'Admin'
+ * e quelli non attivi (colonna J != 'Si'). Il risultato viene usato dal
+ * frontend admin per popolare il selettore del dipendente target nelle
+ * operazioni di visualizzazione e modifica ore.
+ *
+ * FLUSSO INTERNO:
+ *   1. Valida sessionToken
+ *   2. Legge foglio Utenti con getSheetByName()
+ *   3. Itera righe saltando header
+ *   4. Include solo utenti con userId, ruolo != 'Admin', Attivo == 'Si'
+ *   5. Restituisce array di { userId, nome, ruolo }
+ *
+ * CHIAMATA DA: ApiRouter.gs → doGet() (action='getDipendentiList')
+ *              ApiRouter.gs → doPost() (action='getDipendentiList')
+ * CHIAMA:      validateSessionToken(), Logger.debug/critical
+ *
+ * @param {string} sessionToken - Token sessione (non richiede ruolo admin).
+ * @returns {{
+ *   success: boolean,
+ *   data?: Array<{ userId: string, nome: string, ruolo: string }>,
+ *   message?: string
+ * }} Lista dipendenti attivi.
+ *
+ * @example
+ * getDipendentiListAdmin('admin_1709_abc');
+ * // → { success: true, data: [{ userId: 'mario.rossi', nome: 'Mario Rossi', ruolo: 'Dipendente' }] }
  */
 function getDipendentiListAdmin(sessionToken) {
   const startTime = Date.now();
@@ -222,13 +313,53 @@ function getDipendentiListAdmin(sessionToken) {
   }
 }
 
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 // TIMELINE DIPENDENTE
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Timeline dipendente con ore da celle F/G/H
- * IDENTICO al tuo code.gs
+ * Restituisce il riepilogo ore di un dipendente per un timeframe specifico.
+ *
+ * Legge le ore dalle celle riepilogative F2/G2/H2 del foglio personale
+ * (valori pre-calcolati da formule SUMIFS) e selezione in base al timeframe.
+ * In aggiunta, calcola il numero di giornate lavorate e i cantieri coinvolti
+ * scansionando le righe dati del foglio (dalla riga 5).
+ *
+ * Timeframe supportati:
+ *   - '30days': mese corrente (cella F2)
+ *   - 'lastMonth': mese precedente (cella G2)
+ *   - 'year': anno corrente (cella H2)
+ *
+ * FLUSSO INTERNO:
+ *   1. Valida sessionToken e userId
+ *   2. Trova il nome del dipendente dal foglio Utenti (colonna G → colonna B)
+ *   3. Apre il foglio personale del dipendente
+ *   4. Legge F2, G2, H2 per le ore aggregate
+ *   5. Seleziona totaleOre in base al timeframe
+ *   6. Scansiona righe 5+ per calcolare giornateLavorate e cantieriCoinvolti
+ *   7. Restituisce struttura dati completa
+ *
+ * CHIAMATA DA: ApiRouter.gs → doGet() (action='getDipendenteTimeline')
+ *              ApiRouter.gs → doPost() (action='getDipendenteTimeline')
+ * CHIAMA:      validateSessionToken(), Logger.debug/warn/critical
+ *
+ * @param {string} sessionToken - Token sessione.
+ * @param {string} userId       - Username del dipendente target.
+ * @param {string} timeframe    - '30days' | 'lastMonth' | 'year'.
+ * @returns {{
+ *   success: boolean,
+ *   data?: {
+ *     userId: string, nome: string, ruolo: string, timeline: Array,
+ *     totaleOre: number, giornateLavorate: number, cantieriCoinvolti: string[],
+ *     timeframe: string, timeframeLabel: string,
+ *     oreMeseCorrente: number, oreMesePrecedente: number, oreAnnoCorrente: number
+ *   },
+ *   message?: string
+ * }} Timeline dipendente.
+ *
+ * @example
+ * getDipendenteTimelineAdmin('admin_1709_abc', 'mario.rossi', '30days');
+ * // → { success: true, data: { totaleOre: 160, giornateLavorate: 20, ... } }
  */
 function getDipendenteTimelineAdmin(sessionToken, userId, timeframe) {
   const startTime = Date.now();
@@ -378,13 +509,48 @@ function getDipendenteTimelineAdmin(sessionToken, userId, timeframe) {
   }
 }
 
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 // CALENDARIO ALTRO UTENTE
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Dati calendario mensile altro utente (admin only)
- * IDENTICO al tuo code.gs
+ * Restituisce i dati del calendario mensile di un altro utente (solo admin).
+ *
+ * Verifica che il richiedente sia admin cercando il ruolo nel foglio Utenti,
+ * poi legge il foglio personale del dipendente target e filtra le righe per
+ * anno e mese. Restituisce un dizionario {dateStr: {totalOre, entries}} dove
+ * dateStr è nel formato YYYY-MM-DD.
+ *
+ * FLUSSO INTERNO:
+ *   1. Valida sessionToken
+ *   2. Estrae requestingUserId dal token
+ *   3. Legge foglio Utenti, trova colonna Ruolo dagli header
+ *   4. Verifica che requestingUserId abbia ruolo 'admin'
+ *   5. Trova targetUserName dal foglio Utenti
+ *   6. Apre il foglio personale del target
+ *   7. Legge righe 5+ e filtra per year/month
+ *   8. Restituisce workDays con entries per data
+ *
+ * CHIAMATA DA: ApiRouter.gs → doGet() (action='getOtherUserMonthlyData')
+ *              ApiRouter.gs → doPost() (action='getOtherUserMonthlyData')
+ * CHIAMA:      validateSessionToken(), getWorksheet(), Logger.debug/warn/error/critical
+ *
+ * @param {string}        sessionToken  - Token sessione (deve essere admin).
+ * @param {string}        targetUserId  - Username del dipendente target.
+ * @param {string|number} year          - Anno (es. 2025).
+ * @param {string|number} month         - Mese 1-12.
+ * @returns {{
+ *   success: boolean,
+ *   data?: {
+ *     year: number, month: number, userName: string, userId: string,
+ *     workDays: Object.<string, { totalOre: number, entries: Array<{ rowIndex, cantiereId, cantiereName, ore, note }> }>
+ *   },
+ *   message?: string
+ * }} Dati calendario mensile del dipendente target.
+ *
+ * @example
+ * getOtherUserMonthlyData('admin_1709_abc', 'mario.rossi', 2025, 9);
+ * // → { success: true, data: { workDays: { '2025-09-15': { totalOre: 8, entries: [...] } } } }
  */
 function getOtherUserMonthlyData(sessionToken, targetUserId, year, month) {
   Logger.debug('getOtherUserMonthlyData:', targetUserId, year, month);
@@ -544,13 +710,54 @@ function getOtherUserMonthlyData(sessionToken, targetUserId, year, month) {
   }
 }
 
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 // MODIFICA ORE (ADMIN)
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Modifica o crea registrazione ore (solo admin)
- * IDENTICO al tuo code.gs (righe ~2500-2700)
+ * Modifica una registrazione ore esistente o ne crea una nuova (solo admin).
+ *
+ * Supporta due modalità in base a updateData.isNewEntry:
+ *   - isNewEntry === true: inserisce una nuova riga nel foglio del dipendente
+ *   - isNewEntry === false (default): cerca la prima riga con la data specificata e la aggiorna
+ *
+ * Verifica la validità del cantiere nel foglio Cantieri. Aggiunge un log
+ * "(Modificato da amministrazione)" nelle note della riga. Aggiorna le ore
+ * del cantiere (incrementale se modifica, compensativo se cambia cantiere).
+ *
+ * FLUSSO INTERNO:
+ *   1. Valida sessionToken
+ *   2. Verifica che il richiedente sia admin (cerca ruolo nel foglio Utenti)
+ *   3. Trova targetUserName dal foglio Utenti
+ *   4. Valida ore (0-24) e cantiereId
+ *   5. Verifica esistenza cantiere nel foglio Cantieri
+ *   6. Se isNewEntry: appende riga >= 5, chiama updateCantiereHours(+newOre)
+ *   7. Se modifica: cerca riga per dateStr, aggiorna celle, gestisce delta ore cantiere
+ *
+ * CHIAMATA DA: ApiRouter.gs → doGet() (action='updateWorkEntry')
+ *              ApiRouter.gs → doPost() (action='updateWorkEntry')
+ * CHIAMA:      validateSessionToken(), getWorksheet(), buildColumnMap(),
+ *              updateCantiereHours(), Logger.info/error
+ *
+ * @param {string} sessionToken  - Token sessione admin.
+ * @param {string} targetUserId  - Username del dipendente target.
+ * @param {string} dateStr       - Data in formato YYYY-MM-DD.
+ * @param {{
+ *   ore: number,
+ *   cantiereId: string,
+ *   note?: string,
+ *   isNewEntry?: boolean
+ * }} updateData - Dati della modifica.
+ * @returns {{
+ *   success: boolean,
+ *   message: string,
+ *   data?: { action: 'insert'|'update', date: string, cantiereId: string, ore: number, row: number }
+ * }} Risultato operazione.
+ *
+ * @example
+ * updateWorkEntry('admin_1709_abc', 'mario.rossi', '2025-09-15',
+ *   { ore: 8, cantiereId: 'C001', note: 'Correzione', isNewEntry: true });
+ * // → { success: true, data: { action: 'insert', row: 42, ... } }
  */
 function updateWorkEntry(sessionToken, targetUserId, dateStr, updateData) {
   try {
@@ -734,13 +941,24 @@ function updateWorkEntry(sessionToken, targetUserId, dateStr, updateData) {
   }
 }
 
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 // CACHE MANAGEMENT
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Invalida cache admin
- * IDENTICO al tuo code.gs
+ * Invalida la cache admin per il tipo specificato.
+ *
+ * Attualmente restituisce sempre successo senza effettuare operazioni reali
+ * sulla cache (stub). La gestione cache è integrata direttamente in
+ * getCantieriAdminOverview() con chiavi specifiche per mese/totali.
+ *
+ * CHIAMATA DA: ApiRouter.gs → doGet() (action='invalidateCache')
+ *              ApiRouter.gs → doPost() (action='invalidateCache')
+ * CHIAMA:      validateSessionToken(), Logger.debug/critical
+ *
+ * @param {string} sessionToken - Token sessione.
+ * @param {string} cacheType    - Tipo cache da invalidare (es. 'cantieri', 'dipendenti').
+ * @returns {{ success: boolean, message: string }} Risultato invalidazione.
  */
 function invalidateAdminCache(sessionToken, cacheType) {
   try {
@@ -760,24 +978,44 @@ function invalidateAdminCache(sessionToken, cacheType) {
     return { success: false, message: 'Errore: ' + error.toString() };
   }
 }
-/**
- * 
- * Elimina una registrazione ore dal foglio dipendente
- * - Cancella fisica della riga
- * - Aggiorna automaticamente formule cantieri
- * - Log dell'operazione per audit
- * 
- * @param {string} sessionToken - Token sessione admin
- * @param {string} targetUserId - ID utente target
- * @param {string} dateStr - Data formato YYYY-MM-DD
- * @param {number} entryIndex - Indice registrazione (0-based)
- * @returns {Object} - {success: boolean, message: string}
- */
-/**
- * Funzione deleteWorkEntry usando ESATTAMENTE le stesse convenzioni
- * di updateWorkEntry() già presente nel sistema
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE REGISTRAZIONE — eliminazione fisica riga dipendente
+// ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Elimina fisicamente una registrazione ore dal foglio dipendente.
+ *
+ * Permette all'admin di cancellare una singola entry per data e indice.
+ * Dopo la cancellazione aggiorna le ore cumulative del cantiere interessato
+ * (sottraendo le ore eliminate) e invalida la cache mensile per quell'utente.
+ * L'operazione è atomica: se il delete fisico fallisce la funzione ritorna
+ * errore senza toccare i cantieri. Se il cantiere update fallisce, il delete
+ * rimane comunque valido (non critico).
+ *
+ * FLUSSO INTERNO:
+ *   1. Valida sessionToken
+ *   2. Determina isAdmin e risolve targetUserName dal foglio Utenti
+ *   3. Valida parametri (dateStr YYYY-MM-DD, entryIndex >= 0)
+ *   4. Apre foglio dipendente, raccoglie tutte le righe che matchano dateStr
+ *   5. Verifica che entryIndex sia < matchingRows.length
+ *   6. deleteRow() sulla riga target (1-based)
+ *   7. Chiama updateCantiereHours() con ore negativo (non bloccante)
+ *   8. Invalida chiave cache mensile CacheService (non bloccante)
+ *   9. Ritorna { success, message, data: { deletedOre, cantiere, data } }
+ *
+ * CHIAMATA DA: ApiRouter.gs → doPost() (action='deleteWorkEntry')
+ * CHIAMA:      validateSessionToken(), getWorksheet(), buildColumnMap(),
+ *              updateCantiereHours(), CacheService.getScriptCache()
+ *
+ * @param {string} sessionToken  - Token sessione (deve appartenere a un admin).
+ * @param {string} targetUserId  - Username del dipendente target (es. 'U001').
+ * @param {string} dateStr       - Data in formato YYYY-MM-DD.
+ * @param {number} entryIndex    - Indice 0-based della registrazione nel giorno.
+ * @returns {{ success: boolean, message: string, data?: { deletedOre: number, cantiere: string, data: string } }}
+ * @example
+ * // Elimina la prima registrazione del 15 gen 2025 per U001
+ * deleteWorkEntry('U001_1234567890_abc', 'U001', '2025-01-15', 0);
+ */
 function deleteWorkEntry(sessionToken, targetUserId, dateStr, entryIndex) {
   console.log('===== DELETE ENTRY CHIAMATA =====');
   console.log('targetUserId ricevuto:', targetUserId);
@@ -974,15 +1212,37 @@ function deleteWorkEntry(sessionToken, targetUserId, dateStr, entryIndex) {
 }
 
 
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDIT LOG — persistenza operazioni admin su foglio 'Log Admin'
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ⚠️ DEAD CODE: non risulta chiamata da altri file
+// (deleteWorkEntry non la chiama — il log audit non è attualmente attivo)
 /**
- * ============================================
- * FUNZIONE HELPER: LOG OPERAZIONI ADMIN
- * ============================================
- * Salva log operazioni admin in foglio dedicato per audit trail
- * 
- * @param {Object} adminUserName - Dati admin che esegue operazione
- * @param {string} action - Tipo azione (es. 'DELETE_WORK_ENTRY')
- * @param {Object} details - Dettagli operazione
+ * Salva un'operazione amministrativa nel foglio 'Log Admin' per audit trail.
+ *
+ * Crea il foglio 'Log Admin' se non esiste (con header formattato) e poi
+ * appende una riga con timestamp, dati admin, tipo azione e dettagli JSON.
+ * La riga viene colorata in base al tipo azione (rosso per DELETE, verde per
+ * UPDATE). Gli errori sono silently swallowed: il log è considerato opzionale
+ * e non deve bloccare le operazioni principali.
+ *
+ * FLUSSO INTERNO:
+ *   1. Apre il foglio 'Log Admin' (o lo crea con header se mancante)
+ *   2. appendRow con timestamp, adminUserName, azione, dettagli JSON
+ *   3. Colora la riga in base al tipo azione
+ *   4. In caso di errore: console.log() e ritorno silenzioso
+ *
+ * CHIAMATA DA: (nessuno — funzione non chiamata attualmente)
+ * CHIAMA:      SpreadsheetApp.openById(), Session.getActiveUser()
+ *
+ * @param {string} adminUserName - Nome completo dell'admin che esegue l'azione.
+ * @param {string} action        - Tipo azione (es. 'DELETE_WORK_ENTRY', 'UPDATE_WORK_ENTRY').
+ * @param {Object} details       - Oggetto con dettagli operazione (targetUser, ore, ecc.).
+ * @returns {void}
+ * @example
+ * // Logga una cancellazione
+ * logAdminAction('Mario Rossi', 'DELETE_WORK_ENTRY', { targetUser: 'U001', ore: 8 });
  */
 function logAdminAction(adminUserName, action, details) {
   try {
@@ -1040,11 +1300,22 @@ function logAdminAction(adminUserName, action, details) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TEST — verifica manuale deleteWorkEntry da Script Editor
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
- * ============================================
- * TESTING - Funzione di test manuale
- * ============================================
- * Esegui questa funzione dal menu Script Editor per testare
+ * Test manuale per deleteWorkEntry(), da eseguire dallo Script Editor.
+ *
+ * Configura i valori in TEST_CONFIG con dati reali (token admin valido,
+ * userId esistente, data con registrazioni nel foglio) ed esegue la funzione.
+ * Stampa il risultato nel log di esecuzione e segnala PASS/FAIL.
+ * Non è un test automatico: richiede intervento umano per impostare i parametri.
+ *
+ * CHIAMATA DA: (esecuzione manuale da Script Editor)
+ * CHIAMA:      deleteWorkEntry()
+ *
+ * @returns {void}
  */
 function testDeleteWorkEntry() {
   // ATTENZIONE: Modifica questi valori con dati reali del tuo sistema

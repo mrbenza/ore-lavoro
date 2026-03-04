@@ -1,8 +1,46 @@
-// ===== MAIN.GS - MENU PRINCIPALE CON ISTRUZIONI AGGIORNATE =====
+/**
+ * Main.gs — Menu Principale e Coordinamento Moduli GAS
+ *
+ * Punto di ingresso lato menu per tutto il sistema gestionale.
+ * Definisce il menu "Sistema Gestionale" in Google Sheets, coordina
+ * i moduli (Archivio, Password, Report, Cantieri) tramite wrapper
+ * che catturano errori con handleGlobalError(), e gestisce il ciclo
+ * di vita del sistema (inizializzazione, diagnostica, riconfigura).
+ *
+ * MODULI COORDINATI:
+ *   - ArchivioOre.gs      → archivio ore annuali su Drive
+ *   - GestionePassword.gs → cambio password dipendenti
+ *   - ReportCommercialista.gs → report Excel/PDF per commercialista
+ *   - CalcoloCantieri.gs  → ricalcolo totali ore cantieri
+ *   - SystemDiagnostic.gs → (non usato qui, diagnostica integrata)
+ *
+ * USATO DA: trigger onOpen() automatico all'apertura del foglio
+ */
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TRIGGER DI APERTURA — costruzione menu dinamico
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Funzione principale chiamata all'apertura del foglio
- * Crea il menu unificato del sistema con istruzioni
+ * Trigger GAS onOpen — costruisce il menu "Sistema Gestionale" all'apertura.
+ *
+ * Rileva lo stato del sistema tramite checkSystemInitializationStatus() e
+ * costruisce un menu dinamico: se il sistema è 'healthy' nasconde la voce
+ * di inizializzazione; se è 'needs_setup' la mostra; se è 'conflict' mostra
+ * "Riconfigura". In caso di errore nella costruzione, crea un menu di fallback
+ * ridotto. Il menu è organizzato in sottomenu per modulo funzionale.
+ *
+ * FLUSSO INTERNO:
+ *   1. Chiama checkSystemInitializationStatus() per rilevare stato
+ *   2. Costruisce il menu con sottomenu Archivio, Password, Report, Cantieri
+ *   3. Aggiunge voci dinamiche in base a initStatus.systemHealth
+ *   4. addToUi() per mostrare il menu
+ *   5. In caso di errore → crea menu semplificato di fallback
+ *
+ * CHIAMATA DA: GAS runtime (trigger di apertura foglio, automatico)
+ * CHIAMA:      checkSystemInitializationStatus()
+ *
+ * @returns {void}
  */
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
@@ -98,10 +136,27 @@ function onOpen() {
   }
 }
 
-// ===== INFORMAZIONI SISTEMA GENERALE =====
+// ─────────────────────────────────────────────────────────────────────────────
+// DIALOGS INFORMATIVI — pagine di istruzioni e overview sistema
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Mostra informazioni generali del sistema - DIALOG HTML
+ * Mostra la panoramica informativa del sistema in una dialog HTML modale.
+ *
+ * Genera un dialog HTML inline (650x700) con la descrizione di tutti i moduli
+ * del sistema (Archivio, Password, Report, Cantieri), istruzioni per iniziare,
+ * architettura tecnica e guida risoluzione problemi. Nessuna logica di business:
+ * è solo un pannello informativo statico.
+ *
+ * FLUSSO INTERNO:
+ *   1. Costruisce htmlContent come template literal con HTML statico
+ *   2. Crea HtmlOutput 650x700
+ *   3. showModalDialog() sulla UI corrente
+ *
+ * CHIAMATA DA: onOpen() → menu "ℹ️ Informazioni Sistema"
+ * CHIAMA:      HtmlService.createHtmlOutput(), SpreadsheetApp.getUi()
+ *
+ * @returns {void}
  */
 function showSystemInformation() {
   const htmlContent = `
@@ -312,10 +367,17 @@ function showSystemInformation() {
   SpreadsheetApp.getUi().showModalDialog(htmlOutput, 'ℹ️ Informazioni Sistema');
 }
 
-// ===== ISTRUZIONI DETTAGLIATE PER MODULI =====
-
 /**
- * Istruzioni dettagliate per il modulo Archivio - DIALOG HTML
+ * Mostra le istruzioni d'uso del modulo Archivio in una dialog HTML modale.
+ *
+ * Descrive le quattro operazioni disponibili (archivia anno precedente, singolo
+ * dipendente, con selezione anno, stato archivi), le avvertenze sull'irreversibilità
+ * dell'operazione e la struttura cartelle Drive risultante.
+ *
+ * CHIAMATA DA: onOpen() → menu "📁 Archivio" → "📖 Come archiviare"
+ * CHIAMA:      HtmlService.createHtmlOutput(), SpreadsheetApp.getUi()
+ *
+ * @returns {void}
  */
 function showArchiveInstructions() {
   const htmlContent = `
@@ -433,7 +495,16 @@ function showArchiveInstructions() {
 }
 
 /**
- * Istruzioni dettagliate per il modulo Password - DIALOG HTML
+ * Mostra le istruzioni d'uso del modulo Gestione Password in una dialog HTML modale.
+ *
+ * Descrive le operazioni disponibili (cambio password, lista utenti, debug hash),
+ * scenari di utilizzo (nuovo dipendente, cambio password, controllo sicurezza),
+ * i livelli di sicurezza (nessuna password / plain / SHA-256) e le best practices.
+ *
+ * CHIAMATA DA: onOpen() → menu "🔐 Gestione Password" → "📖 Come gestire password"
+ * CHIAMA:      HtmlService.createHtmlOutput(), SpreadsheetApp.getUi()
+ *
+ * @returns {void}
  */
 function showPasswordInstructions() {
   const htmlContent = `
@@ -617,7 +688,16 @@ function showPasswordInstructions() {
 }
 
 /**
- * Istruzioni dettagliate per il modulo Report - DIALOG HTML
+ * Mostra le istruzioni d'uso del modulo Report Commercialista in una dialog HTML modale.
+ *
+ * Descrive le operazioni disponibili (report mensile, riepilogativo annuale, test singolo),
+ * la procedura step-by-step per la generazione, il contenuto dei file prodotti,
+ * la struttura cartelle Drive e la risoluzione dei problemi comuni.
+ *
+ * CHIAMATA DA: onOpen() → menu "📊 Report Commercialista" → "📖 Come generare report"
+ * CHIAMA:      HtmlService.createHtmlOutput(), SpreadsheetApp.getUi()
+ *
+ * @returns {void}
  */
 function showReportInstructions() {
   const htmlContent = `
@@ -826,9 +906,19 @@ function showReportInstructions() {
   SpreadsheetApp.getUi().showModalDialog(htmlOutput, '📊 Istruzioni Report Commercialista');
 }
 
-// ===== WRAPPER FUNCTIONS PER MODULI =====
+// ─────────────────────────────────────────────────────────────────────────────
+// WRAPPER MENU — bridge tra voci menu e funzioni dei moduli
+// Ogni wrapper cattura eccezioni e le gestisce tramite handleGlobalError().
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Archivio Ore
+// --- Archivio Ore ---
+
+/**
+ * Menu bridge: avvia l'archiviazione di tutti i dipendenti per l'anno precedente.
+ * CHIAMATA DA: onOpen() → menu "📁 Archivio" → "📅 Archivia anno precedente"
+ * CHIAMA:      executeArchiveAllPreviousYear() (ArchivioOre.gs), handleGlobalError()
+ * @returns {void}
+ */
 function archiveAllPreviousYear() {
   try {
     executeArchiveAllPreviousYear();
@@ -837,6 +927,12 @@ function archiveAllPreviousYear() {
   }
 }
 
+/**
+ * Menu bridge: avvia l'archiviazione per un singolo dipendente scelto dall'utente.
+ * CHIAMATA DA: onOpen() → menu "📁 Archivio" → "👤 Archivia singolo dipendente"
+ * CHIAMA:      executeArchiveSingleEmployee() (ArchivioOre.gs), handleGlobalError()
+ * @returns {void}
+ */
 function archiveSingleEmployee() {
   try {
     executeArchiveSingleEmployee();
@@ -845,6 +941,12 @@ function archiveSingleEmployee() {
   }
 }
 
+/**
+ * Menu bridge: avvia l'archiviazione con selezione anno libera.
+ * CHIAMATA DA: onOpen() → menu "📁 Archivio" → "📊 Archivia con selezione anno"
+ * CHIAMA:      executeArchiveWithCustomYear() (ArchivioOre.gs), handleGlobalError()
+ * @returns {void}
+ */
 function archiveWithCustomYear() {
   try {
     executeArchiveWithCustomYear();
@@ -853,6 +955,12 @@ function archiveWithCustomYear() {
   }
 }
 
+/**
+ * Menu bridge: mostra lo stato degli archivi esistenti su Drive.
+ * CHIAMATA DA: onOpen() → menu "📁 Archivio" → "📋 Stato archivi"
+ * CHIAMA:      displayArchiveStatus() (ArchivioOre.gs), handleGlobalError()
+ * @returns {void}
+ */
 function showArchiveStatus() {
   try {
     displayArchiveStatus();
@@ -861,7 +969,14 @@ function showArchiveStatus() {
   }
 }
 
-// Gestione Password
+// --- Gestione Password ---
+
+/**
+ * Menu bridge: avvia il wizard cambio password per un dipendente.
+ * CHIAMATA DA: onOpen() → menu "🔐 Gestione Password" → "👤 Cambia password dipendente"
+ * CHIAMA:      executeChangeEmployeePassword() (GestionePassword.gs), handleGlobalError()
+ * @returns {void}
+ */
 function changeEmployeePassword() {
   try {
     executeChangeEmployeePassword();
@@ -870,6 +985,12 @@ function changeEmployeePassword() {
   }
 }
 
+/**
+ * Menu bridge: mostra la lista di tutti gli utenti con stato sicurezza.
+ * CHIAMATA DA: onOpen() → menu "🔐 Gestione Password" → "📋 Lista utenti"
+ * CHIAMA:      displayUsersList() (GestionePassword.gs), handleGlobalError()
+ * @returns {void}
+ */
 function showUsersList() {
   try {
     displayUsersList();
@@ -878,6 +999,12 @@ function showUsersList() {
   }
 }
 
+/**
+ * Menu bridge: esegue il debug e verifica integrità degli hash password.
+ * CHIAMATA DA: onOpen() → menu "🔐 Gestione Password" → "🔍 Debug hash password"
+ * CHIAMA:      executeDebugPasswordHash() (GestionePassword.gs), handleGlobalError()
+ * @returns {void}
+ */
 function debugPasswordHash() {
   try {
     executeDebugPasswordHash();
@@ -886,7 +1013,14 @@ function debugPasswordHash() {
   }
 }
 
-// Report Commercialista
+// --- Report Commercialista ---
+
+/**
+ * Menu bridge: avvia la generazione del report mensile.
+ * CHIAMATA DA: onOpen() → menu "📊 Report Commercialista" → "📅 Genera report mensile"
+ * CHIAMA:      executeGenerateMonthlyReport() (ReportCommercialista.gs), handleGlobalError()
+ * @returns {void}
+ */
 function generateMonthlyReport() {
   try {
     executeGenerateMonthlyReport();
@@ -895,6 +1029,12 @@ function generateMonthlyReport() {
   }
 }
 
+/**
+ * Menu bridge: avvia la generazione del report riepilogativo annuale.
+ * CHIAMATA DA: onOpen() → menu "📊 Report Commercialista" → "📋 Report riepilogativo annuale"
+ * CHIAMA:      executeGenerateYearlyReport() (ReportCommercialista.gs), handleGlobalError()
+ * @returns {void}
+ */
 function generateYearlyReport() {
   try {
     executeGenerateYearlyReport();
@@ -903,6 +1043,12 @@ function generateYearlyReport() {
   }
 }
 
+/**
+ * Menu bridge: genera un report di test per un singolo dipendente (mese corrente).
+ * CHIAMATA DA: onOpen() → menu "📊 Report Commercialista" → "🧪 Test report"
+ * CHIAMA:      executeTestSingleReport() (ReportCommercialista.gs), handleGlobalError()
+ * @returns {void}
+ */
 function testSingleReport() {
   try {
     executeTestSingleReport();
@@ -911,7 +1057,14 @@ function testSingleReport() {
   }
 }
 
-// Gestione Cantieri
+// --- Gestione Cantieri ---
+
+/**
+ * Menu bridge: ricalcola i totali ore per tutti i cantieri.
+ * CHIAMATA DA: onOpen() → menu "🗏️ Gestione Cantieri" → "🔄 Ricalcola totali ore cantieri"
+ * CHIAMA:      executeRecalculateConstructionSites() (CalcoloCantieri.gs), handleGlobalError()
+ * @returns {void}
+ */
 function recalculateConstructionSites() {
   try {
     executeRecalculateConstructionSites();
@@ -920,6 +1073,12 @@ function recalculateConstructionSites() {
   }
 }
 
+/**
+ * Menu bridge: verifica l'allineamento dei dati tra fogli dipendente e foglio Cantieri.
+ * CHIAMATA DA: onOpen() → menu "🗏️ Gestione Cantieri" → "🔍 Verifica allineamento dati"
+ * CHIAMA:      executeVerifyDataAlignment() (CalcoloCantieri.gs), handleGlobalError()
+ * @returns {void}
+ */
 function verifyDataAlignment() {
   try {
     executeVerifyDataAlignment();
@@ -928,6 +1087,19 @@ function verifyDataAlignment() {
   }
 }
 
+/**
+ * Mostra le istruzioni d'uso del modulo Gestione Cantieri in una dialog HTML modale.
+ *
+ * Descrive le due operazioni (ricalcola totali, verifica allineamento), lo scenario
+ * tipico di disallineamento dati dopo modifiche manuali, le performance attese,
+ * il contenuto dei report generati e le best practices.
+ * Menziona la custom function TOTALE_ORE_CANTIERE() disponibile nelle celle Sheets.
+ *
+ * CHIAMATA DA: onOpen() → menu "🗏️ Gestione Cantieri" → "📖 Come gestire cantieri"
+ * CHIAMA:      HtmlService.createHtmlOutput(), SpreadsheetApp.getUi()
+ *
+ * @returns {void}
+ */
 function showConstructionSiteInstructions() {
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; padding: 25px; line-height: 1.6; color: #333; max-width: 600px;">
@@ -1115,8 +1287,26 @@ function showConstructionSiteInstructions() {
   SpreadsheetApp.getUi().showModalDialog(htmlOutput, '🗏️ Istruzioni Cantieri');
 }
 
-// ===== FUNZIONI SISTEMA =====
+// ─────────────────────────────────────────────────────────────────────────────
+// SISTEMA — inizializzazione, stato, diagnostica
+// ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Entry point menu per l'inizializzazione/reconfigurazione del sistema.
+ *
+ * Controlla lo stato corrente del sistema e mostra il dialog appropriato.
+ * Non esegue modifiche direttamente: delega a showSystemInitializationDialog().
+ *
+ * FLUSSO INTERNO:
+ *   1. Chiama checkSystemInitializationStatus() per rilevare lo stato
+ *   2. Passa il risultato a showSystemInitializationDialog()
+ *
+ * CHIAMATA DA: onOpen() → menu "🚀 Inizializza sistema" / "⚠️ Riconfigura sistema"
+ * CHIAMA:      checkSystemInitializationStatus(), showSystemInitializationDialog(),
+ *              handleGlobalError()
+ *
+ * @returns {void}
+ */
 function initializeSystemSetup() {
   try {
     // Prima controlla lo stato attuale del sistema
@@ -1128,7 +1318,28 @@ function initializeSystemSetup() {
 }
 
 /**
- * Controlla lo stato di inizializzazione del sistema
+ * Controlla lo stato di inizializzazione del sistema e restituisce un oggetto status.
+ *
+ * Confronta l'ID dello spreadsheet attivo con quello salvato in PropertiesService.
+ * Determina se il sistema è 'healthy' (IDs corrispondono), 'needs_setup' (nessun ID
+ * salvato), 'conflict' (IDs diversi), o 'error' (eccezione).
+ * Usato da onOpen() per costruire il menu dinamico e da initializeSystemSetup()
+ * per decidere quale dialog mostrare.
+ *
+ * FLUSSO INTERNO:
+ *   1. Legge activeSpreadsheetId da SpreadsheetApp.getActiveSpreadsheet()
+ *   2. Legge storedSpreadsheetId da PropertiesService.getScriptProperties()
+ *   3. Confronta i due ID e imposta systemHealth di conseguenza
+ *   4. Ritorna l'oggetto status completo
+ *
+ * CHIAMATA DA: onOpen(), initializeSystemSetup()
+ * CHIAMA:      SpreadsheetApp.getActiveSpreadsheet(), PropertiesService.getScriptProperties()
+ *
+ * @returns {{ isInitialized: boolean, currentSpreadsheetId: string|null,
+ *             storedSpreadsheetId: string|null, activeSpreadsheetId: string|null,
+ *             needsInitialization: boolean, hasConflict: boolean,
+ *             systemHealth: 'healthy'|'needs_setup'|'conflict'|'error'|'unknown',
+ *             error?: string }} Oggetto con lo stato completo del sistema.
  */
 function checkSystemInitializationStatus() {
   const status = {
@@ -1184,7 +1395,28 @@ function checkSystemInitializationStatus() {
 }
 
 /**
- * Mostra dialog intelligente per inizializzazione sistema
+ * Mostra il dialog HTML di inizializzazione sistema adattato allo stato corrente.
+ *
+ * Genera un dialog modale con contenuto dinamico in base a status.systemHealth:
+ *   - 'healthy': mostra messaggio "già inizializzato", nessuna azione richiesta
+ *   - 'needs_setup': mostra pulsante "Inizializza Sistema" → chiama executeSystemInitialization()
+ *   - 'conflict': mostra pulsante "Ri-configura Sistema" → chiama executeSystemReconfiguration()
+ *   - altri: mostra messaggio di errore con suggerimenti
+ * Il dialog contiene uno <script> client-side che invoca le funzioni GAS via
+ * google.script.run.
+ *
+ * FLUSSO INTERNO:
+ *   1. Costruisce statusInfo (colori, icona, titolo) in base a status.systemHealth
+ *   2. Genera htmlContent con template literal (HTML + CSS + JS inline)
+ *   3. Crea HtmlOutput 650x700 e mostra il dialog
+ *
+ * CHIAMATA DA: initializeSystemSetup()
+ * CHIAMA:      HtmlService.createHtmlOutput(), SpreadsheetApp.getUi()
+ *              (il JS client chiama executeSystemInitialization() o executeSystemReconfiguration())
+ *
+ * @param {{ systemHealth: string, activeSpreadsheetId: string, storedSpreadsheetId: string,
+ *           error?: string }} status - Oggetto stato da checkSystemInitializationStatus().
+ * @returns {void}
  */
 function showSystemInitializationDialog(status) {
   const getStatusInfo = () => {
@@ -1478,7 +1710,21 @@ function showSystemInitializationDialog(status) {
 }
 
 /**
- * Esegue l'inizializzazione vera e propria
+ * Esegue l'inizializzazione del sistema salvando l'ID spreadsheet corrente.
+ *
+ * Legge l'ID dello spreadsheet attivo e lo salva in PropertiesService con la
+ * chiave 'MAIN_SHEET_ID'. Chiamata dal JS client nel dialog via google.script.run.
+ * Restituisce un oggetto strutturato per il callback del dialog.
+ *
+ * FLUSSO INTERNO:
+ *   1. Legge ID spreadsheet attivo
+ *   2. setProperty('MAIN_SHEET_ID', spreadsheetId)
+ *   3. Ritorna { success: true, spreadsheetId }
+ *
+ * CHIAMATA DA: showSystemInitializationDialog() → client JS → google.script.run
+ * CHIAMA:      SpreadsheetApp.getActiveSpreadsheet(), PropertiesService.getScriptProperties()
+ *
+ * @returns {{ success: boolean, message: string, spreadsheetId?: string }}
  */
 function executeSystemInitialization() {
   try {
@@ -1505,7 +1751,21 @@ function executeSystemInitialization() {
 }
 
 /**
- * Esegue la ri-configurazione del sistema
+ * Esegue la riconfigura del sistema aggiornando l'ID spreadsheet in PropertiesService.
+ *
+ * Salva il vecchio ID (previousId) per il feedback nel dialog, poi aggiorna
+ * 'MAIN_SHEET_ID' con l'ID dello spreadsheet corrente. Usata quando il sistema
+ * era configurato per un altro spreadsheet (stato 'conflict').
+ *
+ * FLUSSO INTERNO:
+ *   1. Legge l'ID attivo e il precedente
+ *   2. setProperty('MAIN_SHEET_ID', currentSpreadsheetId)
+ *   3. Ritorna { success: true, previousId, newId }
+ *
+ * CHIAMATA DA: showSystemInitializationDialog() → client JS → google.script.run
+ * CHIAMA:      SpreadsheetApp.getActiveSpreadsheet(), PropertiesService.getScriptProperties()
+ *
+ * @returns {{ success: boolean, message: string, previousId?: string, newId?: string }}
  */
 function executeSystemReconfiguration() {
   try {
@@ -1533,6 +1793,17 @@ function executeSystemReconfiguration() {
   }
 }
 
+/**
+ * Menu bridge: avvia il ciclo completo di diagnostica e mostra i risultati.
+ *
+ * Chiama performSystemDiagnostics() per raccogliere i dati, poi passa il
+ * risultato a showDiagnosticsDialog() per la visualizzazione HTML.
+ *
+ * CHIAMATA DA: onOpen() → menu "🔧 Diagnostica sistema"
+ * CHIAMA:      performSystemDiagnostics(), showDiagnosticsDialog(), handleGlobalError()
+ *
+ * @returns {void}
+ */
 function runSystemDiagnostics() {
   try {
     const diagnostics = performSystemDiagnostics();
@@ -1542,6 +1813,32 @@ function runSystemDiagnostics() {
   }
 }
 
+/**
+ * Raccoglie i dati diagnostici del sistema senza mostrare UI.
+ *
+ * Verifica connessione al database, conta fogli (sistema vs dipendenti),
+ * legge la lista utenti per verificare quanti hanno password, e controlla
+ * l'esistenza delle cartelle Drive di archivio e report. Tutti gli errori
+ * parziali vengono registrati in results.errors senza interrompere l'analisi.
+ *
+ * FLUSSO INTERNO:
+ *   1. getMainSpreadsheet() → verifica connessione database
+ *   2. getSheets() → classifica fogli con isSystemSheet()
+ *   3. getUsersList() → conta utenti attivi e con password
+ *   4. DriveApp.getFoldersByName() → verifica cartelle archivio e report
+ *   5. Ritorna oggetto results con tutti i dati raccolti
+ *
+ * CHIAMATA DA: runSystemDiagnostics()
+ * CHIAMA:      getMainSpreadsheet() (Config.gs), isSystemSheet() (Config.gs),
+ *              getUsersList() (GestionePassword.gs), DriveApp.getFoldersByName(),
+ *              CONFIG.FOLDERS
+ *
+ * @returns {{ timestamp: string, spreadsheet: { status: string, details: string },
+ *             sheets: { count: number, employees: number, system: number },
+ *             users: { total: number, active: number, withPassword: number },
+ *             folders: { archive: boolean, reports: boolean },
+ *             errors: string[] }} Oggetto con tutti i risultati diagnostici.
+ */
 function performSystemDiagnostics() {
   const results = {
     timestamp: new Date().toLocaleString('it-IT'),
@@ -1594,6 +1891,22 @@ function performSystemDiagnostics() {
   return results;
 }
 
+/**
+ * Mostra i risultati della diagnostica in una dialog HTML modale.
+ *
+ * Genera un dialog 650x700 con riepilogo generale (database, fogli, utenti, errori),
+ * dettagli per ogni area (database, struttura fogli, gestione utenti, cartelle Drive),
+ * lista degli errori rilevati (se presenti) e raccomandazioni. Il colore e l'icona
+ * dell'header si adattano automaticamente alla presenza o assenza di errori.
+ *
+ * CHIAMATA DA: runSystemDiagnostics()
+ * CHIAMA:      HtmlService.createHtmlOutput(), SpreadsheetApp.getUi()
+ *
+ * @param {{ timestamp: string, spreadsheet: object, sheets: object,
+ *           users: object, folders: object, errors: string[] }} diagnostics
+ *   - Oggetto risultati da performSystemDiagnostics().
+ * @returns {void}
+ */
 function showDiagnosticsDialog(diagnostics) {
   const statusIcon = diagnostics.errors.length === 0 ? '✅' : '⚠️';
   const overallStatus = diagnostics.errors.length === 0 ? 'ECCELLENTE' : 'PROBLEMI RILEVATI';
@@ -1773,8 +2086,32 @@ function showDiagnosticsDialog(diagnostics) {
   SpreadsheetApp.getUi().showModalDialog(htmlOutput, title);
 }
 
-// ===== GESTIONE ERRORI GLOBALE =====
+// ─────────────────────────────────────────────────────────────────────────────
+// GESTIONE ERRORI GLOBALE — logging e notifica utente
+// ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Gestore globale degli errori per le funzioni menu — logga e notifica l'utente.
+ *
+ * Costruisce un messaggio di errore con timestamp e lo salva in PropertiesService
+ * (chiave 'ERROR_LOG', max 5000 caratteri in coda FIFO). Poi mostra all'utente
+ * un alert con il messaggio di errore leggibile e il nome della funzione fallita.
+ * Usato da tutti i wrapper menu come catch universale.
+ *
+ * FLUSSO INTERNO:
+ *   1. Costruisce errorMessage con timestamp + functionName + error.toString()
+ *   2. console.error() per il log GAS
+ *   3. Legge 'ERROR_LOG' da PropertiesService, appende, salva (slice -5000)
+ *   4. SpreadsheetApp.getUi().alert() con messaggio user-friendly
+ *
+ * CHIAMATA DA: tutti i wrapper menu (archiveAllPreviousYear, changeEmployeePassword,
+ *              generateMonthlyReport, recalculateConstructionSites, ecc.)
+ * CHIAMA:      PropertiesService.getScriptProperties(), SpreadsheetApp.getUi()
+ *
+ * @param {string} functionName - Nome della funzione che ha generato l'errore.
+ * @param {Error}  error        - Oggetto errore catturato dal blocco catch.
+ * @returns {void}
+ */
 function handleGlobalError(functionName, error) {
   const timestamp = new Date().toLocaleString('it-IT');
   const errorMessage = `[${timestamp}] Errore in ${functionName}: ${error.toString()}`;

@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sistema Gestione Ore V2.2 TEST</title>
     <style>
+        /* ═══════════════════════════════════════════
+           RESET E BODY — Reset box-model globale,
+           sfondo gradiente viola animato, centra
+           il form verticalmente e orizzontalmente.
+           ═══════════════════════════════════════════ */
         * {
             margin: 0;
             padding: 0;
@@ -23,7 +28,11 @@
             overflow-x: hidden;
         }
 
-        /* Animated background elements */
+        /* ═══════════════════════════════════════════
+           BG DECORATION — Cerchi animati in background
+           per effetto decorativo. Tre elementi con
+           animation-delay differente e dimensioni diverse.
+           ═══════════════════════════════════════════ */
         .bg-decoration {
             position: absolute;
             border-radius: 50%;
@@ -60,6 +69,11 @@
             50% { transform: translateY(-20px) rotate(180deg); }
         }
 
+        /* ═══════════════════════════════════════════
+           LOGIN CONTAINER — Card bianca semitrasparente
+           con glassmorphism, ombra e bordo raffinato.
+           Hover solleva la card di 5px.
+           ═══════════════════════════════════════════ */
         .login-container {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
@@ -89,6 +103,11 @@
             }
         }
 
+        /* ═══════════════════════════════════════════
+           VERSION BADGE — Badge versione in alto a destra
+           con gradiente viola. In produzione viene
+           nascosto da removeDebugElements() in config.js.
+           ═══════════════════════════════════════════ */
         .version-badge {
             position: absolute;
             top: 20px;
@@ -112,6 +131,11 @@
             }
         }
 
+        /* ═══════════════════════════════════════════
+           LOGO SECTION — Sezione logo e titolo nella
+           parte superiore del form. Logo circolare con
+           bordo ombra, hover scala e ruota.
+           ═══════════════════════════════════════════ */
         .logo-section {
             text-align: center;
             margin-bottom: 40px;
@@ -129,7 +153,7 @@
             background: white;       /* opzionale, per stacco sullo sfondo */
             box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* effetto elegante */
         }
-        
+
         .logo img {
             width: 100%;
             height: 100%;
@@ -180,6 +204,11 @@
             }
         }
 
+        /* ═══════════════════════════════════════════
+           FORM SECTION — Container per i campi del form,
+           sfondo leggermente viola, bordo sottile.
+           Hover solleva di 2px.
+           ═══════════════════════════════════════════ */
         .form-section {
             background: rgba(102, 126, 234, 0.05);
             border-radius: 20px;
@@ -201,6 +230,10 @@
             }
         }
 
+        /* ═══════════════════════════════════════════
+           SECTION TITLE E ICON — Intestazioni delle
+           sezioni form con icona emoji e testo viola.
+           ═══════════════════════════════════════════ */
         .section-title {
             color: #667eea;
             font-size: 18px;
@@ -223,6 +256,11 @@
             font-size: 20px;
         }
 
+        /* ═══════════════════════════════════════════
+           FORM GROUP E INPUT — Campi di input con
+           bordo grigio, arrotondato 15px. Focus aggiunge
+           bordo viola e shadow, solleva 2px.
+           ═══════════════════════════════════════════ */
         .form-group {
             margin-bottom: 25px;
             position: relative;
@@ -273,6 +311,12 @@
             }
         }
 
+        /* ═══════════════════════════════════════════
+           LOGIN SECTION E BUTTON — Container del pulsante
+           di accesso, sfondo leggermente viola. Pulsante
+           full-width con gradiente viola, effetto shimmer
+           su hover, disabilitato quando in caricamento.
+           ═══════════════════════════════════════════ */
         .login-section {
             text-align: center;
             padding: 35px 30px;
@@ -350,6 +394,12 @@
             }
         }
 
+        /* ═══════════════════════════════════════════
+           MESSAGE CONTAINER — Area messaggi di stato
+           (errore, successo, sicurezza). Ogni div è
+           hidden di default e mostrato via JS con
+           slideIn animation al display:block.
+           ═══════════════════════════════════════════ */
         .message-container {
             margin-bottom: 25px;
         }
@@ -393,6 +443,10 @@
             }
         }
 
+        /* ═══════════════════════════════════════════
+           LOADING SPINNER — Spinner inline bianco usato
+           all'interno del login-btn durante la richiesta.
+           ═══════════════════════════════════════════ */
         .loading {
             display: inline-block;
             width: 20px;
@@ -410,6 +464,10 @@
             }
         }
 
+        /* ═══════════════════════════════════════════
+           FOOTER — Piè di pagina con nome sistema
+           in gradiente viola.
+           ═══════════════════════════════════════════ */
         .footer {
             text-align: center;
             margin-top: 30px;
@@ -436,13 +494,18 @@
                 margin-top: 25px;
                 padding-top: 20px;
             }
-            
+
             .footer p {
                 font-size: 12px;
             }
         }
 
-        /* Notification system matching dashboard */
+        /* ═══════════════════════════════════════════
+           NOTIFICATION — Toast di notifica uguale a
+           dashboard.html, inserito in alto a destra
+           e animato con translateX. Su mobile cambia
+           in translateY dall'alto.
+           ═══════════════════════════════════════════ */
         .notification {
             position: fixed;
             top: 20px;
@@ -489,13 +552,17 @@
                 border-radius: 10px;
                 padding: 12px 20px;
             }
-            
+
             .notification.show {
                 transform: translateY(0);
             }
         }
 
-        /* Fast mode indicator */
+        /* ═══════════════════════════════════════════
+           FAST INDICATOR — Badge "Fast Mode" in alto
+           a sinistra, visibile in produzione per indicare
+           la modalità veloce V2.2. Animazione pulse.
+           ═══════════════════════════════════════════ */
         .fast-indicator {
             position: absolute;
             top: 10px;
@@ -524,7 +591,11 @@
             }
         }
 
-        /* Form validation styles */
+        /* ═══════════════════════════════════════════
+           FORM VALIDATION — Stile per input non validi
+           (bordo rosso + shadow). Classe aggiunta
+           dinamicamente da validateField().
+           ═══════════════════════════════════════════ */
         .form-validation {
             border-color: #dc3545 !important;
             box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1) !important;
@@ -553,10 +624,10 @@
     <div class="bg-decoration"></div>
     <div class="bg-decoration"></div>
     <div class="bg-decoration"></div>
-    
+
     <div class="version-badge" id="versionBadge">v2.2 Fast ⚡</div>
     <div class="fast-indicator">⚡ Fast Mode</div>
-    
+
     <div class="login-container">
         <div class="logo-section">
             <div class="logo">
@@ -578,17 +649,17 @@
                     <span class="icon">👤</span>
                     Credenziali di Accesso
                 </div>
-                
+
                 <div class="form-group">
                     <label for="userId">Username</label>
-                    <input type="text" id="userId" name="userId" required 
+                    <input type="text" id="userId" name="userId" required
                            placeholder="Inserisci il tuo username" autocomplete="username">
                     <div class="validation-message">Username richiesto</div>
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required 
+                    <input type="password" id="password" name="password" required
                            placeholder="Inserisci la tua password" autocomplete="current-password">
                     <div class="validation-message">Password richiesta</div>
                 </div>
@@ -612,7 +683,12 @@
     <script>
         'use strict';
 
-        // Cache elementi DOM
+        /* ═══════════════════════════════════════════
+           CACHE ELEMENTI DOM — Oggetto che raccoglie
+           i riferimenti agli elementi DOM utilizzati
+           frequentemente nello script, evitando
+           query ripetute al DOM.
+           ═══════════════════════════════════════════ */
         const elements = {
             userId: document.getElementById('userId'),
             password: document.getElementById('password'),
@@ -623,38 +699,76 @@
             securityMessage: document.getElementById('securityMessage')
         };
 
-        // ⚡ AUTENTICAZIONE VELOCE V2.2 - COMPLETAMENTE SILENZIOSA
+        /**
+         * Esegue l'autenticazione utente tramite API backend (V2.2 Fast).
+         *
+         * DESCRIZIONE ESTESA: Chiama Utils.callAPI con action 'authenticate' e
+         * le credenziali. In caso di successo, cancella authMethod dal systemInfo
+         * per sopprimere i messaggi di sicurezza (modalità silenziosa V2.2).
+         * In caso di errore rilancia per gestione nel submit handler.
+         *
+         * FLUSSO INTERNO:
+         *   1. Chiama Utils.callAPI({ action: 'authenticate', userId, password })
+         *   2. Se result.success e result.systemInfo, cancella authMethod
+         *   3. Ritorna il result (con o senza authMethod)
+         *   4. In catch, rilancia con messaggio descrittivo
+         *
+         * CHIAMATA DA:  form submit listener (#loginForm)
+         * CHIAMA:       Utils.callAPI
+         *
+         * @param {string} userId   - Username inserito dall'utente
+         * @param {string} password - Password inserita dall'utente
+         * @returns {Promise<Object>} Oggetto risposta backend con { success, data, sessionToken, message }
+         */
         async function authenticateUser(userId, password) {
             console.log('⚡ Autenticazione veloce V2.2:', userId);
-            
+
             try {
                 const result = await Utils.callAPI({
                     action: 'authenticate',
                     userId: userId,
                     password: password
                 });
-                
+
                 console.log('⚡ Risultato autenticazione V2.2:', result.success ? 'SUCCESS' : 'FAILED');
-                
+
                 // BLOCCA qualsiasi chiamata a showSecurityStatus
                 if (result.success && result.systemInfo) {
                     // Cancella l'authMethod per evitare messaggi
                     delete result.systemInfo.authMethod;
                 }
-                
+
                 return result;
-                
+
             } catch (error) {
                 console.error('❌ Errore autenticazione:', error);
                 throw new Error('Errore di autenticazione: ' + error.message);
             }
         }
 
-        // Funzioni di validazione
+        /**
+         * Valida un singolo campo input e mostra il messaggio di errore se vuoto.
+         *
+         * DESCRIZIONE ESTESA: Controlla che il valore del campo non sia vuoto dopo
+         * trim. Se non valido, aggiunge la classe 'form-validation' (bordo rosso)
+         * e mostra il .validation-message. Se valido, chiama clearValidation.
+         *
+         * FLUSSO INTERNO:
+         *   1. Legge e fa trim del valore
+         *   2. Se vuoto: aggiunge .form-validation, mostra .validation-message, ritorna false
+         *   3. Se valido: chiama clearValidation, ritorna true
+         *
+         * CHIAMATA DA:  blur listener su #userId e #password,
+         *               form submit handler (verifica tutti i campi prima del login)
+         * CHIAMA:       clearValidation
+         *
+         * @param {HTMLInputElement} field - Elemento input da validare
+         * @returns {boolean} true se valido, false se vuoto
+         */
         function validateField(field) {
             const value = field.value.trim();
             const isValid = value.length > 0;
-            
+
             if (!isValid) {
                 field.classList.add('form-validation');
                 const validationMsg = field.parentElement.querySelector('.validation-message');
@@ -666,28 +780,69 @@
             }
         }
 
+        /**
+         * Rimuove lo stato di errore di validazione da un campo input.
+         *
+         * CHIAMATA DA:  validateField (quando valido), input listener su #userId e #password
+         * CHIAMA:       classList.remove, querySelector
+         *
+         * @param {HTMLInputElement} field - Elemento input da resettare
+         * @returns {void}
+         */
         function clearValidation(field) {
             field.classList.remove('form-validation');
             const validationMsg = field.parentElement.querySelector('.validation-message');
             if (validationMsg) validationMsg.style.display = 'none';
         }
 
+        /**
+         * Mostra un messaggio di errore nell'area messaggi del form.
+         *
+         * CHIAMATA DA:  form submit handler (credenziali errate, errori di rete)
+         * CHIAMA:       hideAllMessages
+         *
+         * @param {string} message - Testo dell'errore da mostrare
+         * @returns {void}
+         */
         function showError(message) {
             hideAllMessages();
             elements.errorMessage.textContent = message;
             elements.errorMessage.style.display = 'block';
         }
 
+        /**
+         * Mostra un messaggio di successo nell'area messaggi del form.
+         *
+         * CHIAMATA DA:  form submit handler (login riuscito, prima del redirect)
+         * CHIAMA:       hideAllMessages
+         *
+         * @param {string} message - Testo del messaggio di successo
+         * @returns {void}
+         */
         function showSuccess(message) {
             hideAllMessages();
             elements.successMessage.textContent = message;
             elements.successMessage.style.display = 'block';
         }
 
+        /**
+         * Mostra un messaggio di sicurezza in base al metodo di autenticazione usato.
+         *
+         * DESCRIZIONE ESTESA: Switch su authMethod per comporre il messaggio appropriato.
+         * In modalità V2.2 questa funzione non viene più chiamata perché authMethod
+         * viene cancellato in authenticateUser() prima dell'if nel submit handler.
+         *
+         * CHIAMATA DA:  form submit handler (solo se result.systemInfo.authMethod esiste,
+         *               ma viene cancellato da authenticateUser) — praticamente mai chiamata // ⚠️ ANOMALIA: authMethod cancellato in authenticateUser() prima del controllo nel submit handler, quindi showSecurityInfo non viene mai invocata. Verificare se è comportamento intenzionale.
+         * CHIAMA:       hideAllMessages
+         *
+         * @param {string} authMethod - 'hash'|'plain_migrated'|'plain_fallback'|altro
+         * @returns {void}
+         */
         function showSecurityInfo(authMethod) {
             hideAllMessages();
             let message = '';
-            
+
             switch(authMethod) {
                 case 'hash':
                     message = '🔒 Autenticazione sicura completata!';
@@ -701,32 +856,112 @@
                 default:
                     message = '🔒 Autenticazione completata con successo';
             }
-            
+
             elements.securityMessage.textContent = message;
             elements.securityMessage.style.display = 'block';
         }
 
+        /**
+         * Nasconde tutti i messaggi di stato (errore, successo, sicurezza).
+         *
+         * CHIAMATA DA:  showError, showSuccess, showSecurityInfo,
+         *               form submit handler (reset messaggi prima della validazione)
+         *
+         * @returns {void}
+         */
         function hideAllMessages() {
             elements.errorMessage.style.display = 'none';
             elements.successMessage.style.display = 'none';
             elements.securityMessage.style.display = 'none';
         }
 
-        // Setup form validation
+        /**
+         * Configura i listener di validazione real-time sui campi username e password.
+         *
+         * DESCRIZIONE ESTESA: Aggiunge listener 'blur' per validare al termine della
+         * modifica e 'input' per rimuovere l'errore mentre l'utente digita.
+         *
+         * FLUSSO INTERNO:
+         *   1. Aggiunge blur → validateField su #userId e #password
+         *   2. Aggiunge input → clearValidation su #userId e #password
+         *
+         * CHIAMATA DA:  DOMContentLoaded
+         * CHIAMA:       validateField, clearValidation
+         *
+         * @returns {void}
+         */
         function setupFormValidation() {
             // Validazione real-time
             elements.userId.addEventListener('blur', () => validateField(elements.userId));
             elements.password.addEventListener('blur', () => validateField(elements.password));
-            
+
             // Clear validation on input
             elements.userId.addEventListener('input', () => clearValidation(elements.userId));
             elements.password.addEventListener('input', () => clearValidation(elements.password));
         }
 
-        // ⚡ EVENT LISTENER OTTIMIZZATO
+        /**
+         * Mostra notifica tramite Utils.showNotification (wrapper con fallback a console).
+         *
+         * DESCRIZIONE ESTESA: Verifica che Utils e Utils.showNotification esistano;
+         * se sì delega, altrimenti logga in console. In index.html non viene
+         * usata direttamente (il submit handler usa showError/showSuccess).
+         *
+         * CHIAMATA DA:  Non risulta chiamata direttamente in index.html // ⚠️ DEAD CODE: non risulta chiamata nel flusso attuale di index.html
+         * CHIAMA:       Utils.showNotification
+         *
+         * @param {string} message          - Testo della notifica
+         * @param {string} [type='info']    - Tipo notifica
+         * @param {number} [duration=5000]  - Durata in ms
+         * @returns {void}
+         */
+        function showNotification(message, type = 'info', duration = 5000) {
+            if (Utils && Utils.showNotification) {
+                Utils.showNotification(message, type, duration);
+            } else {
+                console.log(`${type.toUpperCase()}: ${message}`);
+            }
+        }
+
+        /* ═══════════════════════════════════════════
+           SUBMIT HANDLER — Gestisce il submit del form
+           di login: valida, chiama authenticateUser,
+           salva sessione e reindirizza alla dashboard.
+           ═══════════════════════════════════════════ */
+
+        /**
+         * Handler del submit del form di login (evento ottimizzato V2.2).
+         *
+         * DESCRIZIONE ESTESA: Previene il submit nativo, legge i valori dai campi,
+         * esegue validazione client-side, chiama authenticateUser() e gestisce
+         * successo (salva sessione, mostra successo, redirect dopo 2s) e
+         * fallimento (mostra errore). Blocca il pulsante durante la richiesta.
+         *
+         * FLUSSO INTERNO:
+         *   1. e.preventDefault()
+         *   2. Legge userId e password
+         *   3. hideAllMessages()
+         *   4. Valida entrambi i campi con validateField
+         *   5. Valida password minima con Utils.validatePassword
+         *   6. Disabilita loginBtn, mostra spinner
+         *   7. Chiama authenticateUser(userId, password)
+         *   8. Se success: showSuccess, Utils.setSession, setTimeout redirect 2s
+         *   9. Altrimenti: showError con user.message
+         *  10. finally: riabilita loginBtn
+         *
+         * CHIAMATA DA:  evento 'submit' su #loginForm
+         *               evento 'keydown' Enter (via dispatchEvent)
+         * CHIAMA:       hideAllMessages, validateField, Utils.validatePassword,
+         *               authenticateUser, showSuccess, showSecurityInfo,
+         *               Utils.setSession, Utils.redirectToDashboard (via window.location)
+         * LEGGE:        CONFIG.VALIDATION.MIN_PASSWORD_LENGTH, CONFIG.PAGES.DASHBOARD
+         *
+         * @param {Event} e - Evento submit
+         * @returns {Promise<void>}
+         */
         elements.loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const userId = elements.userId.value.trim();
             const password = elements.password.value.trim();
 
@@ -749,35 +984,36 @@
                 return;
             }
 
-            // ⚡ LOADING STATE VELOCE
+            // Loading state
             elements.loginBtn.disabled = true;
             elements.loginBtn.innerHTML = '<span class="loading"></span>Accesso in corso...';
 
             try {
                 const user = await authenticateUser(userId, password);
-                
+
                 if (user && user.success) {
-                    // ⚡ SUCCESS VELOCE
                     showSuccess(`Benvenuto ${user.data.name}!`);
-                    
+
                     // Mostra info sicurezza se disponibile
+                    // NOTA: authMethod è già stato cancellato in authenticateUser(),
+                    // quindi questa condizione non sarà mai vera in V2.2
                     if (user.systemInfo && user.systemInfo.authMethod) {
                         setTimeout(() => {
                             showSecurityInfo(user.systemInfo.authMethod);
                         }, 1500);
                     }
-                    
+
                     console.log('⚡ Login successful');
-                    
+
                     // Salva sessione
                     Utils.setSession(user.data, user.sessionToken);
-                    
-                    // ⚡ REDIRECT IMMEDIATO
+
+                    // Redirect immediato
                     setTimeout(() => {
                         console.log('⚡ Redirect alla dashboard...');
                         window.location.href = CONFIG.PAGES.DASHBOARD;
                     }, 2000);
-                   
+
                 } else {
                     showError(user.message || 'Credenziali non valide');
                 }
@@ -790,47 +1026,74 @@
             }
         });
 
-        // ⚡ SETUP VELOCE AL CARICAMENTO
+        /* ═══════════════════════════════════════════
+           DOMCONTENTLOADED — Inizializzazione pagina:
+           controlla se già loggato, configura validazione,
+           e mette il focus sul campo username.
+           ═══════════════════════════════════════════ */
+
+        /**
+         * Handler DOMContentLoaded — Inizializza la pagina di login V2.2.
+         *
+         * FLUSSO INTERNO:
+         *   1. Controlla PageGuard.redirectIfLoggedIn() — se true, esce subito
+         *   2. Chiama setupFormValidation()
+         *   3. Focus automatico su #userId
+         *
+         * CHIAMATA DA:  DOMContentLoaded
+         * CHIAMA:       PageGuard.redirectIfLoggedIn, setupFormValidation,
+         *               elements.userId.focus
+         *
+         * @returns {Promise<void>}
+         */
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('⚡ Sistema Login V2.2 avviato');
-            
+
             // Se già loggato, redirect immediato
             if (PageGuard.redirectIfLoggedIn()) {
                 return;
             }
-            
+
             // Setup validazione form
             setupFormValidation();
-            
+
             // ✅ CONNECTION TEST DISABILITATO PER PERFORMANCE
             console.log('⚡ Connection test disabilitato - modalità veloce attiva');
             console.log('⚡ Form login pronto per l\'uso');
-            
+
             // Focus automatico sul campo username
             elements.userId.focus();
         });
 
-        // ⚡ ENTER KEY OPTIMIZATION
+        /* ═══════════════════════════════════════════
+           KEYBOARD SHORTCUTS — Enter per submit,
+           Escape per nascondere i messaggi di stato.
+           ═══════════════════════════════════════════ */
+
+        /**
+         * Handler keydown globale — Enter invia il form, Escape nasconde i messaggi.
+         *
+         * DESCRIZIONE ESTESA: Intercetta Enter solo se loginBtn non è disabilitato
+         * (per evitare doppio submit durante il loading). Escape nasconde tutti
+         * i messaggi di errore/successo/sicurezza.
+         *
+         * CHIAMATA DA:  evento 'keydown' su document
+         * CHIAMA:       elements.loginForm.dispatchEvent, hideAllMessages
+         *
+         * @param {KeyboardEvent} e - Evento tastiera
+         * @returns {void}
+         */
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !elements.loginBtn.disabled) {
                 e.preventDefault();
                 elements.loginForm.dispatchEvent(new Event('submit'));
             }
-            
+
             // ESC per clear dei messaggi
             if (e.key === 'Escape') {
                 hideAllMessages();
             }
         });
-
-        // Mostra notifica usando il sistema della dashboard
-        function showNotification(message, type = 'info', duration = 5000) {
-            if (Utils && Utils.showNotification) {
-                Utils.showNotification(message, type, duration);
-            } else {
-                console.log(`${type.toUpperCase()}: ${message}`);
-            }
-        }
     </script>
 </body>
 </html>

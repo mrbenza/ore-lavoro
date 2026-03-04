@@ -1,24 +1,67 @@
 /**
  * SheetsDAO.gs - Data Access Object per Google Sheets
- * 
- * ESTRATTO DA: code.gs (updateCantiereHours, helper functions)
- * MODIFICHE: Nessuna - solo organizzazione
+ *
+ * Centralizza tutte le operazioni di lettura/scrittura sui fogli principali:
+ * - Aggiornamento ore cantieri (updateCantiereHours)
+ * - Lettura cantieri (getCantieri, getAllCantieriForAdmin)
+ * - Lettura ore utente (getUserInfo, getOtherUserInfo)
+ * - Helper per lookup utenti
+ *
+ * USATO DA: UserAPI.gs, AdminAPI.gs, ApiRouter.gs
  */
 
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 // AGGIORNAMENTO CANTIERI
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Aggiorna le ore di un cantiere
- * IDENTICO al tuo code.gs (righe 300-350 circa)
+ * Aggiorna le ore totali di un cantiere nel foglio "Cantieri".
+ *
+ * Dopo ogni salvataggio/modifica/eliminazione di ore, questa funzione
+ * incrementa (o decrementa, se oreAggiunte è negativo) il contatore ORE_TOTALI
+ * del cantiere e aggiorna i campi ULTIMO_UPDATE, ULTIMO_DIPENDENTE e
+ * NUM_INSERIMENTI. Legge le colonne in blocco per efficienza.
+ *
+ * FLUSSO INTERNO:
+ *   1. Recupera il foglio Cantieri con getSheetSafely()
+ *   2. Legge tutte le righe in un'unica getRange().getValues()
+ *   3. Cerca il cantiere per ID (confronto stringa)
+ *   4. Aggiorna ORE_TOTALI, ULTIMO_UPDATE, ULTIMO_DIPENDENTE, NUM_INSERIMENTI
+ *      con chiamate separate getRange().setValue() (non batchate — 4 celle per cantiere)
+ *   5. Restituisce oggetto con ore prima e dopo l'aggiornamento
+ *
+ * CHIAMATA DA: UserAPI.gs → saveWorkEntry()
+ *              AdminAPI.gs → updateWorkEntry() (insert e update)
+ *              AdminAPI.gs → deleteWorkEntry() (con oreAggiunte negativo)
+ * CHIAMA:      getSheetSafely(), Logger.save/error, handleError()
+ *
+ * @param {string|number} cantiereId  - ID del cantiere da aggiornare.
+ * @param {number}        oreAggiunte - Ore da aggiungere (negativo per sottrarre).
+ * @param {string|null}   [dipendente] - Nome dipendente da registrare in ULTIMO_DIPENDENTE.
+ * @returns {{
+ *   success: boolean,
+ *   cantiereId?: string,
+ *   oreAttuali?: number,
+ *   oreAggiunte?: number,
+ *   nuovoTotale?: number,
+ *   dataAggiornamento?: Date,
+ *   ultimoDipendente?: string,
+ *   numeroInserimenti?: number,
+ *   message?: string
+ * }} Risultato aggiornamento.
+ *
+ * @example
+ * updateCantiereHours('C001', 8, 'Mario Rossi');
+ * // → { success: true, oreAttuali: 40, oreAggiunte: 8, nuovoTotale: 48, ... }
+ * updateCantiereHours('C001', -8, 'Mario Rossi'); // elimina
+ * // → { success: true, nuovoTotale: 40, ... }
  */
 function updateCantiereHours(cantiereId, oreAggiunte, dipendente) {
   if (!dipendente) dipendente = null;
-  
+
   try {
     Logger.save('Aggiornando cantiere ' + cantiereId + ' con +' + oreAggiunte + ' ore');
-    
+
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var cantieriSheet = getSheetSafely(ss, SHEET_NAMES.CANTIERI);
 
@@ -33,16 +76,16 @@ function updateCantiereHours(cantiereId, oreAggiunte, dipendente) {
 
     // Leggi colonne necessarie in blocco
     var data = cantieriSheet.getRange(
-      2, 
-      1, 
-      lastRow - 1, 
+      2,
+      1,
+      lastRow - 1,
       Math.max(COLUMNS_CANTIERI.NUM_INSERIMENTI + 1, cantieriSheet.getLastColumn())
     ).getValues();
 
     for (var i = 0; i < data.length; i++) {
       var row = data[i];
       var cId = row[COLUMNS_CANTIERI.ID];
-      
+
       if (String(cId) === String(cantiereId)) {
         var rowIndex1 = i + 2;
         var oreAttuali = parseFloat(row[COLUMNS_CANTIERI.ORE_TOTALI]) || 0;
@@ -56,17 +99,17 @@ function updateCantiereHours(cantiereId, oreAggiunte, dipendente) {
         cantieriSheet.getRange(rowIndex1, COLUMNS_CANTIERI.ULTIMO_UPDATE + 1)
           .setValue(dataAggiornamento)
           .setNumberFormat('dd/mm/yyyy hh:mm');
-        
-        if (dipendente) { 
+
+        if (dipendente) {
           cantieriSheet.getRange(rowIndex1, COLUMNS_CANTIERI.ULTIMO_DIPENDENTE + 1)
-            .setValue(dipendente); 
+            .setValue(dipendente);
         }
-        
+
         cantieriSheet.getRange(rowIndex1, COLUMNS_CANTIERI.NUM_INSERIMENTI + 1)
           .setValue(nuovoContatore);
 
         Logger.save('Cantiere aggiornato: ' + cantiereId);
-        
+
         return {
           success: true,
           cantiereId: cantiereId,
@@ -79,27 +122,51 @@ function updateCantiereHours(cantiereId, oreAggiunte, dipendente) {
         };
       }
     }
-    
+
     return { success: false, message: 'Cantiere ' + cantiereId + ' non trovato' };
-    
+
   } catch (error) {
     return handleError('updateCantiereHours', error);
   }
 }
 
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 // LETTURA CANTIERI
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Restituisce elenco cantieri aperti
- * IDENTICO al tuo code.gs
+ * Restituisce l'elenco dei cantieri con stato "Aperto" per la dashboard dipendente.
+ *
+ * Filtra il foglio Cantieri restituendo solo i cantieri con stato 'Aperto',
+ * 'aperto' o 'APERTO'. Questa lista viene usata dal frontend per popolare il
+ * dropdown di selezione cantiere nel form di inserimento ore.
+ *
+ * FLUSSO INTERNO:
+ *   1. Valida sessionToken
+ *   2. Legge foglio Cantieri con getSheetSafely()
+ *   3. Filtra per colonna STATO == 'Aperto' (case-insensitive)
+ *   4. Restituisce array di {id, nome, indirizzo, stato}
+ *
+ * CHIAMATA DA: ApiRouter.gs → doGet() (action='getCantieri')
+ *              ApiRouter.gs → doPost() (action='getCantieri')
+ * CHIAMA:      validateSessionToken(), getSheetSafely(), handleError()
+ *
+ * @param {string} sessionToken - Token di sessione.
+ * @returns {{
+ *   success: boolean,
+ *   data?: Array<{ id: *, nome: string, indirizzo: string, stato: string }>,
+ *   message?: string
+ * }} Lista cantieri aperti.
+ *
+ * @example
+ * const res = getCantieri('mario_1709123456_abc');
+ * // res → { success: true, data: [{id:'C001', nome:'Edificio A', ...}], message: '2 cantieri attivi trovati' }
  */
 function getCantieri(sessionToken) {
   if (!validateSessionToken(sessionToken)) {
     return { success: false, message: 'Token di sessione non valido' };
   }
-  
+
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var cantieriSheet = getSheetSafely(ss, SHEET_NAMES.CANTIERI);
@@ -121,7 +188,7 @@ function getCantieri(sessionToken) {
     for (var i = 0; i < data.length; i++) {
       var row = data[i];
       var stato = row[COLUMNS_CANTIERI.STATO];
-      
+
       if (stato === 'Aperto' || stato === 'aperto' || stato === 'APERTO') {
         cantieri.push({
           id: row[COLUMNS_CANTIERI.ID],
@@ -131,43 +198,67 @@ function getCantieri(sessionToken) {
         });
       }
     }
-    
-    return { 
-      success: true, 
-      data: cantieri, 
-      message: cantieri.length + ' cantieri attivi trovati' 
+
+    return {
+      success: true,
+      data: cantieri,
+      message: cantieri.length + ' cantieri attivi trovati'
     };
-    
+
   } catch (error) {
     return handleError('getCantieri', error);
   }
 }
 
 /**
- * Ottieni TUTTI i cantieri (anche chiusi) per admin
- * IDENTICO al tuo code.gs
+ * Restituisce tutti i cantieri (aperti e chiusi) per la dashboard admin.
+ *
+ * Non filtra per stato, permettendo agli admin di selezionare qualsiasi cantiere
+ * durante la modifica delle ore di un dipendente. Legge solo le prime 4 colonne
+ * (ID, Nome, Indirizzo, Stato).
+ *
+ * FLUSSO INTERNO:
+ *   1. Valida sessionToken
+ *   2. Accede al foglio Cantieri con ss.getSheetByName()
+ *   3. Legge colonne A-D per tutte le righe dati
+ *   4. Include tutti i cantieri con ID non vuoto
+ *
+ * CHIAMATA DA: ApiRouter.gs → doGet() (action='getAllCantieriForAdmin')
+ *              ApiRouter.gs → doPost() (action='getAllCantieriForAdmin')
+ * CHIAMA:      validateSessionToken(), Logger.error
+ *
+ * @param {string} sessionToken - Token di sessione.
+ * @returns {{
+ *   success: boolean,
+ *   data?: Array<{ id: *, nome: string, indirizzo: string, stato: string }>,
+ *   message?: string
+ * }} Lista completa cantieri.
+ *
+ * @example
+ * const res = getAllCantieriForAdmin('admin_1709123456_abc');
+ * // res → { success: true, data: [...], message: '5 cantieri totali (inclusi chiusi)' }
  */
 function getAllCantieriForAdmin(sessionToken) {
   try {
     if (!validateSessionToken(sessionToken)) {
       return { success: false, message: 'Sessione non valida' };
     }
-    
+
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var cantieriSheet = ss.getSheetByName(SHEET_NAMES.CANTIERI);
-    
+
     if (!cantieriSheet) {
       return { success: false, message: 'Foglio Cantieri non trovato' };
     }
-    
+
     var lastRow = cantieriSheet.getLastRow();
     if (lastRow < 2) {
       return { success: true, data: [], message: 'Nessun cantiere trovato' };
     }
-    
+
     var data = cantieriSheet.getRange(2, 1, lastRow - 1, 4).getValues();
     var cantieri = [];
-    
+
     for (var i = 0; i < data.length; i++) {
       var row = data[i];
       if (row[0]) {
@@ -179,13 +270,13 @@ function getAllCantieriForAdmin(sessionToken) {
         });
       }
     }
-    
+
     return {
       success: true,
       data: cantieri,
       message: cantieri.length + ' cantieri totali (inclusi chiusi)'
     };
-    
+
   } catch (error) {
     Logger.error('Errore getAllCantieriForAdmin:', error);
     return {
@@ -195,17 +286,41 @@ function getAllCantieriForAdmin(sessionToken) {
   }
 }
 
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 // LETTURA UTENTI
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Ritorna info ore utente corrente.
- * Usa mapping dinamico delle colonne (come Authentication.gs) per evitare
- * dipendenza da indici fissi e garantire confronto robusto con .toString().trim().
+ * Restituisce le ore riepilogative dell'utente corrente (identificato dal token).
  *
- * @param {string} sessionToken - Token di sessione nel formato "username_timestamp_hash"
- * @returns {{success: boolean, data?: {oreMese, oreMesePrecedente, oreAnno}, message?: string}}
+ * Usa mapping dinamico delle colonne tramite buildColumnMap() per trovare
+ * l'utente, evitando dipendenza da indici fissi. Il confronto username usa
+ * .toString().trim() per robustezza. Le ore vengono lette tramite
+ * getUserHoursFromSheet() (Authentication.gs).
+ *
+ * FLUSSO INTERNO:
+ *   1. Estrae userId dal token (prima parte prima di '_')
+ *   2. Legge foglio Utenti con getWorksheet()
+ *   3. Costruisce columnMap dagli header
+ *   4. Scansiona le righe cercando username corrispondente
+ *   5. Chiama getUserHoursFromSheet(userName) per le ore
+ *   6. Restituisce { oreMese, oreMesePrecedente, oreAnno }
+ *
+ * CHIAMATA DA: ApiRouter.gs → doGet() (action='getUserInfo')
+ *              ApiRouter.gs → doPost() (action='getUserInfo')
+ * CHIAMA:      validateSessionToken(), getWorksheet(), buildColumnMap(),
+ *              getUserHoursFromSheet(), handleError()
+ *
+ * @param {string} sessionToken - Token sessione nel formato "{username}_{ts}_{random}".
+ * @returns {{
+ *   success: boolean,
+ *   data?: { oreMese: number, oreMesePrecedente: number, oreAnno: number },
+ *   message?: string
+ * }} Ore riepilogative utente.
+ *
+ * @example
+ * const res = getUserInfo('mario_1709123456_abc');
+ * // res → { success: true, data: { oreMese: 40, oreMesePrecedente: 38, oreAnno: 312 } }
  */
 function getUserInfo(sessionToken) {
   if (!validateSessionToken(sessionToken)) {
@@ -266,22 +381,51 @@ function getUserInfo(sessionToken) {
 }
 
 /**
- * Ottiene le ore totali di un altro utente (solo admin)
- * IDENTICO al tuo code.gs
+ * Restituisce le ore riepilogative di un altro utente (solo per admin).
+ *
+ * Verifica che il richiedente sia admin prima di restituire i dati del target.
+ * La verifica admin usa indici fissi di colonna (COLUMNS.USER_ID, COLUMNS.NOME)
+ * con ricerca della colonna Ruolo per nome negli header.
+ *
+ * FLUSSO INTERNO:
+ *   1. Estrae requestingUserId dal token
+ *   2. Legge foglio Utenti con getWorksheet()
+ *   3. Trova l'indice della colonna 'Ruolo' dagli header
+ *   4. Scansiona le righe per verificare che requestingUserId sia admin
+ *   5. Scansiona le righe per trovare il nome del targetUserId
+ *   6. Chiama getUserHoursFromSheet(targetUserName)
+ *   7. Restituisce { userId, userName, oreMese, oreMesePrecedente, oreAnno }
+ *
+ * CHIAMATA DA: ApiRouter.gs → doGet() (action='getOtherUserInfo')
+ *              ApiRouter.gs → doPost() (action='getOtherUserInfo')
+ * CHIAMA:      validateSessionToken(), getWorksheet(), getUserHoursFromSheet(),
+ *              Logger.debug/warn/error
+ *
+ * @param {string} sessionToken  - Token sessione dell'utente richiedente (deve essere admin).
+ * @param {string} targetUserId  - Username dell'utente target.
+ * @returns {{
+ *   success: boolean,
+ *   data?: { userId: string, userName: string, oreMese: number, oreMesePrecedente: number, oreAnno: number },
+ *   message?: string
+ * }} Ore riepilogative dell'utente target.
+ *
+ * @example
+ * const res = getOtherUserInfo('admin_1709_abc', 'mario.rossi');
+ * // res → { success: true, data: { userName: 'Mario Rossi', oreMese: 40, ... } }
  */
 function getOtherUserInfo(sessionToken, targetUserId) {
   Logger.debug('getOtherUserInfo chiamata per targetUserId:', targetUserId);
-  
+
   if (!validateSessionToken(sessionToken)) {
     return { success: false, message: 'Token di sessione non valido' };
   }
-  
+
   try {
     var requestingUserId = sessionToken.split('_')[0];
     var userSheet = getWorksheet();
     var userData = userSheet.getDataRange().getValues();
     var isAdmin = false;
-    
+
     // Trova colonna Ruolo
     var headerRow = userData[0];
     var ruoloColumnIndex = -1;
@@ -291,12 +435,12 @@ function getOtherUserInfo(sessionToken, targetUserId) {
         break;
       }
     }
-    
+
     if (ruoloColumnIndex === -1) {
       Logger.error('Colonna Ruolo non trovata nel foglio Utenti');
       return { success: false, message: 'Configurazione foglio non valida' };
     }
-    
+
     // Verifica admin
     for (var i = 1; i < userData.length; i++) {
       var row = userData[i];
@@ -307,12 +451,12 @@ function getOtherUserInfo(sessionToken, targetUserId) {
         break;
       }
     }
-    
+
     if (!isAdmin) {
       Logger.warn('Tentativo accesso non autorizzato da:', requestingUserId);
       return { success: false, message: 'Accesso non autorizzato. Solo gli amministratori possono accedere.' };
     }
-    
+
     // Cerca utente target
     var targetUserName = null;
     for (var i = 1; i < userData.length; i++) {
@@ -322,15 +466,15 @@ function getOtherUserInfo(sessionToken, targetUserId) {
         break;
       }
     }
-    
+
     if (!targetUserName) {
       return { success: false, message: 'Utente target non trovato' };
     }
-    
+
     var oreData = getUserHoursFromSheet(targetUserName);
-    
+
     Logger.debug('Ore caricate per', targetUserName, ':', oreData);
-    
+
     return {
       success: true,
       data: {
@@ -341,7 +485,7 @@ function getOtherUserInfo(sessionToken, targetUserId) {
         oreAnno: oreData.oreAnnoCorrente
       }
     };
-    
+
   } catch (error) {
     Logger.error('Errore in getOtherUserInfo:', error);
     return {
@@ -351,30 +495,39 @@ function getOtherUserInfo(sessionToken, targetUserId) {
   }
 }
 
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 // HELPER FUNCTIONS
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Ottiene nome utente dal userId
- * IDENTICO al tuo code.gs
+ * Restituisce il nome completo di un utente dato il suo userId.
+ *
+ * Scansiona il foglio Utenti usando l'indice fisso COLUMNS.USER_ID (colonna G).
+ * Restituisce null se non trovato.
+ *
+ * CHIAMATA DA: non risulta chiamata da altri file  // ⚠️ DEAD CODE: non risulta chiamata da altri file
+ *              (le funzioni che necessitano del nome lo ricercano direttamente in-line)
+ * CHIAMA:      getWorksheet()
+ *
+ * @param {string} userId - Username da cercare.
+ * @returns {string|null} Nome completo o null se non trovato.
  */
 function getUserNameFromUserId(userId) {
   try {
     const sheet = getWorksheet();
     const lastRow = sheet.getLastRow();
     if (lastRow < 2) return null;
-    
+
     const userData = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
-    
+
     for (let row of userData) {
       if (row[COLUMNS.USER_ID] === userId) {
         return row[COLUMNS.NOME];
       }
     }
-    
+
     return null;
-    
+
   } catch (error) {
     console.error('Errore getUserNameFromUserId:', error);
     return null;
@@ -382,7 +535,16 @@ function getUserNameFromUserId(userId) {
 }
 
 /**
- * Verifica se esiste foglio per utente
+ * Verifica se esiste un foglio con il nome del dipendente nello spreadsheet attivo.
+ *
+ * Utility usata potenzialmente per controlli di integrità prima di operazioni
+ * che richiedono il foglio personale del dipendente.
+ *
+ * CHIAMATA DA: non risulta chiamata da altri file  // ⚠️ DEAD CODE: non risulta chiamata da altri file
+ * CHIAMA:      SpreadsheetApp.getActiveSpreadsheet().getSheetByName()
+ *
+ * @param {string} userName - Nome completo del dipendente (= nome del foglio).
+ * @returns {boolean} true se il foglio esiste.
  */
 function checkIfUserHasSheet(userName) {
   try {
@@ -393,28 +555,33 @@ function checkIfUserHasSheet(userName) {
   }
 }
 
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 // FUNZIONI TEST
-// ========================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Test SheetsDAO
+ * Test manuale di SheetsDAO — da eseguire dall'editor GAS.
+ *
+ * Verifica getCantieri() e getUserInfo() con un token di test.
+ *
+ * CHIAMATA DA: manuale (editor GAS)
+ * CHIAMA:      generateSessionToken(), getCantieri(), getUserInfo()
  */
 function testSheetsDAO() {
   console.log('=== TEST SHEETS DAO ===');
-  
+
   try {
     // Test getCantieri
     const testToken = generateSessionToken('test');
     const cantieriResult = getCantieri(testToken);
     console.log('Cantieri trovati:', cantieriResult.data?.length || 0);
-    
+
     // Test getUserInfo
     const userInfoResult = getUserInfo(testToken);
     console.log('Info utente:', userInfoResult);
-    
+
     console.log('=== TEST COMPLETATO ===');
-    
+
   } catch (error) {
     console.error('Errore test:', error);
   }

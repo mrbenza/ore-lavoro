@@ -5,14 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Sistema Gestione Ore</title>
-    
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
+
     <style>
+        /* ═══════════════════════════════════════════
+           RESET E BODY — Reset globale, sfondo gradiente
+           viola, font system-ui, testo scuro.
+           ═══════════════════════════════════════════ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333; font-size: 14px; line-height: 1.5; }
-        
-        /* HEADER */
+
+        /* ═══════════════════════════════════════════
+           HEADER ADMIN — Barra superiore sticky con
+           sfondo bianco semitrasparente e glassmorphism.
+           Contiene titolo admin, nome utente badge e
+           pulsante logout.
+           ═══════════════════════════════════════════ */
         .admin-header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 20px; box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 100; }
         .header-content { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
         .admin-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: #4f46e5; }
@@ -20,17 +29,27 @@
         .user-badge { background: #4f46e5; color: white; padding: 5px 12px; border-radius: 20px; font-weight: 600; }
         .logout-btn { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
         .logout-btn:hover { background: #dc2626; transform: translateY(-1px); }
-        
-        /* CONTAINER */
+
+        /* ═══════════════════════════════════════════
+           CONTAINER ADMIN — Griglia a singola colonna
+           con gap 25px, max-width 1200px centrata.
+           ═══════════════════════════════════════════ */
         .admin-container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; gap: 25px; }
         .admin-section { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 16px; padding: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); }
-        
-        /* SECTION HEADER */
+
+        /* ═══════════════════════════════════════════
+           SECTION HEADER — Intestazione di ogni sezione
+           con titolo e controlli (toggle, refresh).
+           ═══════════════════════════════════════════ */
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .section-title { font-size: 20px; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 10px; }
         .section-title i { color: #4f46e5; }
-        
-        /* CANTIERI */
+
+        /* ═══════════════════════════════════════════
+           CANTIERI — Toggle totali/mese, griglia card
+           cantieri, struttura di ogni card con nome,
+           ore, meta (stato badge + data ultimo ins.).
+           ═══════════════════════════════════════════ */
         .toggle-container { display: flex; background: #f3f4f6; border-radius: 12px; padding: 4px; }
         .toggle-option { padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 12px; font-weight: 600; color: #6b7280; white-space: nowrap; }
         .toggle-option.active { background: #4f46e5; color: white; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3); }
@@ -48,15 +67,23 @@
         .badge-warning { background: #fef3c7; color: #92400e; }
         .badge-secondary { background: #f3f4f6; color: #374151; }
         .badge-info { background: #dbeafe; color: #1e40af; }
-        
-        /* DIPENDENTI */
+
+        /* ═══════════════════════════════════════════
+           DIPENDENTI — Header con select e refresh,
+           select con bordo custom, pulsante refresh
+           con rotazione 180° su hover.
+           ═══════════════════════════════════════════ */
         .dipendenti-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
         .select-dipendente { flex: 1; min-width: 200px; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 14px; background: white; transition: all 0.3s; cursor: pointer; }
         .select-dipendente:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
         .refresh-btn { background: #f3f4f6; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all 0.2s; color: #6b7280; }
         .refresh-btn:hover { background: #e5e7eb; transform: rotate(180deg); }
-        
-        /* COLLAPSIBLE */
+
+        /* ═══════════════════════════════════════════
+           COLLAPSIBLE — Sezione cantieri collassabile.
+           La classe .open espande il collapsible-body
+           e ruota l'icona chevron.
+           ═══════════════════════════════════════════ */
         .collapsible .section-header { cursor: pointer; }
         .collapse-toggle { cursor: pointer; user-select: none; width: 100%; }
         .collapse-toggle:hover { opacity: 0.8; }
@@ -65,7 +92,12 @@
         .collapsible-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
         .collapsible.open .collapsible-body { max-height: 2000px; }
 
-        /* CALENDARIO - STILE DASHBOARD */
+        /* ═══════════════════════════════════════════
+           CALENDARIO ADMIN — Uguale al calendario di
+           dashboard.html ma con stili admin (indigo).
+           Controlli navigazione mese (prev/next/oggi),
+           griglia 7 colonne, classi .today e .has-work.
+           ═══════════════════════════════════════════ */
         .calendar-wrapper { margin: 20px 0; }
         .calendar-controls {
             display: flex;
@@ -134,36 +166,51 @@
         .day-number { font-size: 14px; }
         .work-hours-admin { font-size: 11px; color: #28a745; font-weight: 600; }
         .work-indicator { width: 8px; height: 8px; background: linear-gradient(135deg, #28a745, #20c997); border-radius: 50%; margin-bottom: 2px; }
-        /* Vecchie classi mantenute per retrocompatibilità */
+        /* Vecchie classi mantenute per retrocompatibilità con versioni precedenti renderCalendar */
         .day-hours { font-size: 11px; font-weight: 700; color: #3b82f6; }
-        
-        /* TOTALI ORE */
+
+        /* ═══════════════════════════════════════════
+           TOTALI ORE — Griglia statistiche sotto il
+           calendario: ore mese corrente, mese precedente,
+           anno corrente.
+           ═══════════════════════════════════════════ */
         .stats-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb; }
         .stat-card { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center; }
         .stat-value { font-size: 28px; font-weight: 800; color: #1f2937; display: block; }
         .stat-label { font-size: 12px; color: #6b7280; font-weight: 600; margin-top: 5px; text-transform: uppercase; }
-        
-        /* LOADING E STATI */
+
+        /* ═══════════════════════════════════════════
+           LOADING E STATI VUOTI — Spinner animato,
+           stato "nessun dato", spinner-container con testo.
+           ═══════════════════════════════════════════ */
         .loading-spinner { border: 3px solid #f3f4f6; border-top: 3px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .no-data-state { text-align: center; padding: 40px 20px; color: #6b7280; }
         .no-data-icon { font-size: 48px; margin-bottom: 15px; opacity: 0.5; }
         .spinner-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; gap: 15px; }
         .spinner-text { color: #6b7280; font-weight: 500; font-size: 14px; }
-        
-        /* ANIMAZIONI */
+
+        /* ═══════════════════════════════════════════
+           ANIMAZIONI — fadeIn per le sezioni al load,
+           slideIn per le card cantieri.
+           ═══════════════════════════════════════════ */
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .slide-in { animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        
-        /* POPUP DETTAGLI GIORNO */
+
+        /* ═══════════════════════════════════════════
+           POPUP DETTAGLI GIORNO — Overlay modale per
+           visualizzare le registrazioni di un giorno
+           dipendente con pulsanti modifica/elimina.
+           ═══════════════════════════════════════════ */
         .day-details-popup { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; justify-content: center; align-items: center; padding: 20px; }
         .day-details-popup.show { display: flex; }
         .popup-content { background: white; border-radius: 20px; padding: 30px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
         .popup-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e1e5e9; text-align: center; }
         .popup-title { font-size: 20px; font-weight: 600; color: #333; margin-bottom: 8px; }
         .popup-total-hours { font-size: 24px; font-weight: 700; color: #4f46e5; background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(124, 58, 237, 0.1)); padding: 8px 20px; border-radius: 20px; border: 2px solid rgba(79, 70, 229, 0.2); margin-top: 5px; }
+        /* popup-close nascosto — la chiusura avviene via pulsante OK */
         .popup-close { display: none; }
         .popup-ok-button { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; padding: 15px 40px; border-radius: 25px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; width: 100%; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); }
         .popup-ok-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4); }
@@ -175,8 +222,12 @@
         .work-cantiere { font-weight: 600; color: #1f2937; font-size: 16px; }
         .work-hours-large { font-size: 20px; font-weight: 700; color: #4f46e5; }
         .work-note { font-size: 14px; color: #6b7280; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-style: italic; }
-        
-        /* RESPONSIVE */
+
+        /* ═══════════════════════════════════════════
+           RESPONSIVE MOBILE — Adatta layout admin
+           per schermi <= 768px: colonne singole,
+           font ridotti, calendar day più piccoli.
+           ═══════════════════════════════════════════ */
         @media (max-width: 768px) {
             .admin-header { padding: 12px 15px; }
             .header-content { flex-direction: column; gap: 10px; align-items: flex-start; }
@@ -211,7 +262,7 @@
     </header>
 
     <div class="admin-container">
-        <!-- SEZIONE CALENDARIO DIPENDENTI -->
+        <!-- SEZIONE CALENDARIO DIPENDENTE -->
         <section class="admin-section fade-in">
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-calendar-alt"></i>Calendario Dipendente</h2>
@@ -297,7 +348,7 @@
         </section>
     </div>
 
-                <!-- POPUP DETTAGLI GIORNO -->
+    <!-- POPUP DETTAGLI GIORNO (per modifica/eliminazione registrazioni) -->
     <div class="day-details-popup" id="dayDetailsPopup">
         <div class="popup-content">
             <div class="popup-header">
@@ -314,30 +365,51 @@
     <script>
         'use strict';
 
-        // STATE
-        let currentCantieriMode = 'totali';
-        let currentUserId = null;
-        let currentUserName = null;
-        let currentYear = new Date().getFullYear();
-        let currentMonth = new Date().getMonth() + 1;
-        let calendarData = null;
-        let cantieriCache = { totali: null, mese: null };
-        let calendarCache = {}; // Cache per i calendari: { userId_year_month: data }
-        let autoRefreshInterval = null;
-		let currentEditDateStr = null;
+        /* ═══════════════════════════════════════════
+           VARIABILI DI STATO GLOBALI
+           ═══════════════════════════════════════════ */
+        let currentCantieriMode = 'totali';  // Modalità visualizzazione cantieri: 'totali'|'mese'
+        let currentUserId = null;            // userId del dipendente selezionato nel select
+        let currentUserName = null;          // Nome del dipendente selezionato (per i log)
+        let currentYear = new Date().getFullYear();   // Anno del calendario admin corrente
+        let currentMonth = new Date().getMonth() + 1; // Mese 1-12 del calendario admin corrente
+        let calendarData = null;             // Dati calendario del dipendente selezionato: { workDays: {...} }
+        let cantieriCache = { totali: null, mese: null }; // Cache bipartita per i due modi cantieri
+        let calendarCache = {};              // Cache calendario: chiave "userId_year_month" → data
+        let autoRefreshInterval = null;      // ID interval per auto-refresh ogni 30 minuti
+        let currentEditDateStr = null;       // Data selezionata nel calendario per modifica: "YYYY-MM-DD"
 
-        // INIT
+        /**
+         * Handler DOMContentLoaded — Entry point dell'admin dashboard.
+         *
+         * DESCRIZIONE ESTESA: Verifica l'accesso admin tramite Utils.checkAdminAccess
+         * (che fa redirect se non admin), poi inizializza l'UI, configura i listener,
+         * carica i dati iniziali e avvia il refresh automatico.
+         *
+         * FLUSSO INTERNO:
+         *   1. Utils.checkAdminAccess() — se false, esce (redirect automatico a dashboard)
+         *   2. initUI() — imposta nome admin nell'header, setup collapsible
+         *   3. setupListeners() — toggle cantieri, select dipendente
+         *   4. loadInitialData() — loadCantieri() + loadDipendenti() in parallelo
+         *   5. setupAutoRefresh() — interval 30 minuti
+         *
+         * CHIAMATA DA:  DOMContentLoaded
+         * CHIAMA:       Utils.checkAdminAccess, initUI, setupListeners,
+         *               loadInitialData, setupAutoRefresh, Utils.showNotification
+         *
+         * @returns {Promise<void>}
+         */
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('[ADMIN] Inizializzazione...');
             try {
                 const hasAccess = await Utils.checkAdminAccess();
                 if (!hasAccess) return;
-                
+
                 initUI();
                 setupListeners();
                 await loadInitialData();
                 setupAutoRefresh();
-                
+
                 console.log('[ADMIN] Dashboard pronta');
             } catch (error) {
                 console.error('[ADMIN] Errore init:', error);
@@ -345,6 +417,19 @@
             }
         });
 
+        /**
+         * Inizializza gli elementi dell'interfaccia utente admin.
+         *
+         * DESCRIZIONE ESTESA: Legge la sessione per mostrare il nome admin nel
+         * badge dell'header, poi configura il comportamento collapsible della
+         * sezione cantieri.
+         *
+         * CHIAMATA DA:  DOMContentLoaded
+         * CHIAMA:       Utils.getSession, setupCollapsible
+         * LEGGE:        (sessionStorage via Utils.getSession)
+         *
+         * @returns {void}
+         */
         function initUI() {
             const session = Utils.getSession();
             if (session && session.user) {
@@ -353,6 +438,18 @@
             setupCollapsible();
         }
 
+        /**
+         * Configura il comportamento toggle (apri/chiudi) delle sezioni collassabili.
+         *
+         * DESCRIZIONE ESTESA: Per ogni .collapse-toggle registra un click handler che
+         * trova il .collapsible padre e fa toggle della classe .open. Ignora click
+         * sui button interni (es. refresh).
+         *
+         * CHIAMATA DA:  initUI
+         * CHIAMA:       querySelectorAll, classList.toggle
+         *
+         * @returns {void}
+         */
         function setupCollapsible() {
             document.querySelectorAll('.collapse-toggle').forEach(function(toggle) {
                 toggle.addEventListener('click', function(e) {
@@ -364,6 +461,32 @@
             });
         }
 
+        /**
+         * Configura i listener principali dell'admin: toggle cantieri e select dipendente.
+         *
+         * DESCRIZIONE ESTESA: Per ogni .toggle-option registra click per cambiare modalità
+         * cantieri (totali/mese) e ricaricare. Per #dipendentiSelect registra change per
+         * mostrare il calendario del dipendente selezionato.
+         *
+         * FLUSSO INTERNO (toggle cantieri):
+         *   1. Se già .active, esce
+         *   2. Rimuove .active da tutti, aggiunge all'opzione cliccata
+         *   3. Aggiorna currentCantieriMode
+         *   4. showCantieriLoader() + loadCantieri()
+         *
+         * FLUSSO INTERNO (select dipendente):
+         *   1. Salva currentUserId e currentUserName
+         *   2. Se dipendente selezionato: mostra #calendarSection, reset mese corrente,
+         *      loadCalendarData()
+         *   3. Altrimenti: mostra #noUserSelected
+         *
+         * CHIAMATA DA:  DOMContentLoaded
+         * CHIAMA:       showCantieriLoader, loadCantieri, loadCalendarData
+         * MODIFICA:     currentCantieriMode, currentUserId, currentUserName,
+         *               currentYear, currentMonth
+         *
+         * @returns {void}
+         */
         function setupListeners() {
             // Toggle cantieri
             document.querySelectorAll('.toggle-option').forEach(opt => {
@@ -382,16 +505,16 @@
                 const selectedOption = this.options[this.selectedIndex];
                 currentUserId = this.value;
                 currentUserName = selectedOption.dataset.name || null;
-                
+
                 if (currentUserId) {
                     document.getElementById('noUserSelected').style.display = 'none';
                     document.getElementById('calendarSection').style.display = 'block';
-                    
+
                     // Reset al mese corrente
                     const now = new Date();
                     currentYear = now.getFullYear();
                     currentMonth = now.getMonth() + 1;
-                    
+
                     await loadCalendarData();
                 } else {
                     document.getElementById('noUserSelected').style.display = 'block';
@@ -400,6 +523,14 @@
             });
         }
 
+        /**
+         * Carica in parallelo i dati iniziali: cantieri e lista dipendenti.
+         *
+         * CHIAMATA DA:  DOMContentLoaded
+         * CHIAMA:       loadCantieri, loadDipendenti
+         *
+         * @returns {Promise<void>}
+         */
         async function loadInitialData() {
             await Promise.all([
                 loadCantieri(),
@@ -407,7 +538,19 @@
             ]);
         }
 
-        // ===== CANTIERI =====
+        /* ═══════════════════════════════════════════
+           SEZIONE CANTIERI — Funzioni per caricare,
+           renderizzare e aggiornare la griglia cantieri.
+           ═══════════════════════════════════════════ */
+
+        /**
+         * Mostra lo spinner di caricamento nella griglia cantieri.
+         *
+         * CHIAMATA DA:  setupListeners (toggle), refreshCantieri
+         * LEGGE:        currentCantieriMode
+         *
+         * @returns {void}
+         */
         function showCantieriLoader() {
             document.getElementById('cantieriGrid').innerHTML = `
                 <div class="spinner-container" style="grid-column: 1 / -1;">
@@ -417,10 +560,26 @@
             `;
         }
 
+        /**
+         * Carica i dati cantieri dal backend (o dalla cache) e li renderizza.
+         *
+         * DESCRIZIONE ESTESA: Controlla prima la cache locale cantieriCache per la
+         * modalità corrente. Se non in cache, chiama Utils.loadCantieriOverview
+         * con la modalità corrente ('totali' o 'mese'), salva in cache e renderizza.
+         * In caso di errore mostra lo stato di errore nella griglia.
+         *
+         * CHIAMATA DA:  setupListeners (toggle cantieri), loadInitialData,
+         *               refreshCantieri, setupAutoRefresh (interval)
+         * CHIAMA:       Utils.loadCantieriOverview, renderCantieri, showError
+         * LEGGE:        currentCantieriMode, cantieriCache
+         * MODIFICA:     cantieriCache
+         *
+         * @returns {Promise<void>}
+         */
         async function loadCantieri() {
             try {
                 console.log(`[ADMIN] Caricamento cantieri '${currentCantieriMode}'`);
-                
+
                 if (cantieriCache[currentCantieriMode]) {
                     console.log('[ADMIN] Cantieri da cache');
                     renderCantieri(cantieriCache[currentCantieriMode]);
@@ -437,6 +596,21 @@
             }
         }
 
+        /**
+         * Renderizza la griglia delle card cantieri nel DOM.
+         *
+         * DESCRIZIONE ESTESA: Se data è vuoto, mostra lo stato "nessun cantiere".
+         * Altrimenti genera HTML per ogni cantiere con nome, ore, badge stato e
+         * data ultimo aggiornamento. Ogni card ha onclick="showCantiereDetails(id)".
+         *
+         * CHIAMATA DA:  loadCantieri
+         * CHIAMA:       Utils.truncateText, Utils.formatOre, getStatoBadgeClass,
+         *               Utils.formatDataAdmin
+         * LEGGE:        currentCantieriMode
+         *
+         * @param {Array} data - Array di { id, nome, oreTotali, stato, ultimoAggiornamento }
+         * @returns {void}
+         */
         function renderCantieri(data) {
             const grid = document.getElementById('cantieriGrid');
             if (!data || !data.length) {
@@ -454,14 +628,26 @@
                         <span class="stato-badge ${getStatoBadgeClass(c.stato)}">${c.stato}</span>
                         <span style="display: flex; align-items: center; gap: 4px;">
                             <small style="color: #9ca3af;">Ultimo inserimento:</small>
-                            <i class="fas fa-clock"></i> 
+                            <i class="fas fa-clock"></i>
                             ${Utils.formatDataAdmin(c.ultimoAggiornamento)}
                         </span>
                     </div>
                 </div>
             `).join('');
         }
-        
+
+        /**
+         * Restituisce la classe CSS badge per lo stato di un cantiere (versione locale).
+         *
+         * NOTA: Funzione locale che duplica Utils.getStatoBadgeClass ma con
+         * 'chiuso' → 'badge-danger' invece di 'badge-secondary'. La versione
+         * in Utils non viene chiamata qui.
+         *
+         * CHIAMATA DA:  renderCantieri
+         *
+         * @param {string} stato - Stato del cantiere
+         * @returns {string} Classe CSS badge
+         */
         function getStatoBadgeClass(stato) {
             switch (stato?.toLowerCase()) {
                 case 'aperto':
@@ -475,6 +661,16 @@
             }
         }
 
+        /**
+         * Invalida la cache e ricarica i cantieri dal backend.
+         *
+         * CHIAMATA DA:  onclick="refreshCantieri()" sul pulsante refresh cantieri
+         * CHIAMA:       Utils.invalidateAdminCache, showCantieriLoader, loadCantieri,
+         *               Utils.showNotification
+         * MODIFICA:     cantieriCache
+         *
+         * @returns {Promise<void>}
+         */
         async function refreshCantieri() {
             cantieriCache = { totali: null, mese: null };
             await Utils.invalidateAdminCache('cantieri');
@@ -483,16 +679,39 @@
             Utils.showNotification('Cantieri aggiornati', 'success', 2000);
         }
 
+        /**
+         * Mostra i dettagli di un cantiere specifico.
+         *
+         * NOTA: Funzionalità placeholder — mostra solo notifica "In sviluppo".
+         *
+         * CHIAMATA DA:  onclick su .cantiere-card (generato da renderCantieri)
+         * CHIAMA:       Utils.showNotification
+         *
+         * @param {string} id - ID del cantiere
+         * @returns {void}
+         */
         function showCantiereDetails(id) {
             Utils.showNotification(`Dettagli cantiere ${id} - In sviluppo`, 'info');
         }
 
-        // ===== DIPENDENTI =====
+        /* ═══════════════════════════════════════════
+           SEZIONE DIPENDENTI — Funzioni per caricare
+           la lista dipendenti e gestire il refresh.
+           ═══════════════════════════════════════════ */
+
+        /**
+         * Carica la lista dei dipendenti e popola il select #dipendentiSelect.
+         *
+         * CHIAMATA DA:  loadInitialData
+         * CHIAMA:       Utils.loadDipendentiList
+         *
+         * @returns {Promise<void>}
+         */
         async function loadDipendenti() {
             try {
                 const data = await Utils.loadDipendentiList();
                 const sel = document.getElementById('dipendentiSelect');
-                sel.innerHTML = '<option value="">Seleziona dipendente...</option>' + 
+                sel.innerHTML = '<option value="">Seleziona dipendente...</option>' +
                     data.map(d => `<option value="${d.userId}" data-name="${d.nome}">${d.nome} (${d.ruolo})</option>`).join('');
             } catch (error) {
                 console.error('[ADMIN] Errore dipendenti:', error);
@@ -500,26 +719,74 @@
             }
         }
 
+        /**
+         * Invalida la cache del calendario del dipendente corrente e ricarica.
+         *
+         * DESCRIZIONE ESTESA: Verifica che un dipendente sia selezionato, invalida
+         * la cache per l'utente/anno/mese corrente, ricarica i dati e mostra notifica.
+         *
+         * CHIAMATA DA:  onclick="refreshDipendente()" sul pulsante refresh calendario
+         * CHIAMA:       Utils.showNotification, loadCalendarData
+         * LEGGE:        currentUserId, currentYear, currentMonth
+         * MODIFICA:     calendarCache (elimina chiave specifica)
+         *
+         * @returns {Promise<void>}
+         */
         async function refreshDipendente() {
             if (!currentUserId) {
                 Utils.showNotification('Seleziona prima un dipendente', 'warning');
                 return;
             }
-            
+
             // Invalida cache per l'utente corrente
             const cacheKey = `${currentUserId}_${currentYear}_${currentMonth}`;
             delete calendarCache[cacheKey];
-            
+
             await loadCalendarData();
             Utils.showNotification('Calendario aggiornato', 'success', 2000);
         }
 
-        // ===== CALENDARIO =====
+        /* ═══════════════════════════════════════════
+           SEZIONE CALENDARIO ADMIN — Funzioni per
+           caricare, renderizzare e navigare il
+           calendario di un dipendente selezionato.
+           ═══════════════════════════════════════════ */
+
+        /**
+         * Carica i dati del calendario del dipendente selezionato (con cache).
+         *
+         * DESCRIZIONE ESTESA: Costruisce la chiave cache "userId_year_month". Se in cache,
+         * usa i dati locali e renderizza immediatamente. Altrimenti mostra spinner,
+         * chiama Utils.loadOtherUserMonthlyData e salva in cache prima di renderizzare.
+         * Al termine carica anche i totali ore tramite loadTotaliOre().
+         *
+         * FLUSSO INTERNO:
+         *   1. Guard: ritorna se currentUserId è null
+         *   2. Costruisce cacheKey e controlla calendarCache
+         *   3. Se in cache: calendarData = cache; renderCalendar(); loadTotaliOre()
+         *   4. showCalendarLoader()
+         *   5. Utils.loadOtherUserMonthlyData(currentUserId, currentYear, currentMonth)
+         *   6. calendarData = data; calendarCache[key] = data
+         *   7. renderCalendar(); loadTotaliOre()
+         *   8. Catch: showCalendarError()
+         *
+         * CHIAMATA DA:  setupListeners (change su #dipendentiSelect),
+         *               refreshDipendente, changeMonth, goToToday,
+         *               confirmDelete (dopo elimina), saveWorkEdit (dopo salva),
+         *               setupAutoRefresh (interval)
+         * CHIAMA:       showCalendarLoader, Utils.loadOtherUserMonthlyData,
+         *               renderCalendar, loadTotaliOre, showCalendarError
+         * LEGGE:        currentUserId, currentYear, currentMonth, currentUserName,
+         *               calendarCache
+         * MODIFICA:     calendarData, calendarCache
+         *
+         * @returns {Promise<void>}
+         */
         async function loadCalendarData() {
             if (!currentUserId) return;
 
             const cacheKey = `${currentUserId}_${currentYear}_${currentMonth}`;
-            
+
             // Controlla cache
             if (calendarCache[cacheKey]) {
                 console.log('[ADMIN] Calendario da cache:', cacheKey);
@@ -533,7 +800,7 @@
 
             try {
                 console.log(`[ADMIN] Caricamento calendario: ${currentUserName} - ${currentYear}/${currentMonth}`);
-                
+
                 const data = await Utils.loadOtherUserMonthlyData(
                     currentUserId,
                     currentYear,
@@ -550,6 +817,19 @@
             }
         }
 
+        /**
+         * Carica i totali ore del dipendente selezionato e aggiorna le stat-card.
+         *
+         * DESCRIZIONE ESTESA: Chiama Utils.loadOtherUserInfo e aggiorna i tre
+         * contatori (#oreMeseCorrente, #oreMesePrecedente, #oreAnnoCorrente).
+         * In caso di errore imposta "-" come valore di fallback.
+         *
+         * CHIAMATA DA:  loadCalendarData (dopo render calendario)
+         * CHIAMA:       Utils.loadOtherUserInfo, Utils.formatOre
+         * LEGGE:        currentUserId
+         *
+         * @returns {Promise<void>}
+         */
         async function loadTotaliOre() {
             try {
                 const data = await Utils.loadOtherUserInfo(currentUserId);
@@ -565,6 +845,14 @@
             }
         }
 
+        /**
+         * Mostra lo spinner di caricamento nella griglia del calendario.
+         *
+         * CHIAMATA DA:  loadCalendarData (prima della fetch)
+         * LEGGE:        currentUserName
+         *
+         * @returns {void}
+         */
         function showCalendarLoader() {
             document.getElementById('calendarGrid').innerHTML = `
                 <div class="spinner-container" style="grid-column: 1 / -1;">
@@ -574,6 +862,13 @@
             `;
         }
 
+        /**
+         * Mostra lo stato di errore nella griglia del calendario.
+         *
+         * CHIAMATA DA:  loadCalendarData (catch)
+         *
+         * @returns {void}
+         */
         function showCalendarError() {
             document.getElementById('calendarGrid').innerHTML = `
                 <div class="no-data-state" style="grid-column: 1 / -1;">
@@ -583,16 +878,41 @@
             `;
         }
 
+        /**
+         * Renderizza la griglia HTML del calendario per il mese/anno correnti.
+         *
+         * DESCRIZIONE ESTESA: Aggiorna il display del mese, genera gli header giorni
+         * (Dom-Sab), poi itera i giorni del mese precedente (celle grigie), del mese
+         * corrente (con dati da calendarData.workDays) e del mese successivo.
+         * I giorni con lavoro hanno class has-work, pallino verde e testo ore.
+         * Tutti i giorni hanno onclick per aprire showDayDetails.
+         *
+         * FLUSSO INTERNO:
+         *   1. Aggiorna #currentMonthDisplay
+         *   2. Genera header giorni settimana
+         *   3. Calcola firstDay, daysInMonth, daysInPrevMonth
+         *   4. Itera giorni mese precedente (firstDay-1 celle grigie)
+         *   5. Itera giorni mese corrente con dati da calendarData.workDays[dateStr]
+         *   6. Riempie celle rimanenti con giorni mese successivo
+         *   7. calendarGrid.innerHTML = html
+         *   8. updateNavigationButtons()
+         *
+         * CHIAMATA DA:  loadCalendarData
+         * CHIAMA:       updateNavigationButtons
+         * LEGGE:        currentMonth, currentYear, calendarData
+         *
+         * @returns {void}
+         */
         function renderCalendar() {
-            const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
+            const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
                                'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-            
-            document.getElementById('currentMonthDisplay').textContent = 
+
+            document.getElementById('currentMonthDisplay').textContent =
                 `${monthNames[currentMonth - 1]} ${currentYear}`;
 
             const grid = document.getElementById('calendarGrid');
             const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
-            
+
             let html = days.map(d => `<div class="calendar-day-header">${d}</div>`).join('');
 
             const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
@@ -602,7 +922,7 @@
             const today = new Date();
             const isCurrentMonth = today.getFullYear() === currentYear && (today.getMonth() + 1) === currentMonth;
 
-            // Giorni mese precedente
+            // Giorni mese precedente (celle grigie)
             for (let i = firstDay - 1; i >= 0; i--) {
                 const day = daysInPrevMonth - i;
                 html += `<div class="calendar-day other-month"><span class="calendar-day-number">${day}</span></div>`;
@@ -620,15 +940,15 @@
 
                 let content = `<span class="calendar-day-number">${day}</span>`;
                 if (workDay && workDay.ore) {
-                    // Punto indicatore verde + ore con classe dashboard-style
+                    // Pallino verde + ore con stile dashboard
                     content += `<div class="work-indicator"></div><span class="work-hours-admin">${workDay.ore}h</span>`;
                 }
 
-                // TUTTI i giorni sono cliccabili
+                // TUTTI i giorni sono cliccabili per permettere inserimento e modifica
                 html += `<div class="${classes}" onclick="currentEditDateStr='${dateStr}'; showDayDetails('${dateStr}')" data-date="${dateStr}">${content}</div>`;
             }
 
-            // Giorni mese successivo
+            // Giorni mese successivo (celle grigie)
             const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
             const remainingCells = totalCells - (firstDay + daysInMonth);
             for (let day = 1; day <= remainingCells; day++) {
@@ -639,20 +959,45 @@
             updateNavigationButtons();
         }
 
+        /**
+         * Aggiorna lo stato disabled del pulsante "mese successivo" in base al mese corrente.
+         *
+         * DESCRIZIONE ESTESA: Non permette di navigare oltre il mese corrente.
+         *
+         * CHIAMATA DA:  renderCalendar
+         * LEGGE:        currentYear, currentMonth
+         *
+         * @returns {void}
+         */
         function updateNavigationButtons() {
             const now = new Date();
             const maxYear = now.getFullYear();
             const maxMonth = now.getMonth() + 1;
-            
-            const isCurrentOrFuture = (currentYear > maxYear) || 
+
+            const isCurrentOrFuture = (currentYear > maxYear) ||
                                      (currentYear === maxYear && currentMonth >= maxMonth);
-            
+
             document.getElementById('nextMonthBtn').disabled = isCurrentOrFuture;
         }
 
+        /**
+         * Naviga al mese precedente o successivo nel calendario admin.
+         *
+         * DESCRIZIONE ESTESA: Modifica currentMonth di delta (+1 o -1) e gestisce
+         * il wrap tra dicembre e gennaio aggiornando anche currentYear.
+         * Poi ricarica i dati dal backend (o dalla cache).
+         *
+         * CHIAMATA DA:  onclick="changeMonth(-1)" sul #prevMonthBtn,
+         *               onclick="changeMonth(1)" sul #nextMonthBtn
+         * CHIAMA:       loadCalendarData
+         * MODIFICA:     currentMonth, currentYear
+         *
+         * @param {number} delta - +1 per mese successivo, -1 per mese precedente
+         * @returns {void}
+         */
         function changeMonth(delta) {
             currentMonth += delta;
-            
+
             if (currentMonth > 12) {
                 currentMonth = 1;
                 currentYear++;
@@ -660,10 +1005,19 @@
                 currentMonth = 12;
                 currentYear--;
             }
-            
+
             loadCalendarData();
         }
 
+        /**
+         * Torna al mese corrente nel calendario admin.
+         *
+         * CHIAMATA DA:  onclick="goToToday()" sul pulsante "Oggi"
+         * CHIAMA:       loadCalendarData
+         * MODIFICA:     currentYear, currentMonth
+         *
+         * @returns {void}
+         */
         function goToToday() {
             const now = new Date();
             currentYear = now.getFullYear();
@@ -671,563 +1025,728 @@
             loadCalendarData();
         }
 
+        /**
+         * Mostra il popup modale con i dettagli delle registrazioni di un giorno.
+         *
+         * DESCRIZIONE ESTESA: Legge i dati del giorno da calendarData.workDays[dateStr].
+         * Se ci sono registrazioni esistenti, mostra ogni entry con pulsanti Modifica
+         * e Elimina, più un pulsante per aggiungere nuova registrazione. Se il giorno
+         * è vuoto, mostra direttamente il form di nuova registrazione.
+         * Genera anche l'#editArea (nascosta) con generateEditForm per le modifiche.
+         * Se non ci sono registrazioni, chiama loadAllCantieriForEdit(null) subito.
+         *
+         * FLUSSO INTERNO:
+         *   1. Legge dayData da calendarData.workDays[dateStr]
+         *   2. Formatta la data in italiano
+         *   3. Popola popupTitle e popupTotalHours
+         *   4. Genera HTML con entries esistenti (se hasExistingWork)
+         *      oppure form diretto (se giorno vuoto)
+         *   5. Aggiunge pulsante "Chiudi"
+         *   6. popup.classList.add('show')
+         *   7. Se !hasExistingWork: loadAllCantieriForEdit(null)
+         *
+         * CHIAMATA DA:  onclick su .calendar-day in renderCalendar (tutti i giorni)
+         * CHIAMA:       generateEditForm, loadAllCantieriForEdit, selectEntryToEdit (via onclick inline),
+         *               showDeleteConfirmation (via onclick inline), showNewEntryForm (via onclick inline),
+         *               closeDayDetails (via onclick inline)
+         * LEGGE:        calendarData, currentEditDateStr
+         *
+         * @param {string} dateStr - Data nel formato "YYYY-MM-DD"
+         * @returns {void}
+         */
         function showDayDetails(dateStr) {
-			const dayData = calendarData?.workDays?.[dateStr];
-			const hasExistingWork = dayData && dayData.totalOre > 0;
-			
-			const date = new Date(dateStr);
-			const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
-							   'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-			
-			const popup = document.getElementById('dayDetailsPopup');
-			const popupTitle = document.getElementById('popupTitle');
-			const popupTotalHours = document.getElementById('popupTotalHours');
-			const popupContent = document.getElementById('popupContent');
+            const dayData = calendarData?.workDays?.[dateStr];
+            const hasExistingWork = dayData && dayData.totalOre > 0;
 
-			if (!popup || !popupTitle || !popupTotalHours || !popupContent) return;
+            const date = new Date(dateStr);
+            const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                               'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
 
-			popupTitle.textContent = `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-			popupTotalHours.textContent = hasExistingWork ? `${dayData.totalOre}h registrate` : 'Nessuna registrazione';
+            const popup = document.getElementById('dayDetailsPopup');
+            const popupTitle = document.getElementById('popupTitle');
+            const popupTotalHours = document.getElementById('popupTotalHours');
+            const popupContent = document.getElementById('popupContent');
 
-			let html = '';
-			
-			if (hasExistingWork && dayData.entries.length > 0) {
-				// CASO: Esistono registrazioni
-				html += `
-					<div style="background: rgba(79, 70, 229, 0.05); border-left: 4px solid #4f46e5; 
-								padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-						<div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1f2937; margin-bottom: 8px;">
-							✏️ ${dayData.entries.length} registrazione/i esistente/i
-						</div>
-				`;
-				
-				dayData.entries.forEach((entry, index) => {
-					const cantiereLabel = entry.cantiereName || entry.cantiereId;
-					const cantiereTrunc = cantiereLabel.length > 20 
-						? cantiereLabel.substring(0, 20) + '...' 
-						: cantiereLabel;
-					const entryLabel = `#${index + 1} - ${cantiereTrunc}`;
-					
-					html += `
-						<div style="background: white; border-radius: 10px; padding: 14px; margin-top: 10px; 
-									border: 2px solid ${index === 0 ? '#4f46e5' : '#e5e7eb'}; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
-							<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-								<div style="font-size: 12px; color: #6b7280; font-weight: 700; text-transform: uppercase;">${entryLabel}</div>
-							</div>
-							<div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin-bottom: 12px;">
-								<div>
-									<div style="font-size: 11px; color: #9ca3af; font-weight: 600; margin-bottom: 3px;">CANTIERE</div>
-									<div style="font-size: 14px; color: #1f2937; font-weight: 600;">${entry.cantiereName || entry.cantiereId}</div>
-								</div>
-								<div style="background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; padding: 8px 16px; 
-											border-radius: 10px; font-size: 18px; font-weight: 800; text-align: center; min-width: 60px;">${entry.ore}h</div>
-							</div>
-							${entry.note && !entry.note.includes('** Modificato') ? `
-								<div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
-									<div style="font-size: 10px; color: #9ca3af; font-weight: 600; margin-bottom: 4px;">NOTE</div>
-									<div style="font-size: 13px; color: #4b5563; font-style: italic;">${entry.note}</div>
-								</div>
-							` : ''}
-							<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
-								<button onclick="selectEntryToEdit(${index})" style="background: linear-gradient(135deg, #4f46e5, #4338ca); color: white; 
-										border: none; padding: 12px; border-radius: 10px; font-size: 13px; cursor: pointer; font-weight: 700;
-										display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px;">
-									<span style="font-size: 15px;">✏️</span><span>Modifica</span>
-								</button>
-								<button onclick="showDeleteConfirmation(${index})" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; 
-										border: none; padding: 12px; border-radius: 10px; font-size: 13px; cursor: pointer; font-weight: 700;
-										display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px;">
-									<span style="font-size: 15px;">🗑️</span><span>Elimina</span>
-								</button>
-							</div>
-						</div>
-					`;
-				});
-				
-				html += `</div>`;
-				html += `
-					<div id="editArea" style="display: none;">
-						<div style="background: rgba(16, 185, 129, 0.05); border-left: 4px solid #10b981; 
-									padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-							<div style="font-weight: 600; color: #065f46;">✏️ Modifica registrazione <span id="editingIndex"></span></div>
-						</div>
-						${generateEditForm('')}
-					</div>
-				`;
-				html += `
-					<button onclick="showNewEntryForm()" 
-							style="width: 100%; background: #10b981; color: white; border: none; padding: 12px; 
-								   border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px;">
-						➕ Aggiungi Nuovo Inserimento
-					</button>
-				`;
-			} else {
-				// CASO: Nessuna registrazione
-				html += `
-					<div style="background: rgba(245, 158, 11, 0.05); border-left: 4px solid #f59e0b; 
-								padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-						<div style="font-weight: 600; color: #1f2937;">➕ Nuova registrazione</div>
-					</div>
-					${generateEditForm('')}
-				`;
-			}
-			
-			html += `
-				<button class="popup-ok-button" onclick="closeDayDetails()" 
-						style="background: #6b7280; margin-top: 10px;">
-					Chiudi
-				</button>
-			`;
+            if (!popup || !popupTitle || !popupTotalHours || !popupContent) return;
 
-			popupContent.innerHTML = html;
-			popup.classList.add('show');
-			
-			// IMPORTANTE: Se non ci sono registrazioni esistenti, carica i cantieri per il form nuovo
-			if (!hasExistingWork) {
-				loadAllCantieriForEdit(null);
-			}
-		}
-		
-		// Mostra popup conferma cancellazione ottimizzato per mobile
-		function showDeleteConfirmation(entryIndex) {
-			const dayData = calendarData.workDays[currentEditDateStr];
-			const entry = dayData.entries[entryIndex];
-			
-			const date = new Date(currentEditDateStr);
-			const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
-							   'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-			
-			// Vibrazione su dispositivi supportati (feedback tattile Android)
-			if (navigator.vibrate) {
-				navigator.vibrate(50);
-			}
-			
-			const modalHTML = `
-				<div id="deleteConfirmModal" style="
-					position: fixed;
-					top: 0;
-					left: 0;
-					right: 0;
-					bottom: 0;
-					background: rgba(0, 0, 0, 0.7);
-					z-index: 10001;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					padding: 20px;
-					animation: fadeIn 0.2s ease-out;
-				">
-					<div style="
-						background: white;
-						border-radius: 20px;
-						padding: 30px;
-						max-width: 450px;
-						width: 100%;
-						box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-						animation: slideUp 0.3s ease-out;
-					">
-						<!-- Header -->
-						<div style="text-align: center; margin-bottom: 25px;">
-							<div style="
-								width: 70px;
-								height: 70px;
-								background: linear-gradient(135deg, #ef4444, #dc2626);
-								border-radius: 50%;
-								display: flex;
-								align-items: center;
-								justify-content: center;
-								margin: 0 auto 15px;
-								font-size: 36px;
-							">🗑️</div>
-							<h3 style="font-size: 22px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">
-								Elimina Registrazione
-							</h3>
-							<p style="font-size: 14px; color: #6b7280;">
-								Questa azione non può essere annullata
-							</p>
-						</div>
-						
-						<!-- Dettagli registrazione -->
-						<div style="
-							background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.05));
-							border-left: 4px solid #ef4444;
-							border-radius: 12px;
-							padding: 18px;
-							margin-bottom: 25px;
-						">
-							<div style="display: grid; gap: 12px;">
-								<div style="display: flex; justify-content: space-between; align-items: center;">
-									<span style="font-size: 13px; color: #6b7280; font-weight: 600;">Data:</span>
-									<span style="font-size: 14px; color: #1f2937; font-weight: 600;">
-										${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}
-									</span>
-								</div>
-								<div style="display: flex; justify-content: space-between; align-items: center;">
-									<span style="font-size: 13px; color: #6b7280; font-weight: 600;">Cantiere:</span>
-									<span style="font-size: 14px; color: #1f2937; font-weight: 600;">
-										${entry.cantiereName || entry.cantiereId}
-									</span>
-								</div>
-								<div style="display: flex; justify-content: space-between; align-items: center;">
-									<span style="font-size: 13px; color: #6b7280; font-weight: 600;">Ore lavorate:</span>
-									<span style="
-										font-size: 20px; 
-										font-weight: 800; 
-										color: #ef4444;
-										background: rgba(239, 68, 68, 0.1);
-										padding: 4px 12px;
-										border-radius: 8px;
-									">${entry.ore}h</span>
-								</div>
-								${entry.note && !entry.note.includes('** Modificato') ? `
-									<div style="
-										padding-top: 12px; 
-										border-top: 1px solid rgba(239, 68, 68, 0.2);
-										margin-top: 8px;
-									">
-										<span style="font-size: 12px; color: #6b7280; font-weight: 600; display: block; margin-bottom: 4px;">
-											Note:
-										</span>
-										<span style="font-size: 13px; color: #4b5563; font-style: italic;">
-											${entry.note}
-										</span>
-									</div>
-								` : ''}
-							</div>
-						</div>
-						
-						<!-- Bottoni Azione (Mobile-First: grandi e ben spaziati) -->
-						<div style="display: grid; gap: 12px;">
-							<button onclick="confirmDelete(${entryIndex})" style="
-								width: 100%;
-								background: linear-gradient(135deg, #ef4444, #dc2626);
-								color: white;
-								border: none;
-								padding: 16px;
-								border-radius: 12px;
-								font-size: 16px;
-								font-weight: 700;
-								cursor: pointer;
-								transition: all 0.2s;
-								text-transform: uppercase;
-								letter-spacing: 0.5px;
-								box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-								/* Touch target minimo 48px */
-								min-height: 48px;
-							" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(239, 68, 68, 0.4)';"
-							   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.3)';">
-								🗑️ Elimina Definitivamente
-							</button>
-							
-							<button onclick="closeDeleteModal()" style="
-								width: 100%;
-								background: #f3f4f6;
-								color: #4b5563;
-								border: 2px solid #e5e7eb;
-								padding: 14px;
-								border-radius: 12px;
-								font-size: 15px;
-								font-weight: 600;
-								cursor: pointer;
-								transition: all 0.2s;
-								min-height: 48px;
-							" onmouseover="this.style.background='#e5e7eb';"
-							   onmouseout="this.style.background='#f3f4f6';">
-								Annulla
-							</button>
-						</div>
-					</div>
-				</div>
-				
-				<style>
-					@keyframes fadeIn {
-						from { opacity: 0; }
-						to { opacity: 1; }
-					}
-					
-					@keyframes slideUp {
-						from { 
-							opacity: 0;
-							transform: translateY(30px) scale(0.95);
-						}
-						to { 
-							opacity: 1;
-							transform: translateY(0) scale(1);
-						}
-					}
-					
-					/* Mobile: modal full-screen */
-					@media (max-width: 768px) {
-						#deleteConfirmModal > div {
-							max-width: 100%;
-							margin: 0;
-							border-radius: 0;
-							min-height: 100vh;
-							display: flex;
-							flex-direction: column;
-							justify-content: center;
-						}
-					}
-					/* Touch targets mobile */
-					@media (max-width: 768px) {
-						button {
-							min-height: 48px !important;
-							min-width: 48px !important;
-						}
-					}
-					@keyframes fadeIn {
-						from { opacity: 0; }
-						to { opacity: 1; }
-					}
-					@keyframes slideUp {
-						from { 
-							opacity: 0;
-							transform: translateY(30px);
-						}
-						to { 
-							opacity: 1;
-							transform: translateY(0);
-						}
-					}
-				</style>
-			`;
-			
-			document.body.insertAdjacentHTML('beforeend', modalHTML);
-		}
+            popupTitle.textContent = `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+            popupTotalHours.textContent = hasExistingWork ? `${dayData.totalOre}h registrate` : 'Nessuna registrazione';
 
-		function closeDeleteModal() {
-			const modal = document.getElementById('deleteConfirmModal');
-			if (modal) {
-				modal.remove();
-			}
-		}
+            let html = '';
 
-		// Conferma ed esegui cancellazione
-		async function confirmDelete(entryIndex) {
-			closeDeleteModal();
-			
-			const loadingMsg = Utils.showFullscreenMessage(
-				'Eliminazione in corso...', 
-				'error', 
-				0
-			);
-			
-			try {
-				const sessionData = Utils.getSession();
-				const result = await Utils.callAPI({
-					action: 'deleteWorkEntry',
-					sessionToken: sessionData.token,
-					targetUserId: currentUserId,
-					dateStr: currentEditDateStr,
-					entryIndex: entryIndex
-				});
-				
-				loadingMsg.remove();
-				
-				if (result.success) {
-					if (navigator.vibrate) {
-						navigator.vibrate([100, 50, 100]);
-					}
-					
-					Utils.showNotification(
-						'✅ Registrazione eliminata!', 
-						'success'
-					);
-					
-					// Chiudi popup
-					closeDayDetails();
-					
-					// INVALIDA CACHE
-					const cacheKey = `${currentUserId}_${currentYear}_${currentMonth}`;
-					delete calendarCache[cacheKey];
-					
-					// RICARICA automaticamente il calendario
-					await loadCalendarData();
-					
-				} else {
-					Utils.showNotification('Errore: ' + result.message, 'error');
-				}
-			} catch (error) {
-				loadingMsg.remove();
-				console.error('Errore cancellazione:', error);
-				Utils.showNotification('Errore durante l\'eliminazione', 'error');
-			}
-		}
+            if (hasExistingWork && dayData.entries.length > 0) {
+                // CASO: Esistono registrazioni — mostra lista con modifica/elimina
+                html += `
+                    <div style="background: rgba(79, 70, 229, 0.05); border-left: 4px solid #4f46e5;
+                                padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1f2937; margin-bottom: 8px;">
+                            ✏️ ${dayData.entries.length} registrazione/i esistente/i
+                        </div>
+                `;
 
-		// Aggiungi stile fadeOut per chiusura modale
-		const styleSheet = document.createElement('style');
-		styleSheet.textContent = `
-			@keyframes fadeOut {
-				from { opacity: 1; }
-				to { opacity: 0; }
-			}
-		`;
-		document.head.appendChild(styleSheet);
-		
-		function closeDayDetails() {
-			const popup = document.getElementById('dayDetailsPopup');
-			if (popup) {
-				popup.classList.remove('show');
-			}
-			
-			// Reset stato
-			selectedEntryIndex = null;
-			currentEditDateStr = null;
-			
-			// Nasconde l'area di edit se era visibile
-			const editArea = document.getElementById('editArea');
-			if (editArea) {
-				editArea.style.display = 'none';
-			}
-		}
-		
-		function generateEditForm(selectedCantiereId) {
-			return `
-				<div class="work-entry">
-					<div style="display: grid; grid-template-columns: 1fr 120px; gap: 12px; margin-bottom: 15px;">
-						<div>
-							<label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
-								Cantiere
-							</label>
-							<select id="editCantiereId" 
-									style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; 
-										   font-size: 14px; background: white; cursor: pointer;">
-								<option value="">Caricamento...</option>
-							</select>
-						</div>
-						<div>
-							<label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
-								Ore
-							</label>
-							<input type="number" id="editOre" value="" min="0" max="24" step="0.5" placeholder="0.0"
-								   style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; 
-										  font-size: 14px; text-align: center; font-weight: 600;">
-						</div>
-					</div>
-					<div>
-						<label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
-							Note aggiuntive
-						</label>
-						<textarea id="editNote" rows="3" placeholder="Aggiungi note..."
-								  style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; 
-										 font-size: 14px; resize: vertical;"></textarea>
-					</div>
-					<button onclick="saveWorkEdit()" id="saveBtn"
-							style="width: 100%; background: linear-gradient(135deg, #10b981, #059669); color: white; 
-								   border: none; padding: 15px; border-radius: 8px; font-weight: 600; cursor: pointer; 
-								   margin-top: 15px;">
-						💾 Salva Modifiche
-					</button>
-				</div>
-			`;
-		}
+                dayData.entries.forEach((entry, index) => {
+                    const cantiereLabel = entry.cantiereName || entry.cantiereId;
+                    const cantiereTrunc = cantiereLabel.length > 20
+                        ? cantiereLabel.substring(0, 20) + '...'
+                        : cantiereLabel;
+                    const entryLabel = `#${index + 1} - ${cantiereTrunc}`;
 
-		let selectedEntryIndex = null;
+                    html += `
+                        <div style="background: white; border-radius: 10px; padding: 14px; margin-top: 10px;
+                                    border: 2px solid ${index === 0 ? '#4f46e5' : '#e5e7eb'}; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <div style="font-size: 12px; color: #6b7280; font-weight: 700; text-transform: uppercase;">${entryLabel}</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin-bottom: 12px;">
+                                <div>
+                                    <div style="font-size: 11px; color: #9ca3af; font-weight: 600; margin-bottom: 3px;">CANTIERE</div>
+                                    <div style="font-size: 14px; color: #1f2937; font-weight: 600;">${entry.cantiereName || entry.cantiereId}</div>
+                                </div>
+                                <div style="background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; padding: 8px 16px;
+                                            border-radius: 10px; font-size: 18px; font-weight: 800; text-align: center; min-width: 60px;">${entry.ore}h</div>
+                            </div>
+                            ${entry.note && !entry.note.includes('** Modificato') ? `
+                                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+                                    <div style="font-size: 10px; color: #9ca3af; font-weight: 600; margin-bottom: 4px;">NOTE</div>
+                                    <div style="font-size: 13px; color: #4b5563; font-style: italic;">${entry.note}</div>
+                                </div>
+                            ` : ''}
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
+                                <button onclick="selectEntryToEdit(${index})" style="background: linear-gradient(135deg, #4f46e5, #4338ca); color: white;
+                                        border: none; padding: 12px; border-radius: 10px; font-size: 13px; cursor: pointer; font-weight: 700;
+                                        display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px;">
+                                    <span style="font-size: 15px;">✏️</span><span>Modifica</span>
+                                </button>
+                                <button onclick="showDeleteConfirmation(${index})" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white;
+                                        border: none; padding: 12px; border-radius: 10px; font-size: 13px; cursor: pointer; font-weight: 700;
+                                        display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px;">
+                                    <span style="font-size: 15px;">🗑️</span><span>Elimina</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
 
-		function selectEntryToEdit(index) {
-			selectedEntryIndex = index;
-			const dayData = calendarData.workDays[currentEditDateStr];
-			const entry = dayData.entries[index];
-			
-			document.getElementById('editArea').style.display = 'block';
-			document.getElementById('editingIndex').textContent = index + 1;
-			
-			// Popola form
-			document.getElementById('editOre').value = entry.ore;
-			document.getElementById('editNote').value = entry.note ? entry.note.split('\n** Modificato')[0] : '';
-			
-			// Carica cantieri
-			loadAllCantieriForEdit(entry.cantiereId);
-			
-			// Scroll al form
-			document.getElementById('editArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-		}
+                html += `</div>`;
+                html += `
+                    <div id="editArea" style="display: none;">
+                        <div style="background: rgba(16, 185, 129, 0.05); border-left: 4px solid #10b981;
+                                    padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                            <div style="font-weight: 600; color: #065f46;">✏️ Modifica registrazione <span id="editingIndex"></span></div>
+                        </div>
+                        ${generateEditForm('')}
+                    </div>
+                `;
+                html += `
+                    <button onclick="showNewEntryForm()"
+                            style="width: 100%; background: #10b981; color: white; border: none; padding: 12px;
+                                   border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px;">
+                        ➕ Aggiungi Nuovo Inserimento
+                    </button>
+                `;
+            } else {
+                // CASO: Nessuna registrazione — mostra direttamente form
+                html += `
+                    <div style="background: rgba(245, 158, 11, 0.05); border-left: 4px solid #f59e0b;
+                                padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                        <div style="font-weight: 600; color: #1f2937;">➕ Nuova registrazione</div>
+                    </div>
+                    ${generateEditForm('')}
+                `;
+            }
 
-		function showNewEntryForm() {
-			selectedEntryIndex = null;
-			document.getElementById('editArea').style.display = 'block';
-			document.getElementById('editingIndex').textContent = '(Nuova)';
-			
-			document.getElementById('editOre').value = '';
-			document.getElementById('editNote').value = '';
-			
-			// IMPORTANTE: Carica i cantieri PRIMA di cambiare il testo del bottone
-			loadAllCantieriForEdit(null);
-			
-			// Cambia il testo del bottone
-			const saveBtn = document.getElementById('saveBtn');
-			if (saveBtn) {
-				saveBtn.innerHTML = '➕ Crea Registrazione';
-			}
-			
-			document.getElementById('editArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-		}
+            html += `
+                <button class="popup-ok-button" onclick="closeDayDetails()"
+                        style="background: #6b7280; margin-top: 10px;">
+                    Chiudi
+                </button>
+            `;
 
-		async function saveWorkEdit() {
-			const cantiereId = document.getElementById('editCantiereId').value;
-			const ore = parseFloat(document.getElementById('editOre').value);
-			const note = document.getElementById('editNote').value.trim();
-			
-			if (!cantiereId) {
-				Utils.showNotification('Seleziona un cantiere', 'warning');
-				return;
-			}
-			
-			if (isNaN(ore) || ore <= 0 || ore > 24) {
-				Utils.showNotification('Inserisci ore valide (0.1-24)', 'error');
-				return;
-			}
-			
-			const isNewEntry = selectedEntryIndex === null;
-			
-			const loadingMsg = Utils.showFullscreenMessage(
-				isNewEntry ? 'Creazione registrazione...' : 'Salvataggio modifiche...', 
-				'info', 0
-			);
-			
-			try {
-				const sessionData = Utils.getSession();
-				const result = await Utils.callAPI({
-					action: 'updateWorkEntry',
-					sessionToken: sessionData.token,
-					targetUserId: currentUserId,
-					dateStr: currentEditDateStr,
-					updateData: JSON.stringify({
-						cantiereId: cantiereId,
-						ore: ore,
-						note: note,
-						isNewEntry: isNewEntry
-					})
-				});
-				
-				loadingMsg.remove();
-				
-				if (result.success) {
-					Utils.showNotification(
-						isNewEntry ? '✅ Registrazione creata!' : '✅ Modifiche salvate!', 
-						'success'
-					);
-					
-					// Chiudi popup
-					closeDayDetails();
-					
-					// INVALIDA CACHE per l'utente e mese corrente
-					const cacheKey = `${currentUserId}_${currentYear}_${currentMonth}`;
-					delete calendarCache[cacheKey];
-					
-					// RICARICA automaticamente il calendario
-					await loadCalendarData();
-					
-				} else {
-					Utils.showNotification('Errore: ' + result.message, 'error');
-				}
-			} catch (error) {
-				loadingMsg.remove();
-				console.error('Errore:', error);
-				Utils.showNotification('Errore durante il salvataggio', 'error');
-			}
-		}
-        
+            popupContent.innerHTML = html;
+            popup.classList.add('show');
+
+            // Se non ci sono registrazioni esistenti, carica i cantieri per il form nuovo
+            if (!hasExistingWork) {
+                loadAllCantieriForEdit(null);
+            }
+        }
+
+        /**
+         * Mostra la modale di conferma eliminazione per una registrazione specifica.
+         *
+         * DESCRIZIONE ESTESA: Genera una modale fullscreen con i dettagli della
+         * registrazione da eliminare (data, cantiere, ore, note) e due pulsanti:
+         * "Elimina Definitivamente" (chiama confirmDelete) e "Annulla" (chiude modale).
+         * Su dispositivi supportati esegue vibrazione feedback tattile.
+         * Su mobile la modale diventa fullscreen.
+         *
+         * CHIAMATA DA:  onclick="showDeleteConfirmation(index)" nel popup showDayDetails
+         * CHIAMA:       confirmDelete (via onclick inline), closeDeleteModal (via onclick inline),
+         *               navigator.vibrate (se supportato)
+         * LEGGE:        calendarData, currentEditDateStr
+         *
+         * @param {number} entryIndex - Indice della registrazione nell'array entries
+         * @returns {void}
+         */
+        function showDeleteConfirmation(entryIndex) {
+            const dayData = calendarData.workDays[currentEditDateStr];
+            const entry = dayData.entries[entryIndex];
+
+            const date = new Date(currentEditDateStr);
+            const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                               'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+
+            // Vibrazione su dispositivi supportati (feedback tattile Android)
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+
+            const modalHTML = `
+                <div id="deleteConfirmModal" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    z-index: 10001;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                    animation: fadeIn 0.2s ease-out;
+                ">
+                    <div style="
+                        background: white;
+                        border-radius: 20px;
+                        padding: 30px;
+                        max-width: 450px;
+                        width: 100%;
+                        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+                        animation: slideUp 0.3s ease-out;
+                    ">
+                        <!-- Header -->
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <div style="
+                                width: 70px;
+                                height: 70px;
+                                background: linear-gradient(135deg, #ef4444, #dc2626);
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                margin: 0 auto 15px;
+                                font-size: 36px;
+                            ">🗑️</div>
+                            <h3 style="font-size: 22px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">
+                                Elimina Registrazione
+                            </h3>
+                            <p style="font-size: 14px; color: #6b7280;">
+                                Questa azione non può essere annullata
+                            </p>
+                        </div>
+
+                        <!-- Dettagli registrazione -->
+                        <div style="
+                            background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.05));
+                            border-left: 4px solid #ef4444;
+                            border-radius: 12px;
+                            padding: 18px;
+                            margin-bottom: 25px;
+                        ">
+                            <div style="display: grid; gap: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 13px; color: #6b7280; font-weight: 600;">Data:</span>
+                                    <span style="font-size: 14px; color: #1f2937; font-weight: 600;">
+                                        ${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}
+                                    </span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 13px; color: #6b7280; font-weight: 600;">Cantiere:</span>
+                                    <span style="font-size: 14px; color: #1f2937; font-weight: 600;">
+                                        ${entry.cantiereName || entry.cantiereId}
+                                    </span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 13px; color: #6b7280; font-weight: 600;">Ore lavorate:</span>
+                                    <span style="
+                                        font-size: 20px;
+                                        font-weight: 800;
+                                        color: #ef4444;
+                                        background: rgba(239, 68, 68, 0.1);
+                                        padding: 4px 12px;
+                                        border-radius: 8px;
+                                    ">${entry.ore}h</span>
+                                </div>
+                                ${entry.note && !entry.note.includes('** Modificato') ? `
+                                    <div style="
+                                        padding-top: 12px;
+                                        border-top: 1px solid rgba(239, 68, 68, 0.2);
+                                        margin-top: 8px;
+                                    ">
+                                        <span style="font-size: 12px; color: #6b7280; font-weight: 600; display: block; margin-bottom: 4px;">
+                                            Note:
+                                        </span>
+                                        <span style="font-size: 13px; color: #4b5563; font-style: italic;">
+                                            ${entry.note}
+                                        </span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <!-- Bottoni Azione (Mobile-First: grandi e ben spaziati) -->
+                        <div style="display: grid; gap: 12px;">
+                            <button onclick="confirmDelete(${entryIndex})" style="
+                                width: 100%;
+                                background: linear-gradient(135deg, #ef4444, #dc2626);
+                                color: white;
+                                border: none;
+                                padding: 16px;
+                                border-radius: 12px;
+                                font-size: 16px;
+                                font-weight: 700;
+                                cursor: pointer;
+                                transition: all 0.2s;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+                                /* Touch target minimo 48px */
+                                min-height: 48px;
+                            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(239, 68, 68, 0.4)';"
+                               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.3)';">
+                                🗑️ Elimina Definitivamente
+                            </button>
+
+                            <button onclick="closeDeleteModal()" style="
+                                width: 100%;
+                                background: #f3f4f6;
+                                color: #4b5563;
+                                border: 2px solid #e5e7eb;
+                                padding: 14px;
+                                border-radius: 12px;
+                                font-size: 15px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                transition: all 0.2s;
+                                min-height: 48px;
+                            " onmouseover="this.style.background='#e5e7eb';"
+                               onmouseout="this.style.background='#f3f4f6';">
+                                Annulla
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <style>
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+
+                    @keyframes slideUp {
+                        from {
+                            opacity: 0;
+                            transform: translateY(30px) scale(0.95);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateY(0) scale(1);
+                        }
+                    }
+
+                    /* Mobile: modal full-screen */
+                    @media (max-width: 768px) {
+                        #deleteConfirmModal > div {
+                            max-width: 100%;
+                            margin: 0;
+                            border-radius: 0;
+                            min-height: 100vh;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                        }
+                    }
+                    /* Touch targets mobile */
+                    @media (max-width: 768px) {
+                        button {
+                            min-height: 48px !important;
+                            min-width: 48px !important;
+                        }
+                    }
+                </style>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        /**
+         * Chiude e rimuove la modale di conferma eliminazione dal DOM.
+         *
+         * CHIAMATA DA:  onclick="closeDeleteModal()" nel modale showDeleteConfirmation
+         *
+         * @returns {void}
+         */
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteConfirmModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        /**
+         * Conferma ed esegue l'eliminazione di una registrazione ore tramite API.
+         *
+         * DESCRIZIONE ESTESA: Chiude il modale di conferma, mostra overlay di
+         * caricamento fullscreen, chiama API 'deleteWorkEntry' con userId, data e
+         * indice entry. In caso di successo: vibrazione feedback, notifica, chiude
+         * popup, invalida cache e ricarica il calendario. In caso di errore mostra
+         * notifica di errore.
+         *
+         * FLUSSO INTERNO:
+         *   1. closeDeleteModal()
+         *   2. Utils.showFullscreenMessage('Eliminazione in corso...', 'error', 0)
+         *   3. Utils.callAPI({ action: 'deleteWorkEntry', sessionToken, targetUserId,
+         *      dateStr, entryIndex })
+         *   4. loadingMsg.remove()
+         *   5. Se successo: vibrazione, notifica, closeDayDetails,
+         *      invalida cache, loadCalendarData()
+         *   6. Altrimenti: notifica errore
+         *   7. Catch: remove overlay, notifica errore
+         *
+         * CHIAMATA DA:  onclick="confirmDelete(entryIndex)" nel modale showDeleteConfirmation
+         * CHIAMA:       closeDeleteModal, Utils.showFullscreenMessage, Utils.callAPI,
+         *               Utils.showNotification, closeDayDetails, loadCalendarData,
+         *               navigator.vibrate
+         * LEGGE:        currentUserId, currentEditDateStr, currentYear, currentMonth
+         * MODIFICA:     calendarCache (elimina chiave)
+         *
+         * @param {number} entryIndex - Indice della registrazione da eliminare
+         * @returns {Promise<void>}
+         */
+        async function confirmDelete(entryIndex) {
+            closeDeleteModal();
+
+            const loadingMsg = Utils.showFullscreenMessage(
+                'Eliminazione in corso...',
+                'error',
+                0
+            );
+
+            try {
+                const sessionData = Utils.getSession();
+                const result = await Utils.callAPI({
+                    action: 'deleteWorkEntry',
+                    sessionToken: sessionData.token,
+                    targetUserId: currentUserId,
+                    dateStr: currentEditDateStr,
+                    entryIndex: entryIndex
+                });
+
+                loadingMsg.remove();
+
+                if (result.success) {
+                    if (navigator.vibrate) {
+                        navigator.vibrate([100, 50, 100]);
+                    }
+
+                    Utils.showNotification(
+                        '✅ Registrazione eliminata!',
+                        'success'
+                    );
+
+                    // Chiudi popup
+                    closeDayDetails();
+
+                    // Invalida cache per l'utente e mese corrente
+                    const cacheKey = `${currentUserId}_${currentYear}_${currentMonth}`;
+                    delete calendarCache[cacheKey];
+
+                    // Ricarica il calendario
+                    await loadCalendarData();
+
+                } else {
+                    Utils.showNotification('Errore: ' + result.message, 'error');
+                }
+            } catch (error) {
+                loadingMsg.remove();
+                console.error('Errore cancellazione:', error);
+                Utils.showNotification('Errore durante l\'eliminazione', 'error');
+            }
+        }
+
+        // Inietta stile fadeOut per chiusura futura (attualmente non usato direttamente)
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = `
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(styleSheet);
+
+        /**
+         * Chiude il popup modale dei dettagli giorno e resetta lo stato di edit.
+         *
+         * DESCRIZIONE ESTESA: Rimuove la classe .show dal popup, azzera
+         * selectedEntryIndex e currentEditDateStr, nasconde l'#editArea se visibile.
+         *
+         * CHIAMATA DA:  onclick="closeDayDetails()" nel popup showDayDetails,
+         *               confirmDelete (dopo successo), saveWorkEdit (dopo successo)
+         * MODIFICA:     selectedEntryIndex, currentEditDateStr
+         *
+         * @returns {void}
+         */
+        function closeDayDetails() {
+            const popup = document.getElementById('dayDetailsPopup');
+            if (popup) {
+                popup.classList.remove('show');
+            }
+
+            // Reset stato modifica
+            selectedEntryIndex = null;
+            currentEditDateStr = null;
+
+            // Nasconde l'area di edit se era visibile
+            const editArea = document.getElementById('editArea');
+            if (editArea) {
+                editArea.style.display = 'none';
+            }
+        }
+
+        /**
+         * Genera l'HTML del form di modifica/inserimento registrazione.
+         *
+         * DESCRIZIONE ESTESA: Restituisce una stringa HTML con i campi select cantiere,
+         * input ore (number) e textarea note, più il pulsante "Salva Modifiche".
+         * Il select #editCantiereId viene popolato dinamicamente da loadAllCantieriForEdit.
+         *
+         * CHIAMATA DA:  showDayDetails (per editArea e per form diretto)
+         *
+         * @param {string} selectedCantiereId - ID cantiere da pre-selezionare (non ancora usato)
+         * @returns {string} HTML del form
+         */
+        function generateEditForm(selectedCantiereId) {
+            return `
+                <div class="work-entry">
+                    <div style="display: grid; grid-template-columns: 1fr 120px; gap: 12px; margin-bottom: 15px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
+                                Cantiere
+                            </label>
+                            <select id="editCantiereId"
+                                    style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                           font-size: 14px; background: white; cursor: pointer;">
+                                <option value="">Caricamento...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
+                                Ore
+                            </label>
+                            <input type="number" id="editOre" value="" min="0" max="24" step="0.5" placeholder="0.0"
+                                   style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                          font-size: 14px; text-align: center; font-weight: 600;">
+                        </div>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
+                            Note aggiuntive
+                        </label>
+                        <textarea id="editNote" rows="3" placeholder="Aggiungi note..."
+                                  style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                         font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <button onclick="saveWorkEdit()" id="saveBtn"
+                            style="width: 100%; background: linear-gradient(135deg, #10b981, #059669); color: white;
+                                   border: none; padding: 15px; border-radius: 8px; font-weight: 600; cursor: pointer;
+                                   margin-top: 15px;">
+                        💾 Salva Modifiche
+                    </button>
+                </div>
+            `;
+        }
+
+        let selectedEntryIndex = null; // Indice della registrazione in modifica (null = nuova)
+
+        /**
+         * Seleziona una registrazione esistente per la modifica e mostra il form di edit.
+         *
+         * DESCRIZIONE ESTESA: Mostra #editArea, imposta il testo "Modifica registrazione N",
+         * popola i campi ore e nota dall'entry selezionata (rimuovendo il suffisso
+         * "** Modificato" dalla nota se presente), e carica i cantieri con il cantiere
+         * corrente pre-selezionato. Scrolla al form di edit.
+         *
+         * CHIAMATA DA:  onclick="selectEntryToEdit(index)" nel popup showDayDetails
+         * CHIAMA:       loadAllCantieriForEdit
+         * LEGGE:        calendarData, currentEditDateStr
+         * MODIFICA:     selectedEntryIndex
+         *
+         * @param {number} index - Indice della registrazione nell'array entries
+         * @returns {void}
+         */
+        function selectEntryToEdit(index) {
+            selectedEntryIndex = index;
+            const dayData = calendarData.workDays[currentEditDateStr];
+            const entry = dayData.entries[index];
+
+            document.getElementById('editArea').style.display = 'block';
+            document.getElementById('editingIndex').textContent = index + 1;
+
+            // Popola form con i dati esistenti
+            document.getElementById('editOre').value = entry.ore;
+            document.getElementById('editNote').value = entry.note ? entry.note.split('\n** Modificato')[0] : '';
+
+            // Carica cantieri con cantiere corrente pre-selezionato
+            loadAllCantieriForEdit(entry.cantiereId);
+
+            // Scroll al form di edit
+            document.getElementById('editArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        /**
+         * Mostra il form per una nuova registrazione sullo stesso giorno.
+         *
+         * DESCRIZIONE ESTESA: Azzera selectedEntryIndex (indica nuova registrazione),
+         * mostra #editArea, imposta il label "Modifica registrazione (Nuova)", pulisce
+         * i campi del form, carica tutti i cantieri senza pre-selezione, cambia il
+         * testo del pulsante salva in "Crea Registrazione".
+         *
+         * CHIAMATA DA:  onclick="showNewEntryForm()" nel popup showDayDetails
+         * CHIAMA:       loadAllCantieriForEdit
+         * MODIFICA:     selectedEntryIndex
+         *
+         * @returns {void}
+         */
+        function showNewEntryForm() {
+            selectedEntryIndex = null;
+            document.getElementById('editArea').style.display = 'block';
+            document.getElementById('editingIndex').textContent = '(Nuova)';
+
+            document.getElementById('editOre').value = '';
+            document.getElementById('editNote').value = '';
+
+            // Carica i cantieri PRIMA di cambiare il testo del bottone
+            loadAllCantieriForEdit(null);
+
+            // Cambia il testo del bottone
+            const saveBtn = document.getElementById('saveBtn');
+            if (saveBtn) {
+                saveBtn.innerHTML = '➕ Crea Registrazione';
+            }
+
+            document.getElementById('editArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        /**
+         * Salva le modifiche a una registrazione esistente o crea una nuova registrazione.
+         *
+         * DESCRIZIONE ESTESA: Legge i valori da #editCantiereId, #editOre, #editNote.
+         * Valida che cantiere e ore siano validi. Chiama API 'updateWorkEntry' con
+         * isNewEntry=true se selectedEntryIndex è null, false altrimenti. In caso di
+         * successo: notifica, chiude popup, invalida cache, ricarica calendario.
+         *
+         * FLUSSO INTERNO:
+         *   1. Legge cantiereId, ore, note dal DOM
+         *   2. Valida cantiere (non vuoto) e ore (0.1-24)
+         *   3. Determina isNewEntry da selectedEntryIndex
+         *   4. Mostra overlay fullscreen di caricamento
+         *   5. Utils.callAPI({ action: 'updateWorkEntry', sessionToken, targetUserId,
+         *      dateStr, updateData: JSON con cantiereId, ore, note, isNewEntry })
+         *   6. Se successo: notifica, closeDayDetails, invalida cache, loadCalendarData
+         *   7. Altrimenti: notifica errore
+         *   8. Catch: remove overlay, notifica errore
+         *
+         * CHIAMATA DA:  onclick="saveWorkEdit()" nel form generato da generateEditForm
+         * CHIAMA:       Utils.showNotification, Utils.showFullscreenMessage, Utils.callAPI,
+         *               Utils.getSession, closeDayDetails, loadCalendarData
+         * LEGGE:        selectedEntryIndex, currentUserId, currentEditDateStr,
+         *               currentYear, currentMonth
+         * MODIFICA:     calendarCache (elimina chiave)
+         *
+         * @returns {Promise<void>}
+         */
+        async function saveWorkEdit() {
+            const cantiereId = document.getElementById('editCantiereId').value;
+            const ore = parseFloat(document.getElementById('editOre').value);
+            const note = document.getElementById('editNote').value.trim();
+
+            if (!cantiereId) {
+                Utils.showNotification('Seleziona un cantiere', 'warning');
+                return;
+            }
+
+            if (isNaN(ore) || ore <= 0 || ore > 24) {
+                Utils.showNotification('Inserisci ore valide (0.1-24)', 'error');
+                return;
+            }
+
+            const isNewEntry = selectedEntryIndex === null;
+
+            const loadingMsg = Utils.showFullscreenMessage(
+                isNewEntry ? 'Creazione registrazione...' : 'Salvataggio modifiche...',
+                'info', 0
+            );
+
+            try {
+                const sessionData = Utils.getSession();
+                const result = await Utils.callAPI({
+                    action: 'updateWorkEntry',
+                    sessionToken: sessionData.token,
+                    targetUserId: currentUserId,
+                    dateStr: currentEditDateStr,
+                    updateData: JSON.stringify({
+                        cantiereId: cantiereId,
+                        ore: ore,
+                        note: note,
+                        isNewEntry: isNewEntry
+                    })
+                });
+
+                loadingMsg.remove();
+
+                if (result.success) {
+                    Utils.showNotification(
+                        isNewEntry ? '✅ Registrazione creata!' : '✅ Modifiche salvate!',
+                        'success'
+                    );
+
+                    // Chiudi popup
+                    closeDayDetails();
+
+                    // Invalida cache per l'utente e mese corrente
+                    const cacheKey = `${currentUserId}_${currentYear}_${currentMonth}`;
+                    delete calendarCache[cacheKey];
+
+                    // Ricarica il calendario
+                    await loadCalendarData();
+
+                } else {
+                    Utils.showNotification('Errore: ' + result.message, 'error');
+                }
+            } catch (error) {
+                loadingMsg.remove();
+                console.error('Errore:', error);
+                Utils.showNotification('Errore durante il salvataggio', 'error');
+            }
+        }
+
+        /**
+         * Carica la lista cantieri per popolare il select #editCantiereId nel form di modifica.
+         *
+         * DESCRIZIONE ESTESA: Chiama API 'getAllCantieriForAdmin' e popola il select
+         * con tutte le option (inclusi cantieri non-Aperto con tag [Stato]). Se
+         * currentCantiereId è fornito, pre-seleziona l'opzione corrispondente.
+         * In caso di errore imposta option di errore nel select.
+         *
+         * CHIAMATA DA:  selectEntryToEdit (con cantiereId corrente),
+         *               showNewEntryForm (con null),
+         *               showDayDetails (con null, se giorno vuoto)
+         * CHIAMA:       Utils.getSession, Utils.callAPI, Utils.showNotification
+         *
+         * @param {string|null} currentCantiereId - ID cantiere da pre-selezionare, o null
+         * @returns {Promise<void>}
+         */
         async function loadAllCantieriForEdit(currentCantiereId) {
             try {
                 const sessionData = Utils.getSession();
@@ -1235,18 +1754,18 @@
                     action: 'getAllCantieriForAdmin',
                     sessionToken: sessionData.token
                 });
-                
+
                 const select = document.getElementById('editCantiereId');
-                
+
                 if (result.success && result.data) {
-                    select.innerHTML = '<option value="">-- Seleziona cantiere --</option>' + 
+                    select.innerHTML = '<option value="">-- Seleziona cantiere --</option>' +
                         result.data.map(c => {
                             const statoLabel = c.stato !== 'Aperto' ? ` [${c.stato}]` : '';
                             return `<option value="${c.id}" ${c.id === currentCantiereId ? 'selected' : ''}>
                                 ${c.id} - ${c.nome}${statoLabel}
                             </option>`;
                         }).join('');
-                        
+
                     console.log('Cantieri caricati:', result.data.length);
                 } else {
                     select.innerHTML = '<option value="">Errore caricamento cantieri</option>';
@@ -1258,8 +1777,21 @@
                 select.innerHTML = '<option value="">Errore caricamento</option>';
             }
         }
-        
-        // ===== UTILITIES =====
+
+        /* ═══════════════════════════════════════════
+           UTILITIES ADMIN — Funzioni di supporto:
+           showError, logout, setupAutoRefresh, cleanup.
+           ═══════════════════════════════════════════ */
+
+        /**
+         * Mostra uno stato di errore in un container DOM identificato da ID.
+         *
+         * CHIAMATA DA:  loadCantieri (catch)
+         *
+         * @param {string} id  - ID del container DOM da aggiornare
+         * @param {string} msg - Messaggio di errore da mostrare
+         * @returns {void}
+         */
         function showError(id, msg) {
             document.getElementById(id).innerHTML = `
                 <div class="no-data-state" style="grid-column: 1 / -1;">
@@ -1269,21 +1801,42 @@
             `;
         }
 
+        /**
+         * Esegue il logout admin: cancella la sessione e reindirizza al login.
+         *
+         * CHIAMATA DA:  onclick="logout()" sul pulsante "Esci" nell'header
+         * CHIAMA:       Utils.clearSession, Utils.showNotification, Utils.redirectToLogin
+         *
+         * @returns {void}
+         */
         function logout() {
             Utils.clearSession();
             Utils.showNotification('Disconnessione...', 'info');
             setTimeout(() => Utils.redirectToLogin(), 1000);
         }
 
+        /**
+         * Avvia il ciclo di auto-refresh admin ogni 30 minuti.
+         *
+         * DESCRIZIONE ESTESA: Crea un setInterval che ogni 1800000ms invalida la
+         * cache cantieri e ricarica. Se un dipendente è selezionato, ricarica
+         * anche il suo calendario.
+         *
+         * CHIAMATA DA:  DOMContentLoaded (dopo loadInitialData)
+         * CHIAMA:       loadCantieri, loadCalendarData
+         * LEGGE:        currentUserId
+         * MODIFICA:     autoRefreshInterval, cantieriCache
+         *
+         * @returns {void}
+         */
         function setupAutoRefresh() {
-            // Auto-refresh ogni 30 minuti
             autoRefreshInterval = setInterval(async () => {
                 console.log('[ADMIN] Auto-refresh dati');
-                
+
                 // Refresh cantieri
                 cantieriCache = { totali: null, mese: null };
                 await loadCantieri();
-                
+
                 // Refresh calendario se utente selezionato
                 if (currentUserId) {
                     await loadCalendarData();
@@ -1291,12 +1844,23 @@
             }, 1800000); // 30 minuti
         }
 
-        // Cleanup
+        // Cleanup interval al reload/chiusura pagina
         window.addEventListener('beforeunload', () => {
             if (autoRefreshInterval) clearInterval(autoRefreshInterval);
         });
 
-        // Debug helper
+        /**
+         * Helper debug — stampa lo stato corrente della dashboard admin in console.
+         *
+         * NOTA: Funzione esposta su window per uso manuale in console del browser.
+         * Non chiamata da nessun flusso UI automatico.
+         *
+         * CHIAMATA DA:  Uso manuale da console del browser: window.getAdminState()
+         * LEGGE:        currentCantieriMode, currentUserId, currentUserName,
+         *               currentYear, currentMonth, calendarData, cantieriCache
+         *
+         * @returns {void}
+         */
         window.getAdminState = () => console.table({
             cantieriMode: currentCantieriMode,
             userId: currentUserId,

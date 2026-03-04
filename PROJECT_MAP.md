@@ -486,4 +486,37 @@ Colonne righe ore (indicative, mapping dinamico via `buildColumnMap`):
 
 ---
 
-*Documento generato da Docs Agent — 2026-03-03*
+---
+
+## Code Review — 2026-03-04
+
+### Dead Code (non rimosso, marcato con ⚠️)
+
+#### Backend (`Script/*.gs`)
+| Funzione | File | Note |
+|----------|------|------|
+| `decodeSessionToken()` | `Utils.gs` | userId estratto direttamente con `token.split('_')[0]` |
+| `getCurrentDateFormatted()` | `Config.gs` | Nessun chiamante trovato |
+| `logAdminAction()` | `AdminAPI.gs` | Audit log admin completamente inattivo |
+
+#### Frontend (`config.js` — Utils object)
+17 metodi mai chiamati dai file HTML: `formatCurrency`, `formatDate`, `validateHours`, `validateRequired`, `showSecurityStatus`, `measurePerformance`, `isMobile`, `handleResponsiveResize`, `setupAutoRefresh`, `stopAutoRefresh`, `showNoDataState`, `adminLog`, `logAdminPerformance`, `prepareChartData`, `getChartOptions`, `loadDipendenteTimeline`, `getStatoBadgeClass`.
+
+### CSS Orfano
+- `dashboard.html`: `.total-hours { display: none; }` — classe non usata nel DOM
+
+### Anomalie Documentate
+1. **Sicurezza** — `saveWorkEntry` transita anche via GET in `ApiRouter.gs`: `workData` serializzato in query string. Dovrebbe essere solo POST.
+2. **Audit log inattivo** — `logAdminAction()` in `AdminAPI.gs` non viene mai chiamata. Nessuna azione admin viene loggata.
+3. **Password in chiaro** — `GestionePassword.gs → updateUserPassword()` scrive sia la password in chiaro (colonna `Password`) che l'hash (colonna `Password Hash`). Il plaintext rimane nel foglio.
+4. **Cache non invalidata** — `invalidateAdminCache()` in `AdminAPI.gs` è uno stub: non chiama `CacheService.remove()`. Le cache scadono solo per timeout naturale.
+5. **buildColumnMap nel loop** — `AdminAPI.gs → updateWorkEntry()` richiama `buildColumnMap(headers)` ad ogni iterazione del loop righe. Ottimizzazione: spostare fuori dal loop.
+6. **showSecurityInfo mai chiamata** — `index.html`: `authMethod` eliminato da `authenticateUser()` prima del controllo nel submit handler → comportamento intenzionale V2.2 "silent mode".
+7. **ProductionLogger.api()** — Legge `CONFIG.LOGGING.API_CALLS` ma la chiave config si chiama `API_LOGS` → API logging sempre disabilitato.
+
+### Broken References API
+Nessuna. Tutte le `action` nei `Utils.callAPI()` frontend corrispondono a handler in `ApiRouter.gs`.
+
+---
+
+*Documento generato da Docs Agent — 2026-03-03 | Aggiornato 2026-03-04*
