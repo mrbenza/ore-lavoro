@@ -963,16 +963,30 @@ function updateWorkEntry(sessionToken, targetUserId, dateStr, updateData) {
 function invalidateAdminCache(sessionToken, cacheType) {
   try {
     Logger.debug('invalidateAdminCache:', cacheType);
-    
+
     if (!validateSessionToken(sessionToken)) {
       return { success: false, message: 'Sessione non valida' };
     }
-    
+
+    const cache = CacheService.getScriptCache();
+    const today = new Date();
+
+    if (cacheType === 'cantieri' || !cacheType) {
+      // Rimuove chiave totali + chiavi mese degli ultimi 24 mesi
+      const keysToRemove = ['cantieri_totali'];
+      for (var i = 0; i < 24; i++) {
+        var d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        keysToRemove.push('cantieri_mese_' + d.getFullYear() + '_' + d.getMonth());
+      }
+      cache.removeAll(keysToRemove);
+      Logger.debug('Cache cantieri rimossa, chiavi:', keysToRemove.length);
+    }
+
     return {
       success: true,
       message: 'Cache invalidata: ' + cacheType
     };
-    
+
   } catch (error) {
     Logger.critical('Errore invalidateAdminCache:', error);
     return { success: false, message: 'Errore: ' + error.toString() };
