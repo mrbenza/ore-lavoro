@@ -601,3 +601,52 @@ function aggiornaStatoUtenteAPI(sessionToken, targetUserId, nuovoStato) {
     return { success: false, message: 'Errore interno: ' + error.message };
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TEST/DEBUG — cambia stato utente da menu Sheets (bypass token)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Testa aggiornaStatoUtente direttamente dal menu Sheets, senza token HTTP.
+ * Usato per verificare che la logica di scrittura sul foglio funzioni.
+ * CHIAMATA DA: Main.gs → menu "👥 Gestione Utenti"
+ */
+function executeAggiornaStatoUtente() {
+  var ui = SpreadsheetApp.getUi();
+  try {
+    var utenti = getUsersList();
+    if (!utenti.length) { ui.alert('Errore\n\nNessun utente trovato.'); return; }
+
+    var lista = 'Scegli utente:\n\n';
+    utenti.forEach(function(u, i) {
+      lista += (i + 1) + '. ' + u.nome + ' (' + u.userId + ') — ' + (u.attivo || '?') + '\n';
+    });
+    lista += '\nInserisci il numero:';
+
+    var r1 = ui.prompt('Cambia Stato Utente', lista, ui.ButtonSet.OK_CANCEL);
+    if (r1.getSelectedButton() !== ui.Button.OK) return;
+    var idx = parseInt(r1.getResponseText().trim()) - 1;
+    if (isNaN(idx) || idx < 0 || idx >= utenti.length) { ui.alert('Numero non valido.'); return; }
+    var utente = utenti[idx];
+
+    var r2 = ui.prompt('Stato per ' + utente.nome, 'Inserisci 1 = Attivo (Si) oppure 2 = Non attivo (No):', ui.ButtonSet.OK_CANCEL);
+    if (r2.getSelectedButton() !== ui.Button.OK) return;
+    var nuovoStato = r2.getResponseText().trim() === '1' ? 'Si' : 'No';
+
+    var ss = getMainSpreadsheet();
+    var usersSheet = getSheetSafe(ss, SHEET_NAMES.UTENTI);
+    var colMap = getColumnMapping(usersSheet);
+    var data = usersSheet.getDataRange().getValues();
+
+    for (var i = 1; i < data.length; i++) {
+      if ((data[i][colMap['Username']] || '').toString().trim() === utente.userId) {
+        usersSheet.getRange(i + 1, colMap['Attivo'] + 1).setValue(nuovoStato);
+        ui.alert('Completato\n\n' + utente.nome + ' → Attivo: ' + nuovoStato);
+        return;
+      }
+    }
+    ui.alert('Utente non trovato: ' + utente.userId);
+  } catch (e) {
+    ui.alert('Errore\n\n' + e.message);
+  }
+}

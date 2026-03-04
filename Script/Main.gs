@@ -75,7 +75,8 @@ function onOpen() {
         .addItem('➕ Crea nuovo utente', 'createNewUser')
         .addItem('📋 Lista utenti', 'showUsersList')
         .addSeparator()
-        .addItem('👤 Cambia password dipendente', 'changeEmployeePassword'))
+        .addItem('👤 Cambia password dipendente', 'changeEmployeePassword')
+        .addItem('🔄 Cambia stato utente (Attivo/No)', 'aggiornaStatoUtente'))
 
       // Sottomenu Report
       .addSubMenu(ui.createMenu('📊 Report Commercialista')
@@ -1033,6 +1034,20 @@ function createNewUser() {
     executeCreateUser();
   } catch (error) {
     handleGlobalError('createNewUser', error);
+  }
+}
+
+/**
+ * Menu bridge: cambia stato attivo/non attivo di un utente.
+ * CHIAMATA DA: onOpen() → menu "👥 Gestione Utenti" → "🔄 Cambia stato utente"
+ * CHIAMA:      executeAggiornaStatoUtente() (GestioneUtenti.gs), handleGlobalError()
+ * @returns {void}
+ */
+function aggiornaStatoUtente() {
+  try {
+    executeAggiornaStatoUtente();
+  } catch (error) {
+    handleGlobalError('aggiornaStatoUtente', error);
   }
 }
 
