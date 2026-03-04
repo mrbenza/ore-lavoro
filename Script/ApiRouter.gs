@@ -243,6 +243,14 @@ function doGet(e) {
       // → AdminAPI.gs
       result = invalidateAdminCache(e.parameter.sessionToken, e.parameter.cacheType);
     }
+    else if (action === 'updateCantiereStato') {
+      // → AdminAPI.gs
+      result = updateCantiereStato(
+        e.parameter.sessionToken,
+        e.parameter.cantiereId,
+        e.parameter.nuovoStato
+      );
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // AZIONE SCONOSCIUTA
@@ -268,7 +276,8 @@ function doGet(e) {
           'getAllCantieriForAdmin',
           'updateWorkEntry',
           'deleteWorkEntry',
-          'invalidateCache'
+          'invalidateCache',
+          'updateCantiereStato'
         ]
       };
     }
@@ -455,6 +464,14 @@ function doPost(e) {
       // → AdminAPI.gs
       result = invalidateAdminCache(params.sessionToken, params.cacheType);
     }
+    else if (params.action === 'updateCantiereStato') {
+      // → AdminAPI.gs
+      result = updateCantiereStato(
+        params.sessionToken,
+        params.cantiereId,
+        params.nuovoStato
+      );
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // AZIONE SCONOSCIUTA
@@ -480,7 +497,8 @@ function doPost(e) {
           'getAllCantieriForAdmin',
           'updateWorkEntry',
           'deleteWorkEntry',
-          'invalidateCache'
+          'invalidateCache',
+          'updateCantiereStato'
         ]
       };
     }

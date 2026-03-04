@@ -225,6 +225,25 @@
         .work-note { font-size: 14px; color: #6b7280; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-style: italic; }
 
         /* ═══════════════════════════════════════════
+           POPUP MODIFICA STATO CANTIERE
+           ═══════════════════════════════════════════ */
+        .cantiere-stato-popup { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10001; justify-content: center; align-items: center; padding: 20px; }
+        .cantiere-stato-popup.show { display: flex; }
+        .cantiere-stato-content { background: white; border-radius: 20px; padding: 30px; max-width: 420px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .cantiere-stato-header { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e1e5e9; }
+        .cantiere-stato-titolo { font-size: 18px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+        .cantiere-stato-id { font-size: 13px; color: #9ca3af; }
+        .cantiere-stato-label { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; display: block; }
+        .cantiere-stato-select { width: 100%; padding: 12px 16px; border: 2px solid #e1e5e9; border-radius: 12px; font-size: 15px; color: #1f2937; background: #f9fafb; cursor: pointer; outline: none; transition: border-color 0.2s; }
+        .cantiere-stato-select:focus { border-color: #4f46e5; background: white; }
+        .cantiere-stato-actions { display: flex; gap: 12px; margin-top: 24px; }
+        .cantiere-stato-save { flex: 1; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .cantiere-stato-save:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(79,70,229,0.4); }
+        .cantiere-stato-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .cantiere-stato-cancel { flex: 1; background: #f3f4f6; color: #374151; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .cantiere-stato-cancel:hover { background: #e5e7eb; }
+
+        /* ═══════════════════════════════════════════
            RESPONSIVE MOBILE — Adatta layout admin
            per schermi <= 768px: colonne singole,
            font ridotti, calendar day più piccoli.
@@ -362,6 +381,28 @@
         </div>
     </div>
 
+    <!-- Popup modifica stato cantiere -->
+    <div class="cantiere-stato-popup" id="cantiereStatoPopup" onclick="if(event.target===this)closeCantiereStatoPopup()">
+        <div class="cantiere-stato-content">
+            <div class="cantiere-stato-header">
+                <div class="cantiere-stato-titolo" id="cantiereStatoTitolo">Nome Cantiere</div>
+                <div class="cantiere-stato-id" id="cantiereStatoId">ID: —</div>
+            </div>
+            <label class="cantiere-stato-label">Stato Lavori</label>
+            <select class="cantiere-stato-select" id="cantiereStatoSelect">
+                <option value="Aperto">Aperto</option>
+                <option value="Chiuso">Chiuso</option>
+                <option value="Sospeso">Sospeso</option>
+                <option value="In Pausa">In Pausa</option>
+                <option value="Completato">Completato</option>
+            </select>
+            <div class="cantiere-stato-actions">
+                <button class="cantiere-stato-cancel" onclick="closeCantiereStatoPopup()">Annulla</button>
+                <button class="cantiere-stato-save" id="cantiereStatoSaveBtn" onclick="saveCantiereStato()">Salva</button>
+            </div>
+        </div>
+    </div>
+
     <script src="config.js"></script>
     <script>
         'use strict';
@@ -376,6 +417,7 @@
         let currentMonth = new Date().getMonth() + 1; // Mese 1-12 del calendario admin corrente
         let calendarData = null;             // Dati calendario del dipendente selezionato: { workDays: {...} }
         let cantieriCache = { totali: null, mese: null }; // Cache bipartita per i due modi cantieri
+        let cantieriMap = {};                            // Mappa id → dati cantiere per il popup
         let calendarCache = {};              // Cache calendario: chiave "userId_year_month" → data
         let autoRefreshInterval = null;      // ID interval per auto-refresh ogni 30 minuti
         let currentEditDateStr = null;       // Data selezionata nel calendario per modifica: "YYYY-MM-DD"
@@ -618,6 +660,9 @@
                 grid.innerHTML = '<div class="no-data-state" style="grid-column: 1 / -1;"><div class="no-data-icon"><i class="fas fa-building"></i></div><p>Nessun cantiere trovato</p></div>';
                 return;
             }
+            // Aggiorna la mappa per il popup modifica stato
+            cantieriMap = {};
+            data.forEach(c => { cantieriMap[c.id] = c; });
             grid.innerHTML = data.map(c => `
                 <div class="cantiere-card slide-in" onclick="showCantiereDetails('${c.id}')">
                     <div class="cantiere-nome">${Utils.truncateText(c.nome, 35)}</div>
@@ -684,18 +729,94 @@
         }
 
         /**
-         * Mostra i dettagli di un cantiere specifico.
+         * Apre il popup di modifica stato per un cantiere.
          *
-         * NOTA: Funzionalità placeholder — mostra solo notifica "In sviluppo".
+         * DESCRIZIONE ESTESA: Recupera i dati del cantiere da cantieriMap (popolata
+         * da renderCantieri), imposta titolo, ID e stato corrente nel popup, poi
+         * lo rende visibile. Se il cantiere non è in mappa mostra un errore.
          *
          * CHIAMATA DA:  onclick su .cantiere-card (generato da renderCantieri)
          * CHIAMA:       Utils.showNotification
+         * LEGGE:        cantieriMap
          *
-         * @param {string} id - ID del cantiere
+         * @param {string} id - ID del cantiere (es. 'C001')
          * @returns {void}
          */
         function showCantiereDetails(id) {
-            Utils.showNotification(`Dettagli cantiere ${id} - In sviluppo`, 'info');
+            const c = cantieriMap[id];
+            if (!c) {
+                Utils.showNotification('Dati cantiere non disponibili', 'error');
+                return;
+            }
+            document.getElementById('cantiereStatoTitolo').textContent = c.nome;
+            document.getElementById('cantiereStatoId').textContent = 'ID: ' + id;
+            document.getElementById('cantiereStatoSelect').value = c.stato || 'Aperto';
+            document.getElementById('cantiereStatoPopup').dataset.cantiereId = id;
+            document.getElementById('cantiereStatoSaveBtn').disabled = false;
+            document.getElementById('cantiereStatoPopup').classList.add('show');
+        }
+
+        /**
+         * Chiude il popup di modifica stato cantiere.
+         *
+         * CHIAMATA DA:  onclick su pulsante Annulla nel popup cantiereStatoPopup
+         *
+         * @returns {void}
+         */
+        function closeCantiereStatoPopup() {
+            document.getElementById('cantiereStatoPopup').classList.remove('show');
+        }
+
+        /**
+         * Salva il nuovo stato del cantiere chiamando l'API backend.
+         *
+         * DESCRIZIONE ESTESA: Legge cantiereId dal dataset del popup e nuovoStato
+         * dal select, chiama Utils.callAPI con action='updateCantiereStato',
+         * invalida la cache locale e ricarica i cantieri. Gestisce loading e errori.
+         *
+         * CHIAMATA DA:  onclick su pulsante Salva nel popup cantiereStatoPopup
+         * CHIAMA:       Utils.callAPI, Utils.getSession, Utils.invalidateAdminCache,
+         *               loadCantieri, closeCantiereStatoPopup, Utils.showNotification
+         * MODIFICA:     cantieriCache
+         *
+         * @returns {Promise<void>}
+         */
+        async function saveCantiereStato() {
+            const popup = document.getElementById('cantiereStatoPopup');
+            const cantiereId = popup.dataset.cantiereId;
+            const nuovoStato = document.getElementById('cantiereStatoSelect').value;
+            const saveBtn = document.getElementById('cantiereStatoSaveBtn');
+
+            if (!cantiereId || !nuovoStato) return;
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Salvataggio...';
+
+            try {
+                const session = Utils.getSession();
+                const result = await Utils.callAPI({
+                    action: 'updateCantiereStato',
+                    sessionToken: session.sessionToken,
+                    cantiereId: cantiereId,
+                    nuovoStato: nuovoStato
+                });
+
+                if (result.success) {
+                    closeCantiereStatoPopup();
+                    cantieriCache = { totali: null, mese: null };
+                    await Utils.invalidateAdminCache('cantieri');
+                    await loadCantieri();
+                    Utils.showNotification('Stato aggiornato: ' + nuovoStato, 'success', 3000);
+                } else {
+                    Utils.showNotification('Errore: ' + (result.message || 'Aggiornamento fallito'), 'error');
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Salva';
+                }
+            } catch (err) {
+                Utils.showNotification('Errore di rete', 'error');
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Salva';
+            }
         }
 
         /* ═══════════════════════════════════════════

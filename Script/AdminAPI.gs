@@ -993,6 +993,116 @@ function invalidateAdminCache(sessionToken, cacheType) {
   }
 }
 // ─────────────────────────────────────────────────────────────────────────────
+// AGGIORNAMENTO STATO CANTIERE — modifica colonna Stato Lavori
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Aggiorna lo stato di un cantiere nel foglio Cantieri (colonna D).
+ *
+ * DESCRIZIONE ESTESA: Riceve l'ID del cantiere e il nuovo stato, trova la riga
+ * corrispondente nel foglio Cantieri tramite COLUMNS_CANTIERI.ID, scrive il
+ * nuovo valore in COLUMNS_CANTIERI.STATO (colonna D, indice 3) e invalida
+ * la cache per forzare il reload nei client. Accetta solo stati predefiniti
+ * (Aperto, Chiuso, Sospeso, In Pausa, Completato). Richiede sessione admin.
+ *
+ * FLUSSO INTERNO:
+ *   1. Valida sessionToken e ruolo admin
+ *   2. Verifica che nuovoStato sia tra quelli predefiniti
+ *   3. Apre foglio Cantieri, scorre righe cercando COLUMNS_CANTIERI.ID == cantiereId
+ *   4. Scrive nuovoStato in COLUMNS_CANTIERI.STATO + 1 (1-based)
+ *   5. Invalida cache cantieri via invalidateAdminCache()
+ *   6. Ritorna { success, message, data: { cantiereId, vecchioStato, nuovoStato } }
+ *
+ * CHIAMATA DA: ApiRouter.gs → doPost() (action='updateCantiereStato')
+ * CHIAMA:      validateSessionToken(), getSheetSafely(), invalidateAdminCache(),
+ *              Logger.debug, Logger.critical, COLUMNS_CANTIERI, SHEET_NAMES
+ *
+ * @param {string} sessionToken - Token di sessione admin.
+ * @param {string} cantiereId   - ID del cantiere (es. 'C001').
+ * @param {string} nuovoStato   - Nuovo stato (Aperto|Chiuso|Sospeso|In Pausa|Completato).
+ * @returns {{ success: boolean, message: string, data?: { cantiereId: string,
+ *             vecchioStato: string, nuovoStato: string } }} Risultato operazione.
+ * @example
+ * updateCantiereStato('admin_1709123456_abc', 'C001', 'Chiuso');
+ * // → { success: true, message: 'Stato cantiere C001 aggiornato: Aperto → Chiuso',
+ * //     data: { cantiereId: 'C001', vecchioStato: 'Aperto', nuovoStato: 'Chiuso' } }
+ */
+function updateCantiereStato(sessionToken, cantiereId, nuovoStato) {
+  try {
+    Logger.debug('updateCantiereStato:', cantiereId, '->', nuovoStato);
+
+    if (!validateSessionToken(sessionToken)) {
+      return { success: false, message: 'Sessione non valida' };
+    }
+
+    // Verifica ruolo admin (stesso pattern di updateWorkEntry)
+    var requestingUserId = sessionToken.split('_')[0];
+    var userSheet = getWorksheet();
+    var userData = userSheet.getDataRange().getValues();
+    var headerRow = userData[0];
+    var colMap = buildColumnMap(headerRow);
+    var ruoloColumnIndex = -1;
+    for (var j = 0; j < headerRow.length; j++) {
+      if (headerRow[j] === 'Ruolo') { ruoloColumnIndex = j; break; }
+    }
+    var isAdmin = false;
+    for (var u = 1; u < userData.length; u++) {
+      if (String(userData[u][colMap['Username']]).trim() === requestingUserId) {
+        isAdmin = (ruoloColumnIndex !== -1 && userData[u][ruoloColumnIndex].toString().toLowerCase() === 'admin');
+        break;
+      }
+    }
+    if (!isAdmin) {
+      return { success: false, message: 'Accesso non autorizzato' };
+    }
+
+    // Valida stato predefinito
+    var statiValidi = ['Aperto', 'Chiuso', 'Sospeso', 'In Pausa', 'Completato'];
+    if (statiValidi.indexOf(nuovoStato) === -1) {
+      return { success: false, message: 'Stato non valido: ' + nuovoStato };
+    }
+
+    // Trova cantiere e aggiorna stato
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var cantieriSheet = getSheetSafely(ss, SHEET_NAMES.CANTIERI);
+    if (!cantieriSheet) {
+      return { success: false, message: 'Foglio Cantieri non trovato' };
+    }
+
+    var lastRow = cantieriSheet.getLastRow();
+    if (lastRow < 2) {
+      return { success: false, message: 'Nessun cantiere nel foglio' };
+    }
+
+    var data = cantieriSheet.getRange(2, 1, lastRow - 1, COLUMNS_CANTIERI.STATO + 1).getValues();
+
+    for (var i = 0; i < data.length; i++) {
+      if (String(data[i][COLUMNS_CANTIERI.ID]) === String(cantiereId)) {
+        var vecchioStato = String(data[i][COLUMNS_CANTIERI.STATO] || '');
+        var rowIndex1 = i + 2;
+        cantieriSheet.getRange(rowIndex1, COLUMNS_CANTIERI.STATO + 1).setValue(nuovoStato);
+        Logger.debug('Stato cantiere aggiornato:', cantiereId, vecchioStato, '->', nuovoStato);
+
+        // Invalida cache cantieri
+        invalidateAdminCache(sessionToken, 'cantieri');
+
+        return {
+          success: true,
+          message: 'Stato cantiere ' + cantiereId + ' aggiornato: ' + vecchioStato + ' → ' + nuovoStato,
+          data: { cantiereId: cantiereId, vecchioStato: vecchioStato, nuovoStato: nuovoStato }
+        };
+      }
+    }
+
+    return { success: false, message: 'Cantiere ' + cantiereId + ' non trovato' };
+
+  } catch (error) {
+    Logger.critical('Errore updateCantiereStato:', error);
+    return { success: false, message: 'Errore: ' + error.toString() };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // DELETE REGISTRAZIONE — eliminazione fisica riga dipendente
 // ─────────────────────────────────────────────────────────────────────────────
 
