@@ -271,365 +271,109 @@
             .day-hours { font-size: 9px; }
             .stats-summary { grid-template-columns: repeat(2, 1fr); }
         }
-
-        /* ═══════════════════════════════════════════
-           LAYOUT RESPONSIVE — Sidebar desktop / Tab bar mobile
-           ═══════════════════════════════════════════ */
-
-        /* Body diventa flex row su desktop */
-        body { display: flex !important; flex-direction: row; }
-
-        /* Sidebar desktop */
-        .admin-sidebar {
-            width: 220px;
-            min-height: 100vh;
-            background: rgba(255,255,255,0.12);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255,255,255,0.2);
-            display: flex;
-            flex-direction: column;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            z-index: 200;
-            transition: width 0.25s ease;
-            flex-shrink: 0;
-        }
-        .admin-sidebar.collapsed { width: 56px; }
-
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 18px 14px;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
-            min-height: 60px;
-        }
-        .sidebar-toggle {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 6px;
-            transition: background 0.2s;
-            flex-shrink: 0;
-            width: 30px;
-            text-align: center;
-        }
-        .sidebar-toggle:hover { background: rgba(255,255,255,0.15); }
-        .sidebar-logo {
-            color: white;
-            font-size: 15px;
-            font-weight: 700;
-            white-space: nowrap;
-            overflow: hidden;
-            opacity: 1;
-            transition: opacity 0.2s;
-        }
-        .admin-sidebar.collapsed .sidebar-logo { opacity: 0; width: 0; }
-
-        .sidebar-nav {
-            list-style: none;
-            padding: 12px 0;
-            flex: 1;
-        }
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 14px;
-            color: rgba(255,255,255,0.8);
-            cursor: pointer;
-            transition: all 0.2s;
-            border-left: 3px solid transparent;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-        .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
-        .nav-item.active {
-            background: rgba(255,255,255,0.18);
-            color: white;
-            border-left-color: white;
-            font-weight: 600;
-        }
-        .nav-item i { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
-        .nav-label {
-            font-size: 14px;
-            opacity: 1;
-            transition: opacity 0.2s;
-        }
-        .admin-sidebar.collapsed .nav-label { opacity: 0; width: 0; }
-
-        /* Main content wrapper */
-        .admin-main {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* Pages */
-        .admin-page { display: none; }
-        .admin-page.active { display: block; }
-
-        /* Tab bar mobile — nascosta su desktop */
-        .admin-tabbar { display: none; }
-
-        /* ─── MOBILE ─── */
-        @media (max-width: 900px) {
-            body { flex-direction: column !important; }
-
-            .admin-sidebar { display: none; }
-
-            .admin-main { padding-bottom: 65px; } /* spazio per tab bar */
-
-            .admin-tabbar {
-                display: flex;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: rgba(255,255,255,0.97);
-                backdrop-filter: blur(10px);
-                border-top: 1px solid #e1e5e9;
-                z-index: 200;
-                box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
-            }
-            .tab-item {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 3px;
-                padding: 8px 4px;
-                background: none;
-                border: none;
-                color: #9ca3af;
-                cursor: pointer;
-                transition: color 0.2s;
-                font-size: 10px;
-                font-weight: 500;
-            }
-            .tab-item i { font-size: 18px; }
-            .tab-item.active { color: #4f46e5; }
-            .tab-item.active i { color: #4f46e5; }
-        }
     </style>
 </head>
 
 <body>
-
-    <!-- Sidebar navigazione (desktop) -->
-    <nav class="admin-sidebar" id="adminSidebar">
-        <div class="sidebar-header">
-            <button class="sidebar-toggle" onclick="toggleSidebar()" title="Espandi/Collassa">&#9776;</button>
-            <span class="sidebar-logo">Admin Panel</span>
+    <header class="admin-header">
+        <div class="header-content">
+            <div class="admin-title"><i class="fas fa-user-shield"></i><span>Dashboard Amministratore</span></div>
+            <div class="admin-info">
+                <div class="user-badge"><i class="fas fa-user"></i><span id="adminName">Caricamento...</span></div>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Esci</button>
+            </div>
         </div>
-        <ul class="sidebar-nav">
-            <li class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')" title="Dashboard">
-                <i class="fas fa-tachometer-alt"></i>
-                <span class="nav-label">Dashboard</span>
-            </li>
-            <li class="nav-item" id="nav-strumenti" onclick="showPage('strumenti')" title="Strumenti">
-                <i class="fas fa-tools"></i>
-                <span class="nav-label">Strumenti</span>
-            </li>
-            <li class="nav-item" id="nav-utenti" onclick="showPage('utenti')" title="Utenti">
-                <i class="fas fa-users"></i>
-                <span class="nav-label">Utenti</span>
-            </li>
-            <li class="nav-item" id="nav-report" onclick="showPage('report')" title="Report">
-                <i class="fas fa-file-pdf"></i>
-                <span class="nav-label">Report</span>
-            </li>
-        </ul>
-    </nav>
+    </header>
 
-    <!-- Contenuto principale -->
-    <div class="admin-main" id="adminMain">
+    <div class="admin-container">
+        <!-- SEZIONE CALENDARIO DIPENDENTE -->
+        <section class="admin-section fade-in">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-calendar-alt"></i>Calendario Dipendente</h2>
+            </div>
 
-        <!-- Header -->
-        <header class="admin-header">
-            <div class="header-content">
-                <div class="admin-title"><i class="fas fa-user-shield"></i><span>Dashboard Amministratore</span></div>
-                <div class="admin-info">
-                    <div class="user-badge"><i class="fas fa-user"></i><span id="adminName">Caricamento...</span></div>
-                    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Esci</button>
+            <div class="dipendenti-header">
+                <select class="select-dipendente" id="dipendentiSelect">
+                    <option value="">Seleziona un dipendente...</option>
+                </select>
+                <button class="refresh-btn" onclick="refreshDipendente()" title="Aggiorna calendario"><i class="fas fa-sync-alt"></i></button>
+            </div>
+
+            <div id="calendarSection" style="display: none;">
+                <div class="calendar-wrapper">
+                    <div class="calendar-controls">
+                        <div class="calendar-nav">
+                            <button class="nav-btn" id="prevMonthBtn" onclick="changeMonth(-1)" aria-label="Mese precedente">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="current-month" id="currentMonthDisplay">-</div>
+                            <button class="nav-btn" id="nextMonthBtn" onclick="changeMonth(1)" aria-label="Mese successivo">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <button class="today-btn" onclick="goToToday()">
+                            <i class="fas fa-calendar-day"></i> Oggi
+                        </button>
+                    </div>
+
+                    <div class="calendar-grid" id="calendarGrid">
+                        <div class="spinner-container" style="grid-column: 1 / -1;">
+                            <div class="loading-spinner"></div>
+                            <p class="spinner-text">Caricamento calendario...</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </header>
 
-        <!-- PAGE: Dashboard (cantieri + calendario — contenuto esistente) -->
-        <div class="admin-page active" id="page-dashboard">
-            <div class="admin-container">
-
-                <!-- SEZIONE CALENDARIO DIPENDENTE -->
-                <section class="admin-section fade-in">
-                    <div class="section-header">
-                        <h2 class="section-title"><i class="fas fa-calendar-alt"></i>Calendario Dipendente</h2>
+                <div class="stats-summary">
+                    <div class="stat-card">
+                        <span class="stat-value" id="oreMeseCorrente">-</span>
+                        <span class="stat-label">Ore Mese Corrente</span>
                     </div>
-
-                    <div class="dipendenti-header">
-                        <select class="select-dipendente" id="dipendentiSelect">
-                            <option value="">Seleziona un dipendente...</option>
-                        </select>
-                        <button class="refresh-btn" onclick="refreshDipendente()" title="Aggiorna calendario"><i class="fas fa-sync-alt"></i></button>
+                    <div class="stat-card">
+                        <span class="stat-value" id="oreMesePrecedente">-</span>
+                        <span class="stat-label">Ore Mese Precedente</span>
                     </div>
-
-                    <div id="calendarSection" style="display: none;">
-                        <div class="calendar-wrapper">
-                            <div class="calendar-controls">
-                                <div class="calendar-nav">
-                                    <button class="nav-btn" id="prevMonthBtn" onclick="changeMonth(-1)" aria-label="Mese precedente">
-                                        <i class="fas fa-chevron-left"></i>
-                                    </button>
-                                    <div class="current-month" id="currentMonthDisplay">-</div>
-                                    <button class="nav-btn" id="nextMonthBtn" onclick="changeMonth(1)" aria-label="Mese successivo">
-                                        <i class="fas fa-chevron-right"></i>
-                                    </button>
-                                </div>
-                                <button class="today-btn" onclick="goToToday()">
-                                    <i class="fas fa-calendar-day"></i> Oggi
-                                </button>
-                            </div>
-
-                            <div class="calendar-grid" id="calendarGrid">
-                                <div class="spinner-container" style="grid-column: 1 / -1;">
-                                    <div class="loading-spinner"></div>
-                                    <p class="spinner-text">Caricamento calendario...</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="stats-summary">
-                            <div class="stat-card">
-                                <span class="stat-value" id="oreMeseCorrente">-</span>
-                                <span class="stat-label">Ore Mese Corrente</span>
-                            </div>
-                            <div class="stat-card">
-                                <span class="stat-value" id="oreMesePrecedente">-</span>
-                                <span class="stat-label">Ore Mese Precedente</span>
-                            </div>
-                            <div class="stat-card">
-                                <span class="stat-value" id="oreAnnoCorrente">-</span>
-                                <span class="stat-label">Ore Anno Corrente</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="noUserSelected" class="no-data-state">
-                        <div class="no-data-icon"><i class="fas fa-user-clock"></i></div>
-                        <p>Seleziona un dipendente per visualizzare il calendario</p>
-                    </div>
-                </section>
-
-                <!-- SEZIONE CANTIERI (collassabile, inizialmente chiusa) -->
-                <section class="admin-section fade-in collapsible">
-                    <div class="section-header">
-                        <h2 class="section-title collapse-toggle" title="Espandi/Comprimi">
-                            <i class="fas fa-building"></i>Panoramica Cantieri
-                            <i class="fas fa-chevron-down collapse-icon"></i>
-                        </h2>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <button class="refresh-btn" onclick="refreshCantieri()" title="Aggiorna dati"><i class="fas fa-sync-alt"></i></button>
-                            <div class="toggle-container">
-                                <div class="toggle-option active" data-mode="totali">Totali Assoluti</div>
-                                <div class="toggle-option" data-mode="mese">Mese Corrente</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="collapsible-body">
-                        <div id="cantieriGrid" class="cantieri-grid">
-                            <div class="spinner-container">
-                                <div class="loading-spinner"></div>
-                                <p class="spinner-text">Caricamento cantieri...</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-            </div>
-        </div>
-
-        <!-- PAGE: Strumenti -->
-        <div class="admin-page" id="page-strumenti">
-            <div class="admin-container">
-                <div class="admin-section fade-in">
-                    <div class="section-header">
-                        <div class="section-title"><i class="fas fa-tools"></i> Strumenti Admin</div>
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-
-                        <!-- Card: Gestione Cantieri -->
-                        <div style="background: #f8f9ff; border-radius: 12px; padding: 24px; border: 1px solid #e0e7ff;">
-                            <div style="font-size: 16px; font-weight: 700; color: #1f2937; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-building" style="color: #4f46e5;"></i> Gestione Cantieri
-                            </div>
-                            <p style="font-size: 13px; color: #6b7280; margin-bottom: 20px;">Verifica l'allineamento tra i fogli dipendente e il foglio Cantieri, oppure ricalcola i totali ore.</p>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <button onclick="eseguiVerificaAllineamento()" style="flex: 1; min-width: 120px; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                                    <i class="fas fa-search-plus"></i> Verifica
-                                </button>
-                                <button onclick="eseguiRicalcoloCantieri()" style="flex: 1; min-width: 120px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                                    <i class="fas fa-sync-alt"></i> Ricalcola Totali
-                                </button>
-                            </div>
-                            <div id="strumenti-cantieri-result" style="margin-top: 16px;"></div>
-                        </div>
-
-                        <!-- Card: Gestione Password -->
-                        <div style="background: #f8f9ff; border-radius: 12px; padding: 24px; border: 1px solid #e0e7ff;">
-                            <div style="font-size: 16px; font-weight: 700; color: #1f2937; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-key" style="color: #4f46e5;"></i> Gestione Password
-                            </div>
-                            <p style="font-size: 13px; color: #6b7280; margin-bottom: 20px;">Cambia la password di un dipendente. La modifica viene applicata immediatamente.</p>
-                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                <select id="strumenti-dipendente-select" style="width: 100%; padding: 10px 12px; border: 1px solid #e1e5e9; border-radius: 8px; font-size: 13px; color: #1f2937; background: white;">
-                                    <option value="">Seleziona dipendente...</option>
-                                </select>
-                                <input type="password" id="strumenti-nuova-password" placeholder="Nuova password (min. 4 caratteri)" style="width: 100%; padding: 10px 12px; border: 1px solid #e1e5e9; border-radius: 8px; font-size: 13px; color: #1f2937;">
-                                <button onclick="eseguiCambioPassword()" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                                    <i class="fas fa-save"></i> Cambia Password
-                                </button>
-                            </div>
-                            <div id="strumenti-password-result" style="margin-top: 12px;"></div>
-                        </div>
-
+                    <div class="stat-card">
+                        <span class="stat-value" id="oreAnnoCorrente">-</span>
+                        <span class="stat-label">Ore Anno Corrente</span>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- PAGE: Utenti (placeholder) -->
-        <div class="admin-page" id="page-utenti">
-            <div class="admin-container">
-                <div class="admin-section fade-in">
-                    <div class="section-header">
-                        <div class="section-title"><i class="fas fa-users"></i> Gestione Utenti</div>
+            <div id="noUserSelected" class="no-data-state">
+                <div class="no-data-icon"><i class="fas fa-user-clock"></i></div>
+                <p>Seleziona un dipendente per visualizzare il calendario</p>
+            </div>
+        </section>
+
+        <!-- SEZIONE CANTIERI (collassabile, inizialmente chiusa) -->
+        <section class="admin-section fade-in collapsible">
+            <div class="section-header">
+                <h2 class="section-title collapse-toggle" title="Espandi/Comprimi">
+                    <i class="fas fa-building"></i>Panoramica Cantieri
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="refresh-btn" onclick="refreshCantieri()" title="Aggiorna dati"><i class="fas fa-sync-alt"></i></button>
+                    <div class="toggle-container">
+                        <div class="toggle-option active" data-mode="totali">Totali Assoluti</div>
+                        <div class="toggle-option" data-mode="mese">Mese Corrente</div>
                     </div>
-                    <p style="color: #6b7280; font-size: 14px;">Funzionalita' in arrivo.</p>
                 </div>
             </div>
-        </div>
-
-        <!-- PAGE: Report (placeholder) -->
-        <div class="admin-page" id="page-report">
-            <div class="admin-container">
-                <div class="admin-section fade-in">
-                    <div class="section-header">
-                        <div class="section-title"><i class="fas fa-file-pdf"></i> Report Commercialista</div>
+            <div class="collapsible-body">
+                <div id="cantieriGrid" class="cantieri-grid">
+                    <div class="spinner-container">
+                        <div class="loading-spinner"></div>
+                        <p class="spinner-text">Caricamento cantieri...</p>
                     </div>
-                    <p style="color: #6b7280; font-size: 14px;">Funzionalita' in arrivo.</p>
                 </div>
             </div>
-        </div>
+        </section>
+    </div>
 
-        <!-- POPUP DETTAGLI GIORNO (per modifica/eliminazione registrazioni) -->
-        <div class="day-details-popup" id="dayDetailsPopup">
+    <!-- POPUP DETTAGLI GIORNO (per modifica/eliminazione registrazioni) -->
+    <div class="day-details-popup" id="dayDetailsPopup">
         <div class="popup-content">
             <div class="popup-header">
                 <div class="popup-title" id="popupTitle">Dettagli Giorno</div>
@@ -2262,171 +2006,6 @@
             totaliCached: !!cantieriCache.totali,
             meseCached: !!cantieriCache.mese
         });
-
-        /* ═══════════════════════════════════════════
-           NAVIGAZIONE — Sidebar/TabBar page switching
-           ═══════════════════════════════════════════ */
-
-        let currentPage = 'dashboard';
-        let sidebarCollapsed = false;
-
-        function showPage(pageName) {
-            // Nascondi tutte le pagine
-            document.querySelectorAll('.admin-page').forEach(p => p.classList.remove('active'));
-            // Deseleziona tutti i nav items
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-
-            // Mostra la pagina richiesta
-            const page = document.getElementById('page-' + pageName);
-            if (page) page.classList.add('active');
-
-            // Attiva nav item sidebar
-            const navItem = document.getElementById('nav-' + pageName);
-            if (navItem) navItem.classList.add('active');
-
-            // Attiva tab bar item
-            const tabItem = document.getElementById('tab-' + pageName);
-            if (tabItem) tabItem.classList.add('active');
-
-            currentPage = pageName;
-
-            // Carica dipendenti nel select strumenti quando si va su strumenti
-            if (pageName === 'strumenti') {
-                caricaDipendentiStrumenti();
-            }
-        }
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('adminSidebar');
-            sidebarCollapsed = !sidebarCollapsed;
-            sidebar.classList.toggle('collapsed', sidebarCollapsed);
-        }
-
-        async function caricaDipendentiStrumenti() {
-            const sel = document.getElementById('strumenti-dipendente-select');
-            if (!sel || sel.options.length > 1) return; // già caricati
-            try {
-                const data = await Utils.loadDipendentiList();
-                sel.innerHTML = '<option value="">Seleziona dipendente...</option>' +
-                    data.map(d => `<option value="${d.userId}">${d.nome}</option>`).join('');
-            } catch (e) {
-                // silente
-            }
-        }
-
-        async function eseguiVerificaAllineamento() {
-            const resultDiv = document.getElementById('strumenti-cantieri-result');
-            resultDiv.innerHTML = '<div style="color:#6b7280;font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Verifica in corso...</div>';
-            try {
-                const session = Utils.getSession();
-                const result = await Utils.callAPI({ action: 'verificaAllineamento', sessionToken: session.token });
-                if (result.success) {
-                    const d = result.data;
-                    const totalProblemi = d.inconsistencies.length + d.missingConstructionSites.length + d.orphanedHours.length;
-                    if (totalProblemi === 0) {
-                        resultDiv.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;font-size:13px;color:#16a34a;"><i class="fas fa-check-circle"></i> <strong>Tutto allineato!</strong> ${d.constructionSitesAnalyzed} cantieri, ${d.employeesAnalyzed} dipendenti analizzati.</div>`;
-                    } else {
-                        let html = `<div style="background:#fef9f0;border:1px solid #fcd34d;border-radius:8px;padding:12px;font-size:13px;">`;
-                        html += `<div style="font-weight:700;color:#92400e;margin-bottom:8px;"><i class="fas fa-exclamation-triangle"></i> ${totalProblemi} problema/i rilevati</div>`;
-                        if (d.inconsistencies.length > 0) {
-                            html += `<div style="margin-bottom:6px;color:#374151;"><strong>Totali errati (${d.inconsistencies.length}):</strong></div>`;
-                            d.inconsistencies.slice(0,5).forEach(inc => {
-                                html += `<div style="color:#6b7280;padding-left:12px;">&#8226; ${inc.name}: ${inc.declared}h dichiarate &#8594; ${inc.actual}h reali</div>`;
-                            });
-                            if (d.inconsistencies.length > 5) html += `<div style="color:#9ca3af;padding-left:12px;">... e altri ${d.inconsistencies.length - 5}</div>`;
-                        }
-                        if (d.missingConstructionSites.length > 0) html += `<div style="margin-top:6px;color:#374151;"><strong>Cantieri mancanti: ${d.missingConstructionSites.length}</strong></div>`;
-                        if (d.orphanedHours.length > 0) html += `<div style="margin-top:6px;color:#374151;"><strong>Ore orfane: ${d.orphanedHours.length}</strong></div>`;
-                        html += `<div style="margin-top:10px;color:#6b7280;font-size:12px;">Usa "Ricalcola Totali" per correggere le inconsistenze.</div>`;
-                        html += `</div>`;
-                        resultDiv.innerHTML = html;
-                    }
-                } else {
-                    resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;"><i class="fas fa-times-circle"></i> ${result.message}</div>`;
-                }
-            } catch(e) {
-                resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;"><i class="fas fa-times-circle"></i> Errore di rete</div>`;
-            }
-        }
-
-        async function eseguiRicalcoloCantieri() {
-            const resultDiv = document.getElementById('strumenti-cantieri-result');
-            resultDiv.innerHTML = '<div style="color:#6b7280;font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Ricalcolo in corso (puo\' richiedere qualche secondo)...</div>';
-            try {
-                const session = Utils.getSession();
-                const result = await Utils.callAPI({ action: 'ricalcolaCantieri', sessionToken: session.token });
-                if (result.success) {
-                    const d = result.data;
-                    if (d.corrections.length === 0) {
-                        resultDiv.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;font-size:13px;color:#16a34a;"><i class="fas fa-check-circle"></i> <strong>Tutto corretto!</strong> ${d.constructionSitesUpdated} cantieri controllati, ${d.employeesProcessed} dipendenti. Nessuna correzione necessaria.</div>`;
-                    } else {
-                        let html = `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-size:13px;">`;
-                        html += `<div style="font-weight:700;color:#1d4ed8;margin-bottom:8px;"><i class="fas fa-check"></i> ${d.corrections.length} correzioni effettuate in ${d.executionTime}s</div>`;
-                        d.corrections.slice(0,8).forEach(c => {
-                            const sign = c.difference >= 0 ? '+' : '';
-                            html += `<div style="color:#374151;padding-left:12px;">&#8226; ${c.name}: ${c.oldTotal}h &#8594; ${c.newTotal}h (${sign}${c.difference.toFixed(1)}h)</div>`;
-                        });
-                        if (d.corrections.length > 8) html += `<div style="color:#9ca3af;padding-left:12px;">... e altri ${d.corrections.length - 8}</div>`;
-                        html += `</div>`;
-                        resultDiv.innerHTML = html;
-                        // Invalida cache cantieri
-                        cantieriCache = { totali: null, mese: null };
-                        await Utils.invalidateAdminCache('cantieri');
-                    }
-                } else {
-                    resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;"><i class="fas fa-times-circle"></i> ${result.message}</div>`;
-                }
-            } catch(e) {
-                resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;"><i class="fas fa-times-circle"></i> Errore di rete</div>`;
-            }
-        }
-
-        async function eseguiCambioPassword() {
-            const userId = document.getElementById('strumenti-dipendente-select').value;
-            const nuovaPassword = document.getElementById('strumenti-nuova-password').value.trim();
-            const resultDiv = document.getElementById('strumenti-password-result');
-
-            if (!userId) { resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;">Seleziona un dipendente.</div>`; return; }
-            if (nuovaPassword.length < 4) { resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;">Password troppo corta (min. 4 caratteri).</div>`; return; }
-
-            resultDiv.innerHTML = '<div style="color:#6b7280;font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Aggiornamento...</div>';
-            try {
-                const session = Utils.getSession();
-                const result = await Utils.callAPI({ action: 'cambiaPassword', sessionToken: session.token, targetUserId: userId, nuovaPassword: nuovaPassword });
-                if (result.success) {
-                    resultDiv.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;font-size:13px;color:#16a34a;"><i class="fas fa-check-circle"></i> Password aggiornata correttamente.</div>`;
-                    document.getElementById('strumenti-nuova-password').value = '';
-                } else {
-                    resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;"><i class="fas fa-times-circle"></i> ${result.message}</div>`;
-                }
-            } catch(e) {
-                resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;"><i class="fas fa-times-circle"></i> Errore di rete</div>`;
-            }
-        }
     </script>
-
-    </div><!-- fine admin-main -->
-
-    <!-- Tab bar mobile -->
-    <nav class="admin-tabbar">
-        <button class="tab-item active" id="tab-dashboard" onclick="showPage('dashboard')">
-            <i class="fas fa-tachometer-alt"></i>
-            <span>Dashboard</span>
-        </button>
-        <button class="tab-item" id="tab-strumenti" onclick="showPage('strumenti')">
-            <i class="fas fa-tools"></i>
-            <span>Strumenti</span>
-        </button>
-        <button class="tab-item" id="tab-utenti" onclick="showPage('utenti')">
-            <i class="fas fa-users"></i>
-            <span>Utenti</span>
-        </button>
-        <button class="tab-item" id="tab-report" onclick="showPage('report')">
-            <i class="fas fa-file-pdf"></i>
-            <span>Report</span>
-        </button>
-    </nav>
-
 </body>
 </html>

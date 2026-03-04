@@ -251,22 +251,6 @@ function doGet(e) {
         e.parameter.nuovoStato
       );
     }
-    else if (action === 'ricalcolaCantieri') {
-      // → AdminAPI.gs (wrapper CalcoloCantieri.gs)
-      result = ricalcolaCantieriAPI(e.parameter.sessionToken);
-    }
-    else if (action === 'verificaAllineamento') {
-      // → AdminAPI.gs (wrapper CalcoloCantieri.gs)
-      result = verificaAllineamentoAPI(e.parameter.sessionToken);
-    }
-    else if (action === 'cambiaPassword') {
-      // → AdminAPI.gs (wrapper GestionePassword.gs)
-      result = cambiaPasswordDipendente(
-        e.parameter.sessionToken,
-        e.parameter.targetUserId,
-        e.parameter.nuovaPassword
-      );
-    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // AZIONE SCONOSCIUTA
@@ -277,13 +261,23 @@ function doGet(e) {
         success: false,
         message: 'Azione non riconosciuta: ' + action,
         availableActions: [
-          'ping', 'authenticate', 'saveWorkEntry', 'getCantieri',
-          'getUserInfo', 'getMonthlyWorkData', 'validateAdmin',
-          'getCantieriOverview', 'getDipendentiList', 'getDipendenteTimeline',
-          'getOtherUserInfo', 'getOtherUserMonthlyData', 'getAllCantieriForAdmin',
-          'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
-          'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
-          'cambiaPassword'
+          'ping',
+          'authenticate',
+          'saveWorkEntry',
+          'getCantieri',
+          'getUserInfo',
+          'getMonthlyWorkData',
+          'validateAdmin',
+          'getCantieriOverview',
+          'getDipendentiList',
+          'getDipendenteTimeline',
+          'getOtherUserInfo',
+          'getOtherUserMonthlyData',
+          'getAllCantieriForAdmin',
+          'updateWorkEntry',
+          'deleteWorkEntry',
+          'invalidateCache',
+          'updateCantiereStato'
         ]
       };
     }
@@ -478,22 +472,6 @@ function doPost(e) {
         params.nuovoStato
       );
     }
-    else if (params.action === 'ricalcolaCantieri') {
-      // → AdminAPI.gs (wrapper CalcoloCantieri.gs)
-      result = ricalcolaCantieriAPI(params.sessionToken);
-    }
-    else if (params.action === 'verificaAllineamento') {
-      // → AdminAPI.gs (wrapper CalcoloCantieri.gs)
-      result = verificaAllineamentoAPI(params.sessionToken);
-    }
-    else if (params.action === 'cambiaPassword') {
-      // → AdminAPI.gs (wrapper GestionePassword.gs)
-      result = cambiaPasswordDipendente(
-        params.sessionToken,
-        params.targetUserId,
-        params.nuovaPassword
-      );
-    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // AZIONE SCONOSCIUTA
@@ -504,13 +482,23 @@ function doPost(e) {
         success: false,
         message: 'Azione non riconosciuta: ' + params.action,
         availableActions: [
-          'ping', 'authenticate', 'saveWorkEntry', 'getCantieri',
-          'getUserInfo', 'getMonthlyWorkData', 'validateAdmin',
-          'getCantieriOverview', 'getDipendentiList', 'getDipendenteTimeline',
-          'getOtherUserInfo', 'getOtherUserMonthlyData', 'getAllCantieriForAdmin',
-          'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
-          'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
-          'cambiaPassword'
+          'ping',
+          'authenticate',
+          'saveWorkEntry',
+          'getCantieri',
+          'getUserInfo',
+          'getMonthlyWorkData',
+          'validateAdmin',
+          'getCantieriOverview',
+          'getDipendentiList',
+          'getDipendenteTimeline',
+          'getOtherUserInfo',
+          'getOtherUserMonthlyData',
+          'getAllCantieriForAdmin',
+          'updateWorkEntry',
+          'deleteWorkEntry',
+          'invalidateCache',
+          'updateCantiereStato'
         ]
       };
     }

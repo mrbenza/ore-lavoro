@@ -1,5 +1,25 @@
 ## Changelog
 
+### 2026-03-04 — ui-frontend-developer + gas-code-agent — Layout responsive sidebar/tabbar + Strumenti Admin
+
+- **FEAT-04**: `admin.html` — Ristrutturazione layout responsive. Desktop (≥900px): sidebar sinistra collassabile (220px → 56px) con navigazione `Dashboard | Strumenti | Utenti | Report`. Mobile (<900px): tab bar fissa in fondo, sidebar nascosta. Ogni voce di navigazione mostra/nasconde la propria pagina via `showPage()`.
+- **FEAT-05**: `admin.html` → pagina `Strumenti` — Card "Gestione Cantieri": pulsanti Verifica Allineamento e Ricalcola Totali con risultati inline. Card "Gestione Password": select dipendente + input password + salvataggio.
+- **FEAT-06**: `AdminAPI.gs` → `ricalcolaCantieriAPI(sessionToken)` — wrapper API per `performConstructionSitesRecalculation()` (CalcoloCantieri.gs). Invalida cache dopo correzioni.
+- **FEAT-07**: `AdminAPI.gs` → `verificaAllineamentoAPI(sessionToken)` — wrapper API read-only per `performDataAlignmentVerification()` (CalcoloCantieri.gs). Restituisce inconsistenze, ore orfane, cantieri mancanti.
+- **FEAT-08**: `AdminAPI.gs` → `cambiaPasswordDipendente(sessionToken, targetUserId, nuovaPassword)` — wrapper API per `updateUserPassword()` (GestionePassword.gs). Verifica ruolo admin, valida password min 4 caratteri, aggiorna hash SHA-256 nel foglio Utenti.
+- **FEAT-09**: `ApiRouter.gs` → aggiunti route `ricalcolaCantieri`, `verificaAllineamento`, `cambiaPassword` in `doGet` e `doPost`.
+
+---
+
+### 2026-03-04 — gas-code-agent + ui-frontend-developer — Popup modifica stato cantiere
+
+- **FEAT-01**: `AdminAPI.gs` → nuova funzione `updateCantiereStato(sessionToken, cantiereId, nuovoStato)` — trova la riga nel foglio Cantieri per ID, aggiorna colonna D (`Stato Lavori`), invalida la cache. Verifica ruolo admin con lo stesso pattern di `updateWorkEntry`. Accetta solo stati predefiniti: `Aperto`, `Chiuso`, `Sospeso`, `In Pausa`, `Completato`.
+- **FEAT-02**: `ApiRouter.gs` → aggiunto route `updateCantiereStato` in `doGet` e `doPost`. Aggiornato array `availableActions` in entrambi i metodi.
+- **FEAT-03**: `admin.html` → sostituito placeholder `showCantiereDetails()` con popup funzionale. Click su card cantiere apre modale con nome, ID, select stato preselezionato. Salva chiama API + invalida cache + ricarica cantieri. Chiude cliccando Annulla o fuori dal modale. Layout mobile con pulsanti in colonna su schermi ≤ 480px.
+- **FIX-19**: `admin.html` → `saveCantiereStato()` — corretto `session.sessionToken` → `session.token` (la struttura di `Utils.getSession()` è `{ user, token }`). Causava "Sessione non valida" al salvataggio.
+
+---
+
 ### 2026-03-04 — ui-frontend-developer + gas-code-agent — Fix calendario admin e aggiornamento cantieri
 
 - **FIX-14**: `admin.html` → `renderCalendar()` — corretto mismatch proprietà: il backend restituisce `workDay.totalOre` ma il frontend cercava `workDay.ore`. Ora il pallino verde e le ore appaiono correttamente sui giorni con lavoro.
