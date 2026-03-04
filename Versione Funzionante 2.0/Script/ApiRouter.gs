@@ -267,10 +267,6 @@ function doGet(e) {
         e.parameter.nuovaPassword
       );
     }
-    else if (action === 'creaUtente') {
-      // → GestioneUtenti.gs
-      result = creaUtenteAPI(e.parameter.sessionToken, e.parameter.datiJSON);
-    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // AZIONE SCONOSCIUTA
@@ -287,7 +283,7 @@ function doGet(e) {
           'getOtherUserInfo', 'getOtherUserMonthlyData', 'getAllCantieriForAdmin',
           'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
           'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
-          'cambiaPassword', 'creaUtente'
+          'cambiaPassword'
         ]
       };
     }
@@ -498,10 +494,6 @@ function doPost(e) {
         params.nuovaPassword
       );
     }
-    else if (params.action === 'creaUtente') {
-      // → GestioneUtenti.gs
-      result = creaUtenteAPI(params.sessionToken, params.datiJSON);
-    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // AZIONE SCONOSCIUTA
@@ -518,7 +510,7 @@ function doPost(e) {
           'getOtherUserInfo', 'getOtherUserMonthlyData', 'getAllCantieriForAdmin',
           'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
           'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
-          'cambiaPassword', 'creaUtente'
+          'cambiaPassword'
         ]
       };
     }

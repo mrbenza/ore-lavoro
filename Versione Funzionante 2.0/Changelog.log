@@ -1,22 +1,5 @@
 ## Changelog
 
-### 2026-03-04 — gas-code-agent + ui-frontend-developer — Creazione nuovo utente (Gestione Utenti)
-
-- **FEAT-10**: `Script/GestioneUtenti.gs` (nuovo file) → `creaUtenteCore(dati)` — logica core creazione utente. Mapping dinamico colonne, unicità username, auto-ID (U001...), hash password SHA-256, `appendRow` nel foglio Utenti, protezione header con `setWarningOnly(true)`, creazione foglio dipendente da template (`'Foglio utente Base'` / `'Foglio Utenti Base'`) o da zero con headers e SUMIFS in F2/G2/H2.
-- **FEAT-11**: `Script/GestioneUtenti.gs` → `executeCreateUser()` — wizard interattivo da menu Sheets: 5 prompt sequenziali (nome, username, password ≥4 char, email, ruolo), conferma YES/NO finale.
-- **FEAT-12**: `Script/GestioneUtenti.gs` → `creaUtenteAPI(sessionToken, datiJSON)` — wrapper API: verifica ruolo admin, parsing e validazione JSON, delega a `creaUtenteCore()`.
-- **FEAT-13**: `Script/Main.gs` → aggiunto sottomenu `👥 Gestione Utenti` (tra Password e Report) con voci "Crea nuovo utente", "Lista utenti", "Cambia password dipendente". Aggiunta funzione bridge `createNewUser()`.
-- **FEAT-14**: `Script/ApiRouter.gs` → aggiunto route `creaUtente` in `doGet` e `doPost`. Aggiornato `availableActions`.
-- **FEAT-15**: `admin.html` → pagina `Utenti` — aggiunta card "Crea Nuovo Utente" (form con 6 campi in griglia 2 colonne: nome, username, password, email, ruolo, stato) + card "Cambia Password Dipendente" (spostata da Strumenti). Nuovi JS: `creaNuovoUtente()` async, `mostraRisultatoCreaUtente()`. Nuove classi CSS: `.utenti-form-grid`, `.utenti-form-group`, `.utenti-form-input`, `.utenti-submit-btn`, `.utenti-result`.
-- **FEAT-16**: `admin.html` → pagina `Strumenti` — rimossa card "Gestione Password" (ora in Utenti). Rimane solo card "Gestione Cantieri".
-- **FEAT-17**: `admin.html` → `showPage()` — `caricaDipendentiStrumenti()` ora invocata anche alla navigazione verso il tab `utenti` (per popolare il select cambio password).
-- **FIX-20**: `GestioneUtenti.gs` → `creaUtenteCore()` — invertito ordine operazioni: `_creaFoglioDipendente()` chiamato **prima** di `appendRow()`. Se la creazione del foglio fallisce, la riga nel foglio Utenti non viene mai scritta → stato sempre consistente.
-- **FIX-21**: `GestioneUtenti.gs` → `_creaFoglioDipendente()` — aggiunto guard `if (ss.getSheetByName(nomeDipendente))` all'inizio: se il foglio esiste già, skip silenzioso invece di eccezione.
-- **FIX-22**: `GestioneUtenti.gs` → `_creaFoglioDipendente()` — dopo `template.copyTo()`, rimozione protezioni ereditate dal template (`getProtections(RANGE)` + `getProtections(SHEET)` → `forEach p.remove()`). Preveniva blocco scrittura dati ore.
-- **FIX-23**: `GestioneUtenti.gs` → `_creaFoglioDipendente()` path fallback — aggiunto `setFrozenRows(1)` dopo headers. Coerenza visiva con fogli creati da template.
-
----
-
 ### 2026-03-04 — ui-frontend-developer + gas-code-agent — Layout responsive sidebar/tabbar + Strumenti Admin
 
 - **FEAT-04**: `admin.html` — Ristrutturazione layout responsive. Desktop (≥900px): sidebar sinistra collassabile (220px → 56px) con navigazione `Dashboard | Strumenti | Utenti | Report`. Mobile (<900px): tab bar fissa in fondo, sidebar nascosta. Ogni voce di navigazione mostra/nasconde la propria pagina via `showPage()`.

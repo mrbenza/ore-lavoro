@@ -70,13 +70,6 @@ function onOpen() {
         .addSeparator()
         .addItem('📖 Come gestire password', 'showPasswordInstructions'))
       
-      // Sottomenu Gestione Utenti
-      .addSubMenu(ui.createMenu('👥 Gestione Utenti')
-        .addItem('➕ Crea nuovo utente', 'createNewUser')
-        .addItem('📋 Lista utenti', 'showUsersList')
-        .addSeparator()
-        .addItem('👤 Cambia password dipendente', 'changeEmployeePassword'))
-
       // Sottomenu Report
       .addSubMenu(ui.createMenu('📊 Report Commercialista')
         .addItem('📅 Genera report mensile', 'generateMonthlyReport')
@@ -1017,22 +1010,6 @@ function debugPasswordHash() {
     executeDebugPasswordHash();
   } catch (error) {
     handleGlobalError('debugPasswordHash', error);
-  }
-}
-
-// --- Gestione Utenti ---
-
-/**
- * Menu bridge: avvia il wizard creazione nuovo utente.
- * CHIAMATA DA: onOpen() → menu "👥 Gestione Utenti" → "➕ Crea nuovo utente"
- * CHIAMA:      executeCreateUser() (GestioneUtenti.gs), handleGlobalError()
- * @returns {void}
- */
-function createNewUser() {
-  try {
-    executeCreateUser();
-  } catch (error) {
-    handleGlobalError('createNewUser', error);
   }
 }
 

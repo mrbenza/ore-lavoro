@@ -201,87 +201,6 @@
         @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
         /* ═══════════════════════════════════════════
-           UTENTI — Stili card "Crea Utente" e
-           "Cambia Password" nella pagina Utenti.
-           ═══════════════════════════════════════════ */
-        .utenti-form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 16px;
-        }
-        .utenti-form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .utenti-form-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-        }
-        .utenti-form-input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 13px;
-            color: #1f2937;
-            background: white;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            line-height: 1.5;
-        }
-        .utenti-form-input:focus {
-            outline: none;
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-        select.utenti-form-input { cursor: pointer; }
-        .utenti-submit-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 11px 22px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .utenti-submit-btn:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
-        }
-        .utenti-submit-btn:disabled {
-            opacity: 0.65;
-            cursor: not-allowed;
-        }
-        .utenti-result {
-            display: none;
-            margin-top: 14px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-        }
-        .utenti-result.success-message {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #15803d;
-        }
-        .utenti-result.error-message {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #b91c1c;
-        }
-        @media (max-width: 768px) {
-            .utenti-form-grid { grid-template-columns: 1fr; }
-            .utenti-submit-btn { width: 100%; justify-content: center; }
-        }
-
-        /* ═══════════════════════════════════════════
            POPUP DETTAGLI GIORNO — Overlay modale per
            visualizzare le registrazioni di un giorno
            dipendente con pulsanti modifica/elimina.
@@ -602,6 +521,24 @@
                             <div id="strumenti-cantieri-result" style="margin-top: 16px;"></div>
                         </div>
 
+                        <!-- Card: Gestione Password -->
+                        <div style="background: #f8f9ff; border-radius: 12px; padding: 24px; border: 1px solid #e0e7ff;">
+                            <div style="font-size: 16px; font-weight: 700; color: #1f2937; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-key" style="color: #4f46e5;"></i> Gestione Password
+                            </div>
+                            <p style="font-size: 13px; color: #6b7280; margin-bottom: 20px;">Cambia la password di un dipendente. La modifica viene applicata immediatamente.</p>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <select id="strumenti-dipendente-select" style="width: 100%; padding: 10px 12px; border: 1px solid #e1e5e9; border-radius: 8px; font-size: 13px; color: #1f2937; background: white;">
+                                    <option value="">Seleziona dipendente...</option>
+                                </select>
+                                <input type="password" id="strumenti-nuova-password" placeholder="Nuova password (min. 4 caratteri)" style="width: 100%; padding: 10px 12px; border: 1px solid #e1e5e9; border-radius: 8px; font-size: 13px; color: #1f2937;">
+                                <button onclick="eseguiCambioPassword()" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fas fa-save"></i> Cambia Password
+                                </button>
+                            </div>
+                            <div id="strumenti-password-result" style="margin-top: 12px;"></div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -610,94 +547,6 @@
         <!-- PAGE: Utenti (placeholder) -->
         <div class="admin-page" id="page-utenti">
             <div class="admin-container">
-
-                <!-- CARD: Crea Nuovo Utente -->
-                <section class="admin-section fade-in" aria-labelledby="creaUtenteTitle">
-                    <div class="section-header">
-                        <h2 class="section-title" id="creaUtenteTitle">
-                            <i class="fas fa-user-plus"></i>Crea Nuovo Utente
-                        </h2>
-                    </div>
-                    <form id="formCreaUtente" onsubmit="event.preventDefault(); creaNuovoUtente();" novalidate>
-                        <div class="utenti-form-grid">
-                            <div class="utenti-form-group">
-                                <label class="utenti-form-label" for="nuovoNomeCompleto">Nome Completo <span aria-hidden="true" style="color:#ef4444;">*</span></label>
-                                <input class="utenti-form-input" type="text" id="nuovoNomeCompleto" name="nomeCompleto"
-                                       placeholder="Es. Mario Rossi" required autocomplete="name"
-                                       aria-required="true">
-                            </div>
-                            <div class="utenti-form-group">
-                                <label class="utenti-form-label" for="nuovoUsername">Username <span aria-hidden="true" style="color:#ef4444;">*</span></label>
-                                <input class="utenti-form-input" type="text" id="nuovoUsername" name="username"
-                                       placeholder="Es. mario.rossi" required autocomplete="username"
-                                       aria-required="true">
-                            </div>
-                            <div class="utenti-form-group">
-                                <label class="utenti-form-label" for="nuovaPassword">Password <span aria-hidden="true" style="color:#ef4444;">*</span></label>
-                                <input class="utenti-form-input" type="password" id="nuovaPassword" name="password"
-                                       placeholder="Min. 4 caratteri" required minlength="4"
-                                       autocomplete="new-password" aria-required="true">
-                            </div>
-                            <div class="utenti-form-group">
-                                <label class="utenti-form-label" for="nuovaEmail">Email <span style="color:#9ca3af;font-weight:400;">(opzionale)</span></label>
-                                <input class="utenti-form-input" type="email" id="nuovaEmail" name="email"
-                                       placeholder="Es. mario.rossi@azienda.it" autocomplete="email">
-                            </div>
-                            <div class="utenti-form-group">
-                                <label class="utenti-form-label" for="nuovoRuolo">Ruolo</label>
-                                <select class="utenti-form-input" id="nuovoRuolo" name="ruolo">
-                                    <option value="Dipendente">Dipendente</option>
-                                    <option value="Admin">Admin</option>
-                                </select>
-                            </div>
-                            <div class="utenti-form-group">
-                                <label class="utenti-form-label" for="nuovoAttivo">Stato Account</label>
-                                <select class="utenti-form-input" id="nuovoAttivo" name="attivo">
-                                    <option value="Si" selected>Attivo (Si)</option>
-                                    <option value="No">Non Attivo (No)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div style="margin-top: 20px;">
-                            <button type="submit" id="btnCreaUtente" class="utenti-submit-btn">
-                                <i class="fas fa-user-plus"></i> Crea Utente
-                            </button>
-                        </div>
-                        <div id="creaUtenteResult" class="utenti-result" role="alert" aria-live="polite"></div>
-                    </form>
-                </section>
-
-                <!-- CARD: Cambia Password Dipendente -->
-                <section class="admin-section fade-in" aria-labelledby="cambioPasswordTitle">
-                    <div class="section-header">
-                        <h2 class="section-title" id="cambioPasswordTitle">
-                            <i class="fas fa-key"></i>Cambia Password Dipendente
-                        </h2>
-                    </div>
-                    <p style="font-size: 13px; color: #6b7280; margin-bottom: 20px;">
-                        Cambia la password di un dipendente esistente. La modifica viene applicata immediatamente.
-                    </p>
-                    <div style="display: flex; flex-direction: column; gap: 12px; max-width: 480px;">
-                        <div class="utenti-form-group">
-                            <label class="utenti-form-label" for="strumenti-dipendente-select">Dipendente</label>
-                            <select id="strumenti-dipendente-select" class="utenti-form-input"
-                                    aria-label="Seleziona dipendente per cambio password">
-                                <option value="">Seleziona dipendente...</option>
-                            </select>
-                        </div>
-                        <div class="utenti-form-group">
-                            <label class="utenti-form-label" for="strumenti-nuova-password">Nuova Password</label>
-                            <input type="password" id="strumenti-nuova-password" class="utenti-form-input"
-                                   placeholder="Min. 4 caratteri" autocomplete="new-password">
-                        </div>
-                        <button onclick="eseguiCambioPassword()" class="utenti-submit-btn"
-                                style="align-self: flex-start; min-width: 180px;">
-                            <i class="fas fa-save"></i> Salva Password
-                        </button>
-                    </div>
-                    <div id="strumenti-password-result" class="utenti-result" role="alert" aria-live="polite"
-                         style="max-width: 480px;"></div>
-                </section>
 
                 <!-- SEZIONE CALENDARIO DIPENDENTE -->
                 <section class="admin-section fade-in">
@@ -2437,8 +2286,8 @@
 
             currentPage = pageName;
 
-            // Carica dipendenti nel select cambio password quando si va su utenti o strumenti
-            if (pageName === 'utenti' || pageName === 'strumenti') {
+            // Carica dipendenti nel select strumenti quando si va su strumenti
+            if (pageName === 'strumenti') {
                 caricaDipendentiStrumenti();
             }
         }
@@ -2549,90 +2398,6 @@
             } catch(e) {
                 resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;"><i class="fas fa-times-circle"></i> Errore di rete</div>`;
             }
-        }
-
-        /* ═══════════════════════════════════════════
-           GESTIONE UTENTI — Creazione nuovo utente
-           ═══════════════════════════════════════════ */
-
-        /**
-         * Legge il form "Crea Nuovo Utente", valida i campi e chiama l'API
-         * backend 'creaUtente'. Mostra il risultato nell'area dedicata.
-         *
-         * CHIAMATA DA:  onsubmit del #formCreaUtente
-         * CHIAMA:       mostraRisultatoCreaUtente, Utils.getSession, Utils.callAPI
-         * LEGGE:        #nuovoNomeCompleto, #nuovoUsername, #nuovaPassword,
-         *               #nuovaEmail, #nuovoRuolo, #nuovoAttivo
-         * MODIFICA:     #btnCreaUtente (disabled/text), #formCreaUtente (reset)
-         *
-         * @returns {Promise<void>}
-         */
-        async function creaNuovoUtente() {
-            const nomeCompleto = document.getElementById('nuovoNomeCompleto').value.trim();
-            const username     = document.getElementById('nuovoUsername').value.trim();
-            const password     = document.getElementById('nuovaPassword').value.trim();
-            const email        = document.getElementById('nuovaEmail').value.trim();
-            const ruolo        = document.getElementById('nuovoRuolo').value;
-            const attivo       = document.getElementById('nuovoAttivo').value;
-
-            if (!nomeCompleto || !username || !password) {
-                mostraRisultatoCreaUtente('error', 'Nome Completo, Username e Password sono obbligatori.');
-                return;
-            }
-            if (password.length < 4) {
-                mostraRisultatoCreaUtente('error', 'La password deve avere almeno 4 caratteri.');
-                return;
-            }
-
-            const btn = document.getElementById('btnCreaUtente');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creazione in corso...';
-
-            try {
-                const session = Utils.getSession();
-                if (!session) { window.location.href = 'index.html'; return; }
-
-                const dati = { nomeCompleto, username, password, email, ruolo, attivo };
-
-                const result = await Utils.callAPI({
-                    action: 'creaUtente',
-                    sessionToken: session.token,
-                    datiJSON: JSON.stringify(dati)
-                });
-
-                if (result.success) {
-                    mostraRisultatoCreaUtente('success',
-                        'Utente creato correttamente!' +
-                        (result.data && result.data.userId ? ' ID: ' + result.data.userId : '')
-                    );
-                    // Reset form dopo successo
-                    document.getElementById('formCreaUtente').reset();
-                } else {
-                    mostraRisultatoCreaUtente('error', result.message || 'Errore durante la creazione.');
-                }
-            } catch (err) {
-                mostraRisultatoCreaUtente('error', 'Errore di rete: ' + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-user-plus"></i> Crea Utente';
-            }
-        }
-
-        /**
-         * Mostra un messaggio di successo o errore nell'area risultato del form
-         * "Crea Nuovo Utente".
-         *
-         * CHIAMATA DA:  creaNuovoUtente
-         *
-         * @param {'success'|'error'} tipo     - Tipo di messaggio
-         * @param {string}            messaggio - Testo da visualizzare
-         * @returns {void}
-         */
-        function mostraRisultatoCreaUtente(tipo, messaggio) {
-            const el = document.getElementById('creaUtenteResult');
-            el.className = 'utenti-result ' + (tipo === 'success' ? 'success-message' : 'error-message');
-            el.textContent = messaggio;
-            el.style.display = 'block';
         }
     </script>
 
