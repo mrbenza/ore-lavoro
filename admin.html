@@ -2574,9 +2574,10 @@
             const nuovaPassword = document.getElementById('strumenti-nuova-password').value.trim();
             const resultDiv = document.getElementById('strumenti-password-result');
 
-            if (!userId) { resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;">Seleziona un dipendente.</div>`; return; }
-            if (nuovaPassword.length < 4) { resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;">Password troppo corta (min. 4 caratteri).</div>`; return; }
+            if (!userId) { resultDiv.style.display = 'block'; resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;">Seleziona un dipendente.</div>`; return; }
+            if (nuovaPassword.length < 4) { resultDiv.style.display = 'block'; resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;">Password troppo corta (min. 4 caratteri).</div>`; return; }
 
+            resultDiv.style.display = 'block';
             resultDiv.innerHTML = '<div style="color:#6b7280;font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Aggiornamento...</div>';
             try {
                 const session = Utils.getSession();
