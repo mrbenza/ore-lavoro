@@ -242,6 +242,10 @@
         .cantiere-stato-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .cantiere-stato-cancel { flex: 1; background: #f3f4f6; color: #374151; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
         .cantiere-stato-cancel:hover { background: #e5e7eb; }
+        @media (max-width: 480px) {
+            .cantiere-stato-content { padding: 20px; border-radius: 16px; }
+            .cantiere-stato-actions { flex-direction: column; }
+        }
 
         /* ═══════════════════════════════════════════
            RESPONSIVE MOBILE — Adatta layout admin
@@ -796,7 +800,7 @@
                 const session = Utils.getSession();
                 const result = await Utils.callAPI({
                     action: 'updateCantiereStato',
-                    sessionToken: session.sessionToken,
+                    sessionToken: session.token,
                     cantiereId: cantiereId,
                     nuovoStato: nuovoStato
                 });
