@@ -1,5 +1,13 @@
 ## Changelog
 
+### 2026-03-05 — gas-code-agent + ui-frontend-developer — Cambia stato attività utente (Si/No)
+
+- **FEAT-18**: `GestioneUtenti.gs` → `aggiornaStatoUtenteAPI(sessionToken, targetUserId, nuovoStato)` — aggiorna colonna "Attivo" (Si/No) nel foglio Utenti. Verifica ruolo admin, valida che `nuovoStato` sia esattamente `'Si'` o `'No'`, mapping dinamico colonne, `getRange(i+1, attivoCol+1).setValue()`.
+- **FEAT-19**: `ApiRouter.gs` → aggiunto route `aggiornaStatoUtente` in `doGet` e `doPost`. Aggiornato `availableActions`.
+- **FEAT-20**: `admin.html` → tab Utenti — aggiunta card "Stato Account" (tra "Crea Nuovo Utente" e "Cambia Password"): select dipendente, select Si/No, pulsante "Aggiorna Stato", area risultato. `caricaDipendentiStrumenti()` ora popola anche `#statoUtenteSelect` con la stessa lista in un'unica chiamata API.
+
+---
+
 ### 2026-03-04 — gas-code-agent + ui-frontend-developer — Creazione nuovo utente (Gestione Utenti)
 
 - **FEAT-10**: `Script/GestioneUtenti.gs` (nuovo file) → `creaUtenteCore(dati)` — logica core creazione utente. Mapping dinamico colonne, unicità username, auto-ID (U001...), hash password SHA-256, `appendRow` nel foglio Utenti, protezione header con `setWarningOnly(true)`, creazione foglio dipendente da template (`'Foglio utente Base'` / `'Foglio Utenti Base'`) o da zero con headers e SUMIFS in F2/G2/H2.

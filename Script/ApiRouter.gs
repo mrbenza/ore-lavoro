@@ -271,6 +271,14 @@ function doGet(e) {
       // → GestioneUtenti.gs
       result = creaUtenteAPI(e.parameter.sessionToken, e.parameter.datiJSON);
     }
+    else if (action === 'aggiornaStatoUtente') {
+      // → GestioneUtenti.gs
+      result = aggiornaStatoUtenteAPI(
+        e.parameter.sessionToken,
+        e.parameter.targetUserId,
+        e.parameter.nuovoStato
+      );
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // AZIONE SCONOSCIUTA
@@ -287,7 +295,7 @@ function doGet(e) {
           'getOtherUserInfo', 'getOtherUserMonthlyData', 'getAllCantieriForAdmin',
           'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
           'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
-          'cambiaPassword', 'creaUtente'
+          'cambiaPassword', 'creaUtente', 'aggiornaStatoUtente'
         ]
       };
     }
@@ -502,6 +510,14 @@ function doPost(e) {
       // → GestioneUtenti.gs
       result = creaUtenteAPI(params.sessionToken, params.datiJSON);
     }
+    else if (params.action === 'aggiornaStatoUtente') {
+      // → GestioneUtenti.gs
+      result = aggiornaStatoUtenteAPI(
+        params.sessionToken,
+        params.targetUserId,
+        params.nuovoStato
+      );
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // AZIONE SCONOSCIUTA
@@ -518,7 +534,7 @@ function doPost(e) {
           'getOtherUserInfo', 'getOtherUserMonthlyData', 'getAllCantieriForAdmin',
           'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
           'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
-          'cambiaPassword', 'creaUtente'
+          'cambiaPassword', 'creaUtente', 'aggiornaStatoUtente'
         ]
       };
     }

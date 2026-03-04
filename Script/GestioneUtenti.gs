@@ -219,6 +219,21 @@ function _creaFoglioDipendente(ss, nomeDipendente) {
     nuovoFoglio.getProtections(SpreadsheetApp.ProtectionType.SHEET)
       .forEach(function(p) { p.remove(); });
 
+    // Posiziona il nuovo foglio prima del template/foglio base
+    var sheetNames = ['Foglio utente Base', 'Foglio Utenti Base', 'Foglio Cantieri Base'];
+    var targetIndex = ss.getSheets().length + 1; // default: ultima posizione
+    for (var i = 0; i < sheetNames.length; i++) {
+      var baseSheet = ss.getSheetByName(sheetNames[i]);
+      if (baseSheet) {
+        targetIndex = baseSheet.getIndex(); // 1-based
+        break;
+      }
+    }
+    if (targetIndex <= ss.getSheets().length) {
+      ss.setActiveSheet(nuovoFoglio);
+      ss.moveActiveSheet(targetIndex);
+    }
+
     console.log('_creaFoglioDipendente: foglio creato da template → ' + nomeDipendente);
   } else {
     // Crea foglio da zero
@@ -244,6 +259,14 @@ function _creaFoglioDipendente(ss, nomeDipendente) {
     nuovoFoglio.getRange('H2').setFormula(
       '=SUMIFS(D:D;A:A;">="&DATE(YEAR(TODAY());1;1);A:A;"<"&DATE(YEAR(TODAY())+1;1;1))'
     );
+
+    // Posiziona il foglio prima di Foglio Cantieri Base (gli unici template che
+    // possono esistere nel path fallback — i fogli utente base non esistono per definizione)
+    var baseSheet = ss.getSheetByName('Foglio Cantieri Base');
+    if (baseSheet) {
+      ss.setActiveSheet(nuovoFoglio);
+      ss.moveActiveSheet(baseSheet.getIndex());
+    }
 
     console.log('_creaFoglioDipendente: foglio creato da zero → ' + nomeDipendente);
   }
@@ -415,9 +438,9 @@ function creaUtenteAPI(sessionToken, datiJSON) {
       return { success: false, message: 'Sessione non valida' };
     }
 
-    // Verifica ruolo admin (pattern identico a cambiaPasswordDipendente)
+    // Verifica ruolo admin (usa getMainSpreadsheet per compatibilità web app)
     var requestingUserId = sessionToken.split('_')[0];
-    var userSheet = getWorksheet();
+    var userSheet = getSheetSafe(getMainSpreadsheet(), SHEET_NAMES.UTENTI);
     var userData = userSheet.getDataRange().getValues();
     var headerRow = userData[0];
     var colMapAdmin = buildColumnMap(headerRow);
@@ -483,5 +506,98 @@ function creaUtenteAPI(sessionToken, datiJSON) {
   } catch (error) {
     Logger.critical('Errore creaUtenteAPI:', error);
     return { success: false, message: 'Errore: ' + error.toString() };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API WRAPPER — aggiornamento stato attivo/disattivo utente (solo admin)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Aggiorna il campo "Attivo" (Si/No) di un utente nel foglio Utenti.
+ *
+ * Valida il sessionToken, verifica che il richiedente abbia ruolo admin
+ * (pattern identico a creaUtenteAPI: split('_')[0] + ADMIN_VALIDATION.isAdminRole),
+ * controlla che nuovoStato sia esattamente 'Si' o 'No', poi scrive il valore
+ * nella colonna 'Attivo' della riga corrispondente a targetUserId.
+ *
+ * Utilizza getColumnMapping() (GestionePassword.gs) per trovare le posizioni
+ * delle colonne in modo dinamico, senza dipendere da indici fissi.
+ *
+ * CHIAMATA DA: ApiRouter.gs → doGet/doPost (action='aggiornaStatoUtente')
+ * CHIAMA:      validateSessionToken() (Utils.gs), getMainSpreadsheet() (Config.gs),
+ *              getSheetSafe() (UtilsMenu.gs), getColumnMapping() (GestionePassword.gs),
+ *              ADMIN_VALIDATION.isAdminRole() (Config.gs), SHEET_NAMES.UTENTI (Config.gs)
+ *
+ * @param {string} sessionToken  - Token di sessione dell'amministratore.
+ * @param {string} targetUserId  - Username dell'utente da modificare (colonna 'Username').
+ * @param {string} nuovoStato    - Nuovo valore per la colonna 'Attivo': 'Si' oppure 'No'.
+ * @returns {{ success: boolean, message: string }} Esito operazione.
+ *
+ * @example
+ * aggiornaStatoUtenteAPI('admin_1709123456_abc', 'mario.rossi', 'No');
+ * // → { success: true, message: 'Stato aggiornato: mario.rossi → No' }
+ */
+function aggiornaStatoUtenteAPI(sessionToken, targetUserId, nuovoStato) {
+  try {
+    // 1. Valida sessione (validateSessionToken restituisce boolean)
+    if (!validateSessionToken(sessionToken)) {
+      return { success: false, message: 'Sessione non valida o scaduta.' };
+    }
+
+    // 2. Apri spreadsheet e foglio Utenti
+    var ss = getMainSpreadsheet();
+    var usersSheet = getSheetSafe(ss, SHEET_NAMES.UTENTI);
+    var colMap = getColumnMapping(usersSheet);
+    var data = usersSheet.getDataRange().getValues();
+
+    // 3. Verifica ruolo admin (pattern identico a creaUtenteAPI)
+    var requestingUserId = sessionToken.split('_')[0];
+    var headerRow = data[0];
+    var colMapAdmin = buildColumnMap(headerRow);
+    var ruoloColumnIndex = -1;
+    for (var j = 0; j < headerRow.length; j++) {
+      if (headerRow[j] === 'Ruolo') { ruoloColumnIndex = j; break; }
+    }
+    var isAdmin = false;
+    for (var u = 1; u < data.length; u++) {
+      if (String(data[u][colMapAdmin['Username']]).trim() === requestingUserId) {
+        isAdmin = (ruoloColumnIndex !== -1 &&
+          ADMIN_VALIDATION.isAdminRole(data[u][ruoloColumnIndex].toString()));
+        break;
+      }
+    }
+    if (!isAdmin) {
+      return { success: false, message: 'Accesso non autorizzato: ruolo admin richiesto.' };
+    }
+
+    // 4. Valida nuovoStato — ammessi solo i valori canonici del foglio Utenti
+    if (nuovoStato !== 'Si' && nuovoStato !== 'No') {
+      return { success: false, message: 'Stato non valido. Valori accettati: "Si" o "No".' };
+    }
+
+    // 5. Verifica che le colonne necessarie esistano nel foglio
+    var attivoCol = colMap['Attivo'];
+    var usernameCol = colMap['Username'];
+    if (attivoCol === undefined || usernameCol === undefined) {
+      return { success: false, message: 'Colonne "Attivo" o "Username" non trovate nel foglio Utenti.' };
+    }
+
+    // 6. Trova la riga dell'utente target e aggiorna la colonna Attivo
+    for (var i = 1; i < data.length; i++) {
+      var rowUsername = (data[i][usernameCol] || '').toString().trim();
+      if (rowUsername === targetUserId) {
+        // colMap restituisce indici 0-based; getRange vuole indici 1-based
+        usersSheet.getRange(i + 1, attivoCol + 1).setValue(nuovoStato);
+        Logger.debug('aggiornaStatoUtenteAPI:', targetUserId, '→', nuovoStato);
+        return { success: true, message: 'Stato aggiornato: ' + targetUserId + ' → ' + nuovoStato };
+      }
+    }
+
+    return { success: false, message: 'Utente "' + targetUserId + '" non trovato.' };
+
+  } catch (error) {
+    Logger.critical('Errore aggiornaStatoUtenteAPI:', error);
+    return { success: false, message: 'Errore interno: ' + error.message };
   }
 }

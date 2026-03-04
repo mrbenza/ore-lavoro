@@ -667,6 +667,41 @@
                     </form>
                 </section>
 
+                <!-- CARD: Stato Account -->
+                <section class="admin-section fade-in" aria-labelledby="statoAccountTitle">
+                    <div class="section-header">
+                        <h2 class="section-title" id="statoAccountTitle">
+                            <i class="fas fa-toggle-on"></i>Stato Account
+                        </h2>
+                    </div>
+                    <p style="font-size: 13px; color: #6b7280; margin-bottom: 20px;">
+                        Attiva o disattiva l'account di un dipendente esistente. La modifica viene applicata immediatamente.
+                    </p>
+                    <div style="display: flex; flex-direction: column; gap: 12px; max-width: 480px;">
+                        <div class="utenti-form-group">
+                            <label class="utenti-form-label" for="statoUtenteSelect">Dipendente</label>
+                            <select id="statoUtenteSelect" class="utenti-form-input"
+                                    aria-label="Seleziona dipendente per cambio stato account">
+                                <option value="">Seleziona dipendente...</option>
+                            </select>
+                        </div>
+                        <div class="utenti-form-group">
+                            <label class="utenti-form-label" for="nuovoStatoAttivo">Nuovo Stato</label>
+                            <select id="nuovoStatoAttivo" class="utenti-form-input"
+                                    aria-label="Seleziona nuovo stato account">
+                                <option value="Si">Attivo</option>
+                                <option value="No">Non attivo</option>
+                            </select>
+                        </div>
+                        <button id="btnAggiornaStato" onclick="aggiornaStatoUtente()" class="utenti-submit-btn"
+                                style="align-self: flex-start; min-width: 180px;">
+                            <i class="fas fa-save"></i> Aggiorna Stato
+                        </button>
+                    </div>
+                    <div id="statoUtenteResult" class="utenti-result" role="alert" aria-live="polite"
+                         style="max-width: 480px;"></div>
+                </section>
+
                 <!-- CARD: Cambia Password Dipendente -->
                 <section class="admin-section fade-in" aria-labelledby="cambioPasswordTitle">
                     <div class="section-header">
@@ -2451,11 +2486,17 @@
 
         async function caricaDipendentiStrumenti() {
             const sel = document.getElementById('strumenti-dipendente-select');
-            if (!sel || sel.options.length > 1) return; // già caricati
+            const selStato = document.getElementById('statoUtenteSelect');
+            // Evita di ricaricare se già popolati (più di 1 option = già caricato)
+            if (!sel || sel.options.length > 1) return;
             try {
                 const data = await Utils.loadDipendentiList();
-                sel.innerHTML = '<option value="">Seleziona dipendente...</option>' +
+                const opzioni = '<option value="">Seleziona dipendente...</option>' +
                     data.map(d => `<option value="${d.userId}">${d.nome}</option>`).join('');
+                sel.innerHTML = opzioni;
+                if (selStato) {
+                    selStato.innerHTML = opzioni;
+                }
             } catch (e) {
                 // silente
             }
@@ -2630,6 +2671,60 @@
          */
         function mostraRisultatoCreaUtente(tipo, messaggio) {
             const el = document.getElementById('creaUtenteResult');
+            el.className = 'utenti-result ' + (tipo === 'success' ? 'success-message' : 'error-message');
+            el.textContent = messaggio;
+            el.style.display = 'block';
+        }
+
+        /**
+         * Aggiorna lo stato (Attivo/Non attivo) di un dipendente selezionato.
+         * Chiama l'azione API 'aggiornaStatoUtente' tramite Utils.callAPI.
+         */
+        async function aggiornaStatoUtente() {
+            const targetUserId = document.getElementById('statoUtenteSelect').value;
+            const nuovoStato = document.getElementById('nuovoStatoAttivo').value;
+
+            if (!targetUserId) {
+                mostraRisultatoStatoUtente('error', 'Seleziona un dipendente.');
+                return;
+            }
+
+            const btn = document.getElementById('btnAggiornaStato');
+            btn.disabled = true;
+            btn.textContent = 'Aggiornamento...';
+
+            try {
+                const session = Utils.getSession();
+                if (!session) { window.location.href = 'index.html'; return; }
+
+                const result = await Utils.callAPI({
+                    action: 'aggiornaStatoUtente',
+                    sessionToken: session.token,
+                    targetUserId: targetUserId,
+                    nuovoStato: nuovoStato
+                });
+
+                if (result.success) {
+                    mostraRisultatoStatoUtente('success', result.message || 'Stato aggiornato.');
+                } else {
+                    mostraRisultatoStatoUtente('error', result.message || 'Errore durante l\'aggiornamento.');
+                }
+            } catch (err) {
+                mostraRisultatoStatoUtente('error', 'Errore di rete: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Aggiorna Stato';
+            }
+        }
+
+        /**
+         * Mostra un messaggio di esito nell'area risultato della card "Stato Account".
+         *
+         * @param {'success'|'error'} tipo     - Tipo di messaggio
+         * @param {string}            messaggio - Testo da visualizzare
+         */
+        function mostraRisultatoStatoUtente(tipo, messaggio) {
+            const el = document.getElementById('statoUtenteResult');
             el.className = 'utenti-result ' + (tipo === 'success' ? 'success-message' : 'error-message');
             el.textContent = messaggio;
             el.style.display = 'block';
