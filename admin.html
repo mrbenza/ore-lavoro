@@ -939,9 +939,9 @@
                 if (workDay) classes += ' has-work';
 
                 let content = `<span class="calendar-day-number">${day}</span>`;
-                if (workDay && workDay.ore) {
+                if (workDay && workDay.totalOre) {
                     // Pallino verde + ore con stile dashboard
-                    content += `<div class="work-indicator"></div><span class="work-hours-admin">${workDay.ore}h</span>`;
+                    content += `<div class="work-indicator"></div><span class="work-hours-admin">${workDay.totalOre}h</span>`;
                 }
 
                 // TUTTI i giorni sono cliccabili per permettere inserimento e modifica
