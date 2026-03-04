@@ -681,9 +681,14 @@
                         <div class="utenti-form-group">
                             <label class="utenti-form-label" for="statoUtenteSelect">Dipendente</label>
                             <select id="statoUtenteSelect" class="utenti-form-input"
-                                    aria-label="Seleziona dipendente per cambio stato account">
+                                    aria-label="Seleziona dipendente per cambio stato account"
+                                    onchange="onStatoUtenteChange()">
                                 <option value="">Seleziona dipendente...</option>
                             </select>
+                            <span id="statoCorrenteUtente"
+                                  class="stato-badge"
+                                  style="display:none; margin-top:6px;"
+                                  aria-live="polite"></span>
                         </div>
                         <div class="utenti-form-group">
                             <label class="utenti-form-label" for="nuovoStatoAttivo">Nuovo Stato</label>
@@ -2489,16 +2494,67 @@
             const selStato = document.getElementById('statoUtenteSelect');
             // Evita di ricaricare se già popolati (più di 1 option = già caricato)
             if (!sel || sel.options.length > 1) return;
+
             try {
+                const session = Utils.getSession();
+
+                // Lista solo attivi per il select cambio password
                 const data = await Utils.loadDipendentiList();
-                const opzioni = '<option value="">Seleziona dipendente...</option>' +
-                    data.map(d => `<option value="${d.userId}">${d.nome}</option>`).join('');
-                sel.innerHTML = opzioni;
+                sel.innerHTML = '<option value="">Seleziona dipendente...</option>' +
+                    data.map(d => `<option value="${Utils.escapeHtml(d.userId)}">${Utils.escapeHtml(d.nome)}</option>`).join('');
+
+                // Lista completa (inclusi inattivi) per il select cambia stato
                 if (selStato) {
-                    selStato.innerHTML = opzioni;
+                    const tuttiResult = await Utils.callAPI({
+                        action: 'getDipendentiList',
+                        sessionToken: session.token,
+                        includeInactive: 'true'
+                    });
+                    if (tuttiResult.success && tuttiResult.data) {
+                        // Costruisce una mappa userId → dati dipendente per accesso rapido all'onchange
+                        window._dipendentiStatoMap = {};
+                        tuttiResult.data.forEach(d => { window._dipendentiStatoMap[d.userId] = d; });
+
+                        selStato.innerHTML = '<option value="">Seleziona dipendente...</option>' +
+                            tuttiResult.data.map(d => {
+                                const badge = d.attivo === 'Si' ? '✓' : '✗';
+                                return `<option value="${Utils.escapeHtml(d.userId)}" data-attivo="${Utils.escapeHtml(d.attivo)}">${badge} ${Utils.escapeHtml(d.nome)} (${Utils.escapeHtml(d.attivo)})</option>`;
+                            }).join('');
+                    }
                 }
             } catch (e) {
                 // silente
+            }
+        }
+
+        /**
+         * Gestisce il cambio di selezione nel select dipendenti della card "Stato Account".
+         * Pre-seleziona il valore corrente nel select "Nuovo Stato" e mostra un badge
+         * con lo stato attuale dell'utente selezionato.
+         */
+        function onStatoUtenteChange() {
+            const sel = document.getElementById('statoUtenteSelect');
+            const userId = sel.value;
+            const statoBadge = document.getElementById('statoCorrenteUtente');
+            const nuovoStatoSel = document.getElementById('nuovoStatoAttivo');
+
+            if (!userId || !window._dipendentiStatoMap) {
+                if (statoBadge) statoBadge.style.display = 'none';
+                return;
+            }
+
+            const utente = window._dipendentiStatoMap[userId];
+            if (!utente) return;
+
+            // Pre-seleziona lo stato corrente nel select Nuovo Stato
+            if (nuovoStatoSel) nuovoStatoSel.value = utente.attivo;
+
+            // Mostra badge con lo stato corrente dell'utente
+            if (statoBadge) {
+                const isAttivo = utente.attivo === 'Si';
+                statoBadge.textContent = 'Stato attuale: ' + (isAttivo ? 'Attivo' : 'Non attivo');
+                statoBadge.className = 'stato-badge ' + (isAttivo ? 'badge-success' : 'badge-danger');
+                statoBadge.style.display = 'inline-block';
             }
         }
 

@@ -190,7 +190,7 @@ function doGet(e) {
     }
     else if (action === 'getDipendentiList') {
       // → AdminAPI.gs
-      result = getDipendentiListAdmin(e.parameter.sessionToken);
+      result = getDipendentiListAdmin(e.parameter.sessionToken, e.parameter.includeInactive);
     }
     else if (action === 'getDipendenteTimeline') {
       // → AdminAPI.gs
@@ -429,7 +429,7 @@ function doPost(e) {
     }
     else if (params.action === 'getDipendentiList') {
       // → AdminAPI.gs
-      result = getDipendentiListAdmin(params.sessionToken);
+      result = getDipendentiListAdmin(params.sessionToken, params.includeInactive);
     }
     else if (params.action === 'getDipendenteTimeline') {
       // → AdminAPI.gs

@@ -239,74 +239,109 @@ function calcolaOreMeseCorrenteOttimizzato(spreadsheet) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Restituisce la lista dei dipendenti attivi (non admin) per il dropdown admin.
+ * Restituisce la lista dei dipendenti (non admin) per il dropdown admin.
  *
- * Legge il foglio Utenti e filtra escludendo gli utenti con ruolo 'Admin'
- * e quelli non attivi (colonna J != 'Si'). Il risultato viene usato dal
- * frontend admin per popolare il selettore del dipendente target nelle
- * operazioni di visualizzazione e modifica ore.
+ * Legge il foglio Utenti e filtra escludendo gli utenti con ruolo admin.
+ * Per default restituisce solo i dipendenti attivi (Attivo == 'Si').
+ * Con includeInactive=true restituisce tutti i dipendenti (attivi e non),
+ * utile per la gestione utenti dove l'admin deve poter vedere e riattivare
+ * anche gli account disattivati.
+ *
+ * Usa il mapping dinamico delle colonne tramite header row per essere robusto
+ * a variazioni nell'ordine delle colonne del foglio Utenti.
  *
  * FLUSSO INTERNO:
  *   1. Valida sessionToken
- *   2. Legge foglio Utenti con getSheetByName()
- *   3. Itera righe saltando header
- *   4. Include solo utenti con userId, ruolo != 'Admin', Attivo == 'Si'
- *   5. Restituisce array di { userId, nome, ruolo }
+ *   2. Legge foglio Utenti con getSheetSafe()
+ *   3. Costruisce colMap da riga header (mapping dinamico)
+ *   4. Itera righe saltando header
+ *   5. Esclude sempre gli admin (ADMIN_VALIDATION.isAdminRole)
+ *   6. Se !mostraTutti, esclude anche i non attivi (Attivo != 'Si')
+ *   7. Restituisce array di { userId, nome, ruolo, attivo }
  *
  * CHIAMATA DA: ApiRouter.gs → doGet() (action='getDipendentiList')
  *              ApiRouter.gs → doPost() (action='getDipendentiList')
- * CHIAMA:      validateSessionToken(), Logger.debug/critical
+ * CHIAMA:      validateSessionToken(), getMainSpreadsheet(), getSheetSafe(),
+ *              ADMIN_VALIDATION.isAdminRole(), Logger.debug/critical
  *
- * @param {string} sessionToken - Token sessione (non richiede ruolo admin).
+ * @param {string}          sessionToken    - Token sessione (non richiede ruolo admin).
+ * @param {string|boolean}  includeInactive - Se 'true' o true, include dipendenti non attivi.
  * @returns {{
  *   success: boolean,
- *   data?: Array<{ userId: string, nome: string, ruolo: string }>,
+ *   data?: Array<{ userId: string, nome: string, ruolo: string, attivo: string }>,
  *   message?: string
- * }} Lista dipendenti attivi.
+ * }} Lista dipendenti.
  *
  * @example
  * getDipendentiListAdmin('admin_1709_abc');
- * // → { success: true, data: [{ userId: 'mario.rossi', nome: 'Mario Rossi', ruolo: 'Dipendente' }] }
+ * // → { success: true, data: [{ userId: 'mario.rossi', nome: 'Mario Rossi', ruolo: 'Dipendente', attivo: 'Si' }] }
+ *
+ * getDipendentiListAdmin('admin_1709_abc', true);
+ * // → { success: true, data: [{ userId: 'mario.rossi', ... }, { userId: 'luca.bianchi', ..., attivo: 'No' }] }
  */
-function getDipendentiListAdmin(sessionToken) {
+function getDipendentiListAdmin(sessionToken, includeInactive) {
   const startTime = Date.now();
-  
+
   try {
     if (!validateSessionToken(sessionToken)) {
       return { success: false, message: 'Sessione non valida' };
     }
-    
-    Logger.debug('getDipendentiListAdmin');
-    
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    const userSheet = spreadsheet.getSheetByName(SHEET_NAMES.UTENTI);
+
+    Logger.debug('getDipendentiListAdmin, includeInactive:', includeInactive);
+
+    const spreadsheet = getMainSpreadsheet();
+    const userSheet = getSheetSafe(spreadsheet, SHEET_NAMES.UTENTI);
     const data = userSheet.getDataRange().getValues();
+
+    // Mapping dinamico colonne (robusto a variazioni nell'ordine)
+    const headers = data[0];
+    const colMap = {};
+    headers.forEach(function(h, i) { if (h) colMap[h.toString().trim()] = i; });
+
+    const colUsername = colMap['Username'];
+    const colNome = colMap['Nome Completo'];
+    const colRuolo = colMap['Ruolo'];
+    const colAttivo = colMap['Attivo'];
+
+    if (colUsername === undefined || colNome === undefined) {
+      return { success: false, message: 'Struttura foglio Utenti non valida.' };
+    }
+
     const dipendenti = [];
-    
+    const mostraTutti = (includeInactive === 'true' || includeInactive === true);
+
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      const userId = row[6];
-      const ruolo = row[5] || 'Dipendente';
-      const isActive = row[9];
-      
-      // Escludi admin, solo attivi
-      if (userId && ruolo !== 'Admin' && isActive === 'Si') {
-        dipendenti.push({
-          userId: userId,
-          nome: row[1],
-          ruolo: ruolo
-        });
-      }
+      const userId = (row[colUsername] || '').toString().trim();
+      const nome = (row[colNome] || '').toString().trim();
+      const ruolo = (row[colRuolo] || 'Dipendente').toString().trim();
+      const attivo = (row[colAttivo] || '').toString().trim();
+
+      if (!userId || !nome) continue;
+
+      // Escludi sempre gli admin
+      const isAdmin = ADMIN_VALIDATION.isAdminRole(ruolo);
+      if (isAdmin) continue;
+
+      // Per la lista standard: escludi anche i non attivi
+      if (!mostraTutti && attivo !== 'Si') continue;
+
+      dipendenti.push({
+        userId: userId,
+        nome: nome,
+        ruolo: ruolo,
+        attivo: attivo
+      });
     }
-    
+
     Logger.debug('Dipendenti trovati:', dipendenti.length);
-    
+
     return {
       success: true,
       message: dipendenti.length + ' dipendenti trovati',
       data: dipendenti
     };
-    
+
   } catch (error) {
     Logger.critical('Errore getDipendentiListAdmin:', error);
     return { success: false, message: error.toString() };
