@@ -2529,7 +2529,7 @@
                         tuttiResult.data.forEach(d => { window._dipendentiStatoMap[d.userId] = d; });
                         selStato.innerHTML = '<option value="">Seleziona dipendente...</option>' +
                             tuttiResult.data.map(d => {
-                                const badge = d.attivo === 'Si' ? '✓' : '✗';
+                                const badge = d.attivo === 'Si' ? '🟢' : '🔴';
                                 return `<option value="${d.userId}" data-attivo="${d.attivo}">${badge} ${d.nome} (${d.attivo})</option>`;
                             }).join('');
                     } else {
