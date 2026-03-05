@@ -681,7 +681,7 @@
                         <div class="utenti-form-group">
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <label class="utenti-form-label" for="statoUtenteSelect" style="margin:0;">Dipendente</label>
-                                <button class="refresh-btn" onclick="caricaDipendentiStrumenti()" title="Ricarica lista dipendenti" style="padding:4px 8px; font-size:12px;"><i class="fas fa-sync-alt"></i></button>
+                                <button class="refresh-btn" onclick="refreshStatoDipendenti(this)" title="Ricarica lista dipendenti" style="padding:4px 8px; font-size:12px;"><i class="fas fa-sync-alt"></i></button>
                             </div>
                             <select id="statoUtenteSelect" class="utenti-form-input"
                                     aria-label="Seleziona dipendente per cambio stato account"
@@ -2492,12 +2492,22 @@
             sidebar.classList.toggle('collapsed', sidebarCollapsed);
         }
 
-        async function caricaDipendentiStrumenti() {
+        async function refreshStatoDipendenti(btn) {
+            if (btn) btn.classList.add('spinning');
+            const sel = document.getElementById('strumenti-dipendente-select');
+            const selStato = document.getElementById('statoUtenteSelect');
+            if (sel) sel.innerHTML = '<option value="">Caricamento dipendenti...</option>';
+            if (selStato) selStato.innerHTML = '<option value="">Caricamento dipendenti...</option>';
+            await caricaDipendentiStrumenti(true);
+            if (btn) btn.classList.remove('spinning');
+        }
+
+        async function caricaDipendentiStrumenti(force = false) {
             const sel = document.getElementById('strumenti-dipendente-select');
             const selStato = document.getElementById('statoUtenteSelect');
 
-            const selDaPopolare = sel && sel.options.length <= 1;
-            const statoDaPopolare = selStato && selStato.options.length <= 1;
+            const selDaPopolare = force || (sel && sel.options.length <= 1);
+            const statoDaPopolare = force || (selStato && selStato.options.length <= 1);
             if (!selDaPopolare && !statoDaPopolare) return;
 
             // Placeholder di caricamento immediato
