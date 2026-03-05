@@ -41,19 +41,59 @@
 function setupAmministrazioneSheet() {
   try {
     const ss = getMainSpreadsheet();
-    const sheetAmm = getSheetSafe(ss, SHEET_STATS.SHEET_NAME);
 
-    // Header Tabella A — Cantieri (A1:F1)
+    // 1. Se il foglio esiste già, eliminalo per ripartire da zero
+    const esistente = ss.getSheetByName(SHEET_STATS.SHEET_NAME);
+    if (esistente) {
+      ss.deleteSheet(esistente);
+      Logger.info('[Statistiche] Foglio Amministrazione esistente eliminato per reset');
+    }
+
+    // 2. Crea il foglio nuovo ed espandi alle colonne necessarie (default = 26, serve 34)
+    const sheetAmm = ss.insertSheet(SHEET_STATS.SHEET_NAME);
+    var colsNeeded = 34; // fino alla colonna AH (guida)
+    var colsExisting = sheetAmm.getMaxColumns();
+    if (colsExisting < colsNeeded) {
+      sheetAmm.insertColumnsAfter(colsExisting, colsNeeded - colsExisting);
+    }
+
+    // 3. Larghezze colonne — Tabella A (A:F)
+    sheetAmm.setColumnWidth(1, 55);   // Anno
+    sheetAmm.setColumnWidth(2, 55);   // Mese
+    sheetAmm.setColumnWidth(3, 90);   // Cantiere ID
+    sheetAmm.setColumnWidth(4, 200);  // Nome Cantiere
+    sheetAmm.setColumnWidth(5, 80);   // Ore Totali
+    sheetAmm.setColumnWidth(6, 100);  // Aggiornato
+    // Separatore G
+    sheetAmm.setColumnWidth(7, 18);
+    // Tabella B (H:M)
+    sheetAmm.setColumnWidth(8, 55);   // Anno
+    sheetAmm.setColumnWidth(9, 55);   // Mese
+    sheetAmm.setColumnWidth(10, 110); // User ID
+    sheetAmm.setColumnWidth(11, 160); // Nome Dipendente
+    sheetAmm.setColumnWidth(12, 80);  // Ore Totali
+    sheetAmm.setColumnWidth(13, 100); // Aggiornato
+    // Separatore N
+    sheetAmm.setColumnWidth(14, 18);
+    // Tabella C (O:AE) — Anno, Tipo, EntityID, Nome + 12 mesi + Totale
+    sheetAmm.setColumnWidth(15, 55);  // Anno
+    sheetAmm.setColumnWidth(16, 80);  // Tipo
+    sheetAmm.setColumnWidth(17, 100); // Entity ID
+    sheetAmm.setColumnWidth(18, 160); // Nome
+    for (var m = 19; m <= 30; m++) sheetAmm.setColumnWidth(m, 48); // Gen–Dic
+    sheetAmm.setColumnWidth(31, 90);  // Totale Anno
+
+    // 4. Header Tabella A — Cantieri (A1:F1)
     sheetAmm.getRange(1, 1, 1, 6).setValues([[
       'Anno', 'Mese', 'Cantiere ID', 'Nome Cantiere', 'Ore Totali', 'Aggiornato'
     ]]);
 
-    // Header Tabella B — Dipendenti (H1:M1)
+    // 5. Header Tabella B — Dipendenti (H1:M1)
     sheetAmm.getRange(1, 8, 1, 6).setValues([[
       'Anno', 'Mese', 'User ID', 'Nome Dipendente', 'Ore Totali', 'Aggiornato'
     ]]);
 
-    // Header Tabella C — Riepilogo annuale (O1:AE1, 17 colonne)
+    // 6. Header Tabella C — Riepilogo annuale (O1:AE1, 17 colonne)
     sheetAmm.getRange(1, 15, 1, 17).setValues([[
       'Anno', 'Tipo', 'Entity ID', 'Nome',
       'Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu',
@@ -61,23 +101,100 @@ function setupAmministrazioneSheet() {
       'Totale Anno'
     ]]);
 
-    // Congela riga 1
+    // 7. Congela riga 1 e imposta altezza generosa (40px)
     sheetAmm.setFrozenRows(1);
+    sheetAmm.setRowHeight(1, 40);
 
-    // Formatta header: sfondo #1a237e, testo bianco, bold
-    const headerStyle = SpreadsheetApp.newTextStyle().setBold(true).setForegroundColor('#ffffff').build();
-    const headerRanges = [
-      sheetAmm.getRange(1, 1, 1, 6),   // Tabella A
-      sheetAmm.getRange(1, 8, 1, 6),   // Tabella B
-      sheetAmm.getRange(1, 15, 1, 17)  // Tabella C
+    // 8. Colori header distinti per tabella + stile bold/centrato
+    const boldWhite = SpreadsheetApp.newTextStyle().setBold(true).setForegroundColor('#ffffff').setFontSize(11).build();
+    const boldDark  = SpreadsheetApp.newTextStyle().setBold(true).setForegroundColor('#ffffff').setFontSize(11).build();
+
+    // Tabella A: blu scuro
+    var rA = sheetAmm.getRange(1, 1, 1, 6);
+    rA.setBackground('#1a237e'); rA.setTextStyle(boldWhite);
+    rA.setHorizontalAlignment('center'); rA.setVerticalAlignment('middle');
+    rA.setBorder(true, true, true, true, true, false, '#3949ab', SpreadsheetApp.BorderStyle.SOLID);
+
+    // Tabella B: verde scuro
+    var rB = sheetAmm.getRange(1, 8, 1, 6);
+    rB.setBackground('#1b5e20'); rB.setTextStyle(boldDark);
+    rB.setHorizontalAlignment('center'); rB.setVerticalAlignment('middle');
+    rB.setBorder(true, true, true, true, true, false, '#388e3c', SpreadsheetApp.BorderStyle.SOLID);
+
+    // Tabella C: bordeaux/viola
+    var rC = sheetAmm.getRange(1, 15, 1, 17);
+    rC.setBackground('#4a148c'); rC.setTextStyle(boldDark);
+    rC.setHorizontalAlignment('center'); rC.setVerticalAlignment('middle');
+    rC.setBorder(true, true, true, true, true, false, '#7b1fa2', SpreadsheetApp.BorderStyle.SOLID);
+
+    // 9. Colonne separatore G e N — grigio scuro sottile
+    sheetAmm.getRange('G:G').setBackground('#bdbdbd');
+    sheetAmm.getRange('N:N').setBackground('#bdbdbd');
+    sheetAmm.getRange(1, 7).setValue('');
+    sheetAmm.getRange(1, 14).setValue('');
+
+    // 10. Etichette titolo tabella nella riga 1 celle separatore (rotated note)
+    sheetAmm.getRange(1, 7).setNote('SEPARATORE — Tabella A | Tabella B');
+    sheetAmm.getRange(1, 14).setNote('SEPARATORE — Tabella B | Tabella C');
+
+    // 11. Guida struttura — area a destra della Tabella C (col AH, indice 34)
+    var colGuida = 34; // colonna AH
+    sheetAmm.setColumnWidth(colGuida, 380);
+    var guida = [
+      ['📋  GUIDA AL FOGLIO AMMINISTRAZIONE'],
+      [''],
+      ['🔵  TABELLA A  (colonne A:F)'],
+      ['Ore per cantiere, per mese.'],
+      ['Una riga per ogni combinazione Anno+Mese+Cantiere.'],
+      ['Popolata ogni giorno alle 4:00 dal trigger giornaliero.'],
+      [''],
+      ['🟢  TABELLA B  (colonne H:M)'],
+      ['Ore per dipendente, per mese.'],
+      ['Una riga per ogni combinazione Anno+Mese+Dipendente.'],
+      ['Popolata ogni giorno alle 4:00 dal trigger giornaliero.'],
+      [''],
+      ['🟣  TABELLA C  (colonne O:AE)'],
+      ['Riepilogo annuale: 12 mesi + totale per cantiere/dipendente.'],
+      ['Una riga per Anno+Tipo+Entità. Tipo = "cantiere" o "dipendente".'],
+      ['Aggiornata da "Forza aggregazione completa" e 1° del mese.'],
+      [''],
+      ['⚙️  AGGIORNAMENTO AUTOMATICO'],
+      ['• Ogni giorno alle 4:00 → aggiorna mese corrente (Tab A+B)'],
+      ['• 1° del mese alle 4:00 → snapshot mese chiuso + Tab C'],
+      ['• Da menu → Statistiche → Forza aggregazione: ricalcola tutto'],
+      [''],
+      ['🔑  COLONNE SEPARATORE (G, N)'],
+      ['Colonne grigie usate solo come separatori visivi.'],
+      ['Non contengono dati — non modificare.'],
     ];
-    headerRanges.forEach(range => {
-      range.setBackground('#1a237e');
-      range.setTextStyle(headerStyle);
+    sheetAmm.getRange(1, colGuida, guida.length, 1).setValues(guida);
+
+    // Titolo guida: sfondo giallo, bold, grande
+    var titolo = sheetAmm.getRange(1, colGuida);
+    titolo.setBackground('#fff9c4');
+    titolo.setTextStyle(SpreadsheetApp.newTextStyle().setBold(true).setFontSize(12).build());
+    titolo.setHorizontalAlignment('left');
+    titolo.setVerticalAlignment('middle');
+
+    // Titoli sezioni guida
+    [3, 8, 13, 18, 23].forEach(function(r) {
+      var cell = sheetAmm.getRange(r, colGuida);
+      cell.setTextStyle(SpreadsheetApp.newTextStyle().setBold(true).setFontSize(10).build());
     });
 
-    Logger.info('[Statistiche] Setup foglio Amministrazione completato');
-    SpreadsheetApp.getUi().alert('Foglio "Amministrazione" configurato correttamente!');
+    // 9. Sposta il foglio in prima posizione
+    ss.setActiveSheet(sheetAmm);
+    ss.moveActiveSheet(1);
+
+    Logger.info('[Statistiche] Foglio Amministrazione creato e posizionato in prima posizione');
+
+    // 10. Popola subito con i dati disponibili (aggregazione completa anno corrente)
+    SpreadsheetApp.flush();
+    forzaAggregazioneCompleta();
+
+    SpreadsheetApp.getUi().alert(
+      'Foglio "Amministrazione" ricreato, formattato e popolato con i dati attuali!'
+    );
 
   } catch (error) {
     Logger.error('[Statistiche] Errore setup foglio Amministrazione: ' + error.toString());
