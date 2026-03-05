@@ -2779,6 +2779,7 @@
 
                 if (result.success) {
                     mostraRisultatoStatoUtente('success', result.message || 'Stato aggiornato.');
+                    caricaDipendentiStrumenti();
                 } else {
                     mostraRisultatoStatoUtente('error', result.message || 'Errore durante l\'aggiornamento.');
                 }
