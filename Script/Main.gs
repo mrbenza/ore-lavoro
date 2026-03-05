@@ -93,7 +93,13 @@ function onOpen() {
         .addItem('🔍 Verifica allineamento dati', 'verifyDataAlignment')
         .addSeparator()
         .addItem('📖 Come gestire cantieri', 'showConstructionSiteInstructions'))
-      
+
+      // Sottomenu Statistiche
+      .addSubMenu(ui.createMenu('📊 Statistiche')
+        .addItem('Setup foglio Amministrazione', 'setupAmministrazioneSheet')
+        .addItem('Forza aggregazione completa', 'forzaAggregazioneCompleta')
+        .addItem('Installa trigger automatici', 'setupTriggers'))
+
       .addSeparator();
     
     // MENU DINAMICO BASATO SULLO STATO DEL SISTEMA

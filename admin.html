@@ -7,6 +7,7 @@
     <title>Admin Dashboard - Sistema Gestione Ore</title>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
     <style>
         /* ═══════════════════════════════════════════
@@ -499,6 +500,289 @@
             .tab-item.active { color: #4f46e5; }
             .tab-item.active i { color: #4f46e5; }
         }
+
+        /* ═══════════════════════════════════════════
+           SEZIONE STATISTICHE — Header con dropdown anno
+           e pulsanti, griglia grafici affiancati (2 col)
+           e full-width, tabella riepilogo con tab.
+           ═══════════════════════════════════════════ */
+
+        /* Separatore visivo tra statistiche e sezione precedente */
+        .stats-section-divider {
+            border-top: 2px solid #e5e7eb;
+            margin-top: 10px;
+            padding-top: 25px;
+        }
+
+        /* Header sezione statistiche */
+        .stats-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .stats-section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .stats-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Select anno statistiche */
+        .stats-anno-select {
+            padding: 8px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f2937;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .stats-anno-select:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        /* Pulsanti header statistiche */
+        .stats-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .stats-btn-refresh {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .stats-btn-refresh:hover:not(:disabled) {
+            background: #e5e7eb;
+        }
+        .stats-btn-force {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+        .stats-btn-force:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+        }
+        .stats-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        .stats-btn-refresh.spinning i {
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Stato vuoto statistiche */
+        .stats-empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: #6b7280;
+        }
+        .stats-empty-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+        .stats-empty-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        .stats-empty-desc {
+            font-size: 13px;
+            color: #9ca3af;
+            max-width: 380px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Messaggio ricalcolo in corso */
+        .stats-recalc-msg {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #92400e;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+        .stats-recalc-msg.visible {
+            display: flex;
+        }
+
+        /* Griglia grafici: 2 colonne su desktop, 1 su mobile */
+        .stats-charts-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stats-charts-grid-full {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Card singolo grafico */
+        .stats-chart-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .stats-chart-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .stats-chart-title-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .stats-chart-canvas-wrap {
+            position: relative;
+            width: 100%;
+        }
+
+        /* Tabella riepilogo statistiche */
+        .stats-table-section {
+            margin-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+        }
+        .stats-table-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            background: #f3f4f6;
+            padding: 4px;
+            border-radius: 10px;
+            width: fit-content;
+        }
+        .stats-table-tab {
+            padding: 7px 18px;
+            border-radius: 7px;
+            border: none;
+            background: none;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .stats-table-tab.active {
+            background: white;
+            color: #4f46e5;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+        .stats-table-wrap {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+        }
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .stats-table th {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 10px 12px;
+            text-align: center;
+            font-weight: 600;
+            white-space: nowrap;
+            font-size: 11px;
+        }
+        .stats-table th:first-child {
+            text-align: left;
+        }
+        .stats-table td {
+            padding: 8px 10px;
+            text-align: center;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: middle;
+        }
+        .stats-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: #1f2937;
+            white-space: nowrap;
+        }
+        .stats-table tr:last-child td {
+            border-bottom: none;
+        }
+        .stats-table tbody tr:hover td {
+            background: rgba(79, 70, 229, 0.03);
+        }
+        /* Cella valore zero */
+        .stats-cell-zero {
+            color: #d1d5db;
+            font-size: 11px;
+        }
+        /* Cella con ore */
+        .stats-cell-hours {
+            background: rgba(16, 185, 129, 0.07);
+            color: #065f46;
+            font-weight: 600;
+            border-radius: 4px;
+            padding: 3px 6px;
+        }
+        /* Riga totale */
+        .stats-table .stats-row-total td {
+            background: #f9fafb;
+            font-weight: 700;
+            color: #1f2937;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        /* Colori ore dipendenti mese corrente */
+        .stats-hours-green { background: rgba(16, 185, 129, 0.12); color: #065f46; }
+        .stats-hours-yellow { background: rgba(245, 158, 11, 0.12); color: #92400e; }
+        .stats-hours-red { background: rgba(239, 68, 68, 0.12); color: #991b1b; }
+
+        /* Responsive statistiche */
+        @media (max-width: 768px) {
+            .stats-section-header { flex-direction: column; align-items: flex-start; }
+            .stats-controls { width: 100%; }
+            .stats-anno-select { flex: 1; }
+            .stats-charts-grid-2 { grid-template-columns: 1fr; }
+            .stats-table-tabs { width: 100%; }
+            .stats-table-tab { flex: 1; text-align: center; }
+        }
     </style>
 </head>
 
@@ -570,6 +854,60 @@
                                 <p class="spinner-text">Caricamento cantieri...</p>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- SEZIONE STATISTICHE -->
+                <section class="admin-section fade-in" id="statsSection" aria-labelledby="statsSectionTitle">
+                    <div class="stats-section-divider">
+
+                        <!-- Header: titolo + controlli anno + pulsanti -->
+                        <div class="stats-section-header">
+                            <h2 class="stats-section-title" id="statsSectionTitle">
+                                <i class="fas fa-chart-bar" style="color:#4f46e5;"></i>
+                                Statistiche
+                            </h2>
+                            <div class="stats-controls">
+                                <label for="statsAnnoSelect" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;">Anno statistiche</label>
+                                <select id="statsAnnoSelect"
+                                        class="stats-anno-select"
+                                        aria-label="Seleziona anno statistiche"
+                                        onchange="loadStatistiche(parseInt(this.value))">
+                                    <!-- Opzioni popolate da JS -->
+                                </select>
+                                <button id="statsRefreshBtn"
+                                        class="stats-btn stats-btn-refresh"
+                                        onclick="refreshStatistiche()"
+                                        title="Aggiorna statistiche"
+                                        aria-label="Aggiorna statistiche">
+                                    <i class="fas fa-sync-alt"></i>
+                                    <span>Aggiorna</span>
+                                </button>
+                                <button id="statsForceBtn"
+                                        class="stats-btn stats-btn-force"
+                                        onclick="forzaRicalcoloStatistiche()"
+                                        title="Forza ricalcolo aggregazione"
+                                        aria-label="Forza ricalcolo statistiche">
+                                    <i class="fas fa-bolt"></i>
+                                    <span>Forza ricalcolo</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Messaggio ricalcolo in corso -->
+                        <div id="statsRecalcMsg" class="stats-recalc-msg" role="status" aria-live="polite">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Ricalcolo in corso... (puo' richiedere 20-30 secondi)</span>
+                        </div>
+
+                        <!-- Area contenuto statistiche (spinner / stato vuoto / grafici) -->
+                        <div id="statsContent">
+                            <div class="spinner-container">
+                                <div class="loading-spinner"></div>
+                                <p class="spinner-text">Caricamento statistiche...</p>
+                            </div>
+                        </div>
+
                     </div>
                 </section>
 
@@ -927,6 +1265,8 @@
                 document.getElementById('adminName').textContent = session.user.name;
             }
             setupCollapsible();
+            // Popola il dropdown anno del pannello Statistiche
+            initStatsAnnoSelect();
         }
 
         /**
@@ -1027,6 +1367,8 @@
                 loadCantieri(),
                 loadDipendenti()
             ]);
+            // Carica le statistiche per l'anno corrente al termine del caricamento iniziale
+            await loadStatistiche(new Date().getFullYear());
         }
 
         /* ═══════════════════════════════════════════
@@ -2421,6 +2763,11 @@
                 if (currentUserId) {
                     await loadCalendarData();
                 }
+
+                // Refresh statistiche solo se già caricate almeno una volta
+                if (statsCache) {
+                    loadStatistiche(statsAnno);
+                }
             }, 1800000); // 30 minuti
         }
 
@@ -2815,6 +3162,830 @@
             el.className = 'utenti-result ' + (tipo === 'success' ? 'success-message' : 'error-message');
             el.textContent = messaggio;
             el.style.display = 'block';
+        }
+
+        /* ═══════════════════════════════════════════
+           SEZIONE STATISTICHE — Variabili di stato,
+           caricamento, render grafici, tabella riepilogo.
+           ═══════════════════════════════════════════ */
+
+        /** Cache dei dati statistiche più recenti (null se non ancora caricati). */
+        let statsCache = null;
+
+        /** Anno correntemente visualizzato nelle statistiche. */
+        let statsAnno = new Date().getFullYear();
+
+        /**
+         * Riferimenti ai grafici Chart.js attivi.
+         * Salvati per poter chiamare .destroy() prima di ricrearli.
+         */
+        // I grafici sono gestiti tramite window.chart* per permettere destroy() dinamico
+
+        /**
+         * Popola il dropdown #statsAnnoSelect con gli anni dal 2024 all'anno corrente.
+         * Seleziona di default l'anno corrente.
+         *
+         * CHIAMATA DA:  initUI
+         * @returns {void}
+         */
+        function initStatsAnnoSelect() {
+            const select = document.getElementById('statsAnnoSelect');
+            if (!select) return;
+
+            const annoCorrente = new Date().getFullYear();
+            let options = '';
+            for (let a = annoCorrente; a >= 2024; a--) {
+                options += `<option value="${a}" ${a === annoCorrente ? 'selected' : ''}>${a}</option>`;
+            }
+            select.innerHTML = options;
+        }
+
+        /**
+         * Carica i dati statistiche per l'anno indicato e li renderizza.
+         *
+         * DESCRIZIONE ESTESA: Mostra loader, chiama Utils.callAPI con action
+         * 'getStatistiche', salva in cache e chiama renderStatistiche. In caso
+         * di errore mostra stato di errore nel contenitore.
+         *
+         * CHIAMATA DA:  loadInitialData, setupAutoRefresh, statsAnnoSelect.onchange,
+         *               forzaRicalcoloStatistiche (dopo ricalcolo)
+         * CHIAMA:       Utils.callAPI, Utils.getSession, renderStatistiche,
+         *               showStatsError
+         * MODIFICA:     statsCache, statsAnno
+         *
+         * @param {number} anno - Anno da analizzare (es. 2025)
+         * @returns {Promise<void>}
+         */
+        async function loadStatistiche(anno) {
+            statsAnno = anno;
+
+            // Sincronizza il dropdown con l'anno passato
+            const sel = document.getElementById('statsAnnoSelect');
+            if (sel && sel.value !== String(anno)) sel.value = anno;
+
+            // Mostra loader
+            document.getElementById('statsContent').innerHTML = `
+                <div class="spinner-container">
+                    <div class="loading-spinner"></div>
+                    <p class="spinner-text">Caricamento statistiche ${anno}...</p>
+                </div>
+            `;
+
+            const session = Utils.getSession();
+            if (!session) return;
+
+            try {
+                const result = await Utils.callAPI({
+                    action: 'getStatistiche',
+                    sessionToken: session.token,
+                    anno: anno
+                });
+
+                if (result && result.success && result.data) {
+                    statsCache = result.data;
+                    renderStatistiche(result.data, anno);
+                } else {
+                    // Nessun dato disponibile — mostra stato vuoto
+                    showStatsEmptyState(anno);
+                }
+            } catch (e) {
+                console.error('[ADMIN] Errore caricamento statistiche:', e);
+                showStatsError(anno);
+            }
+        }
+
+        /**
+         * Invalida la cache e ricarica le statistiche per l'anno corrente.
+         *
+         * CHIAMATA DA:  onclick su #statsRefreshBtn
+         * CHIAMA:       loadStatistiche
+         * MODIFICA:     statsCache
+         *
+         * @returns {Promise<void>}
+         */
+        async function refreshStatistiche() {
+            const btn = document.getElementById('statsRefreshBtn');
+            if (btn) btn.classList.add('spinning');
+            statsCache = null;
+            await loadStatistiche(statsAnno);
+            if (btn) btn.classList.remove('spinning');
+            Utils.showNotification('Statistiche aggiornate', 'success', 2000);
+        }
+
+        /**
+         * Forza il ricalcolo dell'aggregazione sul backend (operazione lenta 20-30s),
+         * poi ricarica le statistiche.
+         *
+         * CHIAMATA DA:  onclick su #statsForceBtn
+         * CHIAMA:       Utils.callAPI, Utils.getSession, loadStatistiche,
+         *               Utils.showNotification
+         *
+         * @returns {Promise<void>}
+         */
+        async function forzaRicalcoloStatistiche() {
+            const forceBtn = document.getElementById('statsForceBtn');
+            const refreshBtn = document.getElementById('statsRefreshBtn');
+            const recalcMsg = document.getElementById('statsRecalcMsg');
+
+            // Disabilita pulsanti durante l'operazione
+            if (forceBtn) forceBtn.disabled = true;
+            if (refreshBtn) refreshBtn.disabled = true;
+            if (recalcMsg) recalcMsg.classList.add('visible');
+
+            const session = Utils.getSession();
+            if (!session) {
+                if (forceBtn) forceBtn.disabled = false;
+                if (refreshBtn) refreshBtn.disabled = false;
+                if (recalcMsg) recalcMsg.classList.remove('visible');
+                return;
+            }
+
+            try {
+                const result = await Utils.callAPI({
+                    action: 'forzaAggregazione',
+                    sessionToken: session.token
+                });
+
+                if (result && result.success) {
+                    statsCache = null;
+                    await loadStatistiche(statsAnno);
+                    Utils.showNotification('Ricalcolo completato', 'success', 3000);
+                } else {
+                    Utils.showNotification(
+                        'Errore ricalcolo: ' + (result && result.message ? result.message : 'risposta non valida'),
+                        'error'
+                    );
+                }
+            } catch (e) {
+                console.error('[ADMIN] Errore forzaAggregazione:', e);
+                Utils.showNotification('Errore durante il ricalcolo', 'error');
+            } finally {
+                if (forceBtn) forceBtn.disabled = false;
+                if (refreshBtn) refreshBtn.disabled = false;
+                if (recalcMsg) recalcMsg.classList.remove('visible');
+            }
+        }
+
+        /**
+         * Renderizza tutti i grafici e la tabella riepilogo.
+         *
+         * DESCRIZIONE ESTESA: Distrugge eventuali grafici Chart.js esistenti,
+         * costruisce l'HTML del contenitore (6 card grafici + tabella), lo inietta
+         * in #statsContent, poi istanzia i 6 nuovi grafici con i dati forniti.
+         *
+         * CHIAMATA DA:  loadStatistiche
+         * CHIAMA:       destroyAllCharts, renderCharts, renderTabellaRiepilogo
+         * LEGGE:        statsCache
+         *
+         * @param {Object} data - Oggetto { cantieri, dipendenti, riepilogo }
+         * @param {number} anno - Anno di riferimento
+         * @returns {void}
+         */
+        function renderStatistiche(data, anno) {
+            // Nessun dato: mostra stato vuoto
+            if (
+                (!data.cantieri || data.cantieri.length === 0) &&
+                (!data.dipendenti || data.dipendenti.length === 0)
+            ) {
+                showStatsEmptyState(anno);
+                return;
+            }
+
+            destroyAllCharts();
+
+            const riepilogoCantieriList = (data.riepilogo || []).filter(r => r.tipo === 'cantiere');
+            const riepilogoDipList      = (data.riepilogo || []).filter(r => r.tipo === 'dipendente');
+
+            // Mese e anno corrente per i grafici "mese corrente"
+            const oggi       = new Date();
+            const meseCorrente   = oggi.getMonth() + 1; // 1-12
+            const mesePrecedente = meseCorrente === 1 ? 12 : meseCorrente - 1;
+
+            // Costruisce HTML del contenitore grafici
+            document.getElementById('statsContent').innerHTML = `
+                <!-- Grafici 1 e 2: Ore annuali cantieri/dipendenti (affiancati) -->
+                <div class="stats-charts-grid-2" role="group" aria-label="Grafici ore annuali">
+                    <div class="stats-chart-card">
+                        <div class="stats-chart-title">
+                            <span class="stats-chart-title-dot" style="background:#4f46e5;"></span>
+                            Ore per Cantiere — Anno ${anno}
+                        </div>
+                        <div class="stats-chart-canvas-wrap">
+                            <canvas id="chartOreCantieriAnno" aria-label="Grafico ore per cantiere anno ${anno}" role="img"></canvas>
+                        </div>
+                    </div>
+                    <div class="stats-chart-card">
+                        <div class="stats-chart-title">
+                            <span class="stats-chart-title-dot" style="background:#f59e0b;"></span>
+                            Ore per Dipendente — Anno ${anno}
+                        </div>
+                        <div class="stats-chart-canvas-wrap">
+                            <canvas id="chartOreDipAnno" aria-label="Grafico ore per dipendente anno ${anno}" role="img"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grafico 3: Andamento mensile cantieri (full-width) -->
+                <div class="stats-charts-grid-full" role="group" aria-label="Grafici andamento mensile">
+                    <div class="stats-chart-card">
+                        <div class="stats-chart-title">
+                            <span class="stats-chart-title-dot" style="background:#10b981;"></span>
+                            Andamento Mensile Cantieri — ${anno}
+                        </div>
+                        <div class="stats-chart-canvas-wrap">
+                            <canvas id="chartAndamentoCantieriMensile" aria-label="Grafico andamento mensile cantieri" role="img"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grafico 4: Andamento mensile dipendenti (full-width) -->
+                <div class="stats-charts-grid-full">
+                    <div class="stats-chart-card">
+                        <div class="stats-chart-title">
+                            <span class="stats-chart-title-dot" style="background:#8b5cf6;"></span>
+                            Andamento Mensile Dipendenti — ${anno}
+                        </div>
+                        <div class="stats-chart-canvas-wrap">
+                            <canvas id="chartAndamentoDipMensile" aria-label="Grafico andamento mensile dipendenti" role="img"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grafici 5 e 6: Mese corrente (affiancati) -->
+                <div class="stats-charts-grid-2" role="group" aria-label="Grafici mese corrente">
+                    <div class="stats-chart-card">
+                        <div class="stats-chart-title">
+                            <span class="stats-chart-title-dot" style="background:#3b82f6;"></span>
+                            Mese Corrente: Cantieri vs Mese Precedente
+                        </div>
+                        <div class="stats-chart-canvas-wrap">
+                            <canvas id="chartMeseCantieriComp" aria-label="Grafico cantieri mese corrente vs precedente" role="img"></canvas>
+                        </div>
+                    </div>
+                    <div class="stats-chart-card">
+                        <div class="stats-chart-title">
+                            <span class="stats-chart-title-dot" style="background:#ec4899;"></span>
+                            Mese Corrente: Ore Dipendenti
+                        </div>
+                        <div class="stats-chart-canvas-wrap">
+                            <canvas id="chartMeseDipendenti" aria-label="Grafico ore dipendenti mese corrente" role="img"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabella riepilogo -->
+                <div class="stats-table-section" id="statsTabellaSection">
+                    <div class="stats-table-tabs" role="tablist" aria-label="Tabella riepilogo statistiche">
+                        <button class="stats-table-tab active"
+                                id="tabTabellaCantieriBtn"
+                                role="tab"
+                                aria-selected="true"
+                                aria-controls="tabTabellaCantieriPanel"
+                                onclick="switchStatsTab('cantieri')">
+                            Cantieri
+                        </button>
+                        <button class="stats-table-tab"
+                                id="tabTabellaDipBtn"
+                                role="tab"
+                                aria-selected="false"
+                                aria-controls="tabTabellaDipPanel"
+                                onclick="switchStatsTab('dipendenti')">
+                            Dipendenti
+                        </button>
+                    </div>
+                    <div id="tabTabellaCantieriPanel" role="tabpanel" aria-labelledby="tabTabellaCantieriBtn"></div>
+                    <div id="tabTabellaDipPanel"      role="tabpanel" aria-labelledby="tabTabellaDipBtn" style="display:none;"></div>
+                </div>
+            `;
+
+            // Istanzia i grafici dopo che il DOM è stato aggiornato
+            renderCharts(data, riepilogoCantieriList, riepilogoDipList, meseCorrente, mesePrecedente, anno);
+            renderTabellaRiepilogo(riepilogoCantieriList, riepilogoDipList);
+        }
+
+        /**
+         * Distrugge tutti i grafici Chart.js esistenti per evitare duplicati.
+         *
+         * CHIAMATA DA:  renderStatistiche
+         * @returns {void}
+         */
+        function destroyAllCharts() {
+            const refs = [
+                'chartOreCantieriAnno', 'chartOreDipAnno',
+                'chartAndamentoCantieriMensile', 'chartAndamentoDipMensile',
+                'chartMeseCantieriComp', 'chartMeseDipendenti'
+            ];
+            refs.forEach(name => {
+                if (window[name] && typeof window[name].destroy === 'function') {
+                    window[name].destroy();
+                    window[name] = null;
+                }
+            });
+        }
+
+        /**
+         * Genera le configurazioni di colore per N elementi (palette blu/verde o arancio/viola).
+         *
+         * @param {number} n       - Numero di colori da generare
+         * @param {string} palette - 'blueGreen' | 'orangePurple'
+         * @returns {{ bg: string[], border: string[] }}
+         */
+        function buildColorPalette(n, palette) {
+            // Palette base: colori HSL distinti
+            const blueGreen   = ['210,80%,56%', '165,72%,41%', '199,89%,48%', '173,58%,39%', '217,91%,60%', '142,71%,45%', '221,83%,53%', '158,64%,52%'];
+            const orangePurple = ['38,92%,50%', '262,83%,58%', '24,95%,53%', '291,64%,42%', '45,100%,47%', '280,87%,65%', '14,91%,54%', '258,90%,66%'];
+
+            const base = palette === 'orangePurple' ? orangePurple : blueGreen;
+            const bg     = [];
+            const border = [];
+
+            for (let i = 0; i < n; i++) {
+                const hsl = base[i % base.length];
+                bg.push(`hsla(${hsl},0.55)`);
+                border.push(`hsl(${hsl})`);
+            }
+            return { bg, border };
+        }
+
+        /**
+         * Configurazione base comune per tutti i grafici (tema coerente con la pagina).
+         *
+         * @returns {Object} Partial Chart.js options
+         */
+        function baseChartOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#374151',
+                            font: { family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1f2937',
+                        titleColor: '#f9fafb',
+                        bodyColor: '#d1d5db',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#6b7280',
+                            font: { family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", size: 11 }
+                        },
+                        grid: { color: 'rgba(0,0,0,0.06)' }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#6b7280',
+                            font: { family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", size: 11 }
+                        },
+                        grid: { color: 'rgba(0,0,0,0.06)' }
+                    }
+                }
+            };
+        }
+
+        /**
+         * Instanzia i 6 grafici Chart.js con i dati aggregati.
+         *
+         * CHIAMATA DA:  renderStatistiche
+         * CHIAMA:       buildColorPalette, baseChartOptions
+         * MODIFICA:     chartOreCantieriAnno, chartOreDipAnno,
+         *               chartAndamentoCantieriMensile, chartAndamentoDipMensile,
+         *               chartMeseCantieriComp, chartMeseDipendenti (via window[name])
+         *
+         * @param {Object}   data                 - Dati completi { cantieri, dipendenti, riepilogo }
+         * @param {Array}    riepilogoCantieriList - Righe riepilogo tipo 'cantiere'
+         * @param {Array}    riepilogoDipList      - Righe riepilogo tipo 'dipendente'
+         * @param {number}   meseCorrente          - Mese corrente (1-12)
+         * @param {number}   mesePrecedente        - Mese precedente (1-12)
+         * @param {number}   anno                 - Anno di riferimento
+         * @returns {void}
+         */
+        function renderCharts(data, riepilogoCantieriList, riepilogoDipList, meseCorrente, mesePrecedente, anno) {
+            const mesiLabels = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+            const base = baseChartOptions();
+
+            /* ── Grafico 1: Ore totali per cantiere (bar orizzontale) ── */
+            const cantieriNames   = riepilogoCantieriList.map(r => r.nome || r.entityId);
+            const cantieriTotali  = riepilogoCantieriList.map(r => r.totaleAnno || 0);
+            const palette1        = buildColorPalette(cantieriNames.length, 'blueGreen');
+
+            if (cantieriNames.length > 0) {
+                const ctx1 = document.getElementById('chartOreCantieriAnno');
+                window.chartOreCantieriAnno = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: cantieriNames,
+                        datasets: [{
+                            label: 'Ore totali',
+                            data: cantieriTotali,
+                            backgroundColor: palette1.bg,
+                            borderColor: palette1.border,
+                            borderWidth: 1.5,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        ...base,
+                        indexAxis: 'y',
+                        plugins: {
+                            ...base.plugins,
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { ...base.scales.x, beginAtZero: true,
+                                 ticks: { ...base.scales.x.ticks, callback: v => v + 'h' } },
+                            y: { ...base.scales.y }
+                        }
+                    }
+                });
+            }
+
+            /* ── Grafico 2: Ore totali per dipendente (bar orizzontale) ── */
+            const dipNames   = riepilogoDipList.map(r => r.nome || r.entityId);
+            const dipTotali  = riepilogoDipList.map(r => r.totaleAnno || 0);
+            const palette2   = buildColorPalette(dipNames.length, 'orangePurple');
+
+            if (dipNames.length > 0) {
+                const ctx2 = document.getElementById('chartOreDipAnno');
+                window.chartOreDipAnno = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: dipNames,
+                        datasets: [{
+                            label: 'Ore totali',
+                            data: dipTotali,
+                            backgroundColor: palette2.bg,
+                            borderColor: palette2.border,
+                            borderWidth: 1.5,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        ...base,
+                        indexAxis: 'y',
+                        plugins: {
+                            ...base.plugins,
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { ...base.scales.x, beginAtZero: true,
+                                 ticks: { ...base.scales.x.ticks, callback: v => v + 'h' } },
+                            y: { ...base.scales.y }
+                        }
+                    }
+                });
+            }
+
+            /* ── Grafico 3: Andamento mensile cantieri (line chart) ── */
+            if (riepilogoCantieriList.length > 0) {
+                const palette3 = buildColorPalette(riepilogoCantieriList.length, 'blueGreen');
+                const ctx3 = document.getElementById('chartAndamentoCantieriMensile');
+                window.chartAndamentoCantieriMensile = new Chart(ctx3, {
+                    type: 'line',
+                    data: {
+                        labels: mesiLabels,
+                        datasets: riepilogoCantieriList.map((r, i) => ({
+                            label: r.nome || r.entityId,
+                            data: (r.mesi && r.mesi.length === 12) ? r.mesi : Array(12).fill(0),
+                            backgroundColor: palette3.bg[i % palette3.bg.length],
+                            borderColor: palette3.border[i % palette3.border.length],
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: false,
+                            tension: 0.3
+                        }))
+                    },
+                    options: {
+                        ...base,
+                        scales: {
+                            x: { ...base.scales.x },
+                            y: { ...base.scales.y, beginAtZero: true,
+                                 ticks: { ...base.scales.y.ticks, callback: v => v + 'h' } }
+                        },
+                        plugins: {
+                            ...base.plugins,
+                            tooltip: {
+                                ...base.plugins.tooltip,
+                                callbacks: {
+                                    label: function(ctx) {
+                                        return ctx.dataset.label + ': ' + ctx.parsed.y + 'h';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            /* ── Grafico 4: Andamento mensile dipendenti (line chart) ── */
+            if (riepilogoDipList.length > 0) {
+                const palette4 = buildColorPalette(riepilogoDipList.length, 'orangePurple');
+                const ctx4 = document.getElementById('chartAndamentoDipMensile');
+                window.chartAndamentoDipMensile = new Chart(ctx4, {
+                    type: 'line',
+                    data: {
+                        labels: mesiLabels,
+                        datasets: riepilogoDipList.map((r, i) => ({
+                            label: r.nome || r.entityId,
+                            data: (r.mesi && r.mesi.length === 12) ? r.mesi : Array(12).fill(0),
+                            backgroundColor: palette4.bg[i % palette4.bg.length],
+                            borderColor: palette4.border[i % palette4.border.length],
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: false,
+                            tension: 0.3
+                        }))
+                    },
+                    options: {
+                        ...base,
+                        scales: {
+                            x: { ...base.scales.x },
+                            y: { ...base.scales.y, beginAtZero: true,
+                                 ticks: { ...base.scales.y.ticks, callback: v => v + 'h' } }
+                        },
+                        plugins: {
+                            ...base.plugins,
+                            tooltip: {
+                                ...base.plugins.tooltip,
+                                callbacks: {
+                                    label: function(ctx) {
+                                        return ctx.dataset.label + ': ' + ctx.parsed.y + 'h';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            /* ── Grafico 5: Mese corrente vs precedente per cantiere (bar grouped) ── */
+            // Filtra righe grezze per mese corrente e precedente
+            const cantieriMeseCorr = {};
+            const cantieriMesePrev = {};
+            (data.cantieri || []).forEach(r => {
+                if (r.mese === meseCorrente)   cantieriMeseCorr[r.cantiereId] = { nome: r.nome, ore: r.oreTotali };
+                if (r.mese === mesePrecedente)  cantieriMesePrev[r.cantiereId] = { nome: r.nome, ore: r.oreTotali };
+            });
+            const cantieriMeseIds = [...new Set([
+                ...Object.keys(cantieriMeseCorr),
+                ...Object.keys(cantieriMesePrev)
+            ])];
+            const meseLabels5  = cantieriMeseIds.map(id => (cantieriMeseCorr[id] || cantieriMesePrev[id]).nome || id);
+            const meseDataCorr = cantieriMeseIds.map(id => (cantieriMeseCorr[id] || {}).ore || 0);
+            const meseDataPrev = cantieriMeseIds.map(id => (cantieriMesePrev[id] || {}).ore || 0);
+
+            if (cantieriMeseIds.length > 0) {
+                const ctx5 = document.getElementById('chartMeseCantieriComp');
+                window.chartMeseCantieriComp = new Chart(ctx5, {
+                    type: 'bar',
+                    data: {
+                        labels: meseLabels5,
+                        datasets: [
+                            {
+                                label: mesiLabels[meseCorrente - 1] + ' (corrente)',
+                                data: meseDataCorr,
+                                backgroundColor: 'rgba(59,130,246,0.6)',
+                                borderColor: 'rgba(59,130,246,1)',
+                                borderWidth: 1.5,
+                                borderRadius: 3
+                            },
+                            {
+                                label: mesiLabels[mesePrecedente - 1] + ' (precedente)',
+                                data: meseDataPrev,
+                                backgroundColor: 'rgba(156,163,175,0.5)',
+                                borderColor: 'rgba(107,114,128,0.8)',
+                                borderWidth: 1.5,
+                                borderRadius: 3
+                            }
+                        ]
+                    },
+                    options: {
+                        ...base,
+                        scales: {
+                            x: { ...base.scales.x },
+                            y: { ...base.scales.y, beginAtZero: true,
+                                 ticks: { ...base.scales.y.ticks, callback: v => v + 'h' } }
+                        }
+                    }
+                });
+            }
+
+            /* ── Grafico 6: Ore dipendenti mese corrente (bar con colore per soglia) ── */
+            const dipMeseCorr = (data.dipendenti || []).filter(r => r.mese === meseCorrente);
+            const meseLabels6  = dipMeseCorr.map(r => r.nome || r.userId);
+            const meseDataDip  = dipMeseCorr.map(r => r.oreTotali || 0);
+            const meseColorsDip = meseDataDip.map(ore => {
+                if (ore >= 160)       return 'rgba(16,185,129,0.65)';
+                if (ore >= 80)        return 'rgba(245,158,11,0.65)';
+                return                       'rgba(239,68,68,0.65)';
+            });
+            const meseBordersDip = meseDataDip.map(ore => {
+                if (ore >= 160)       return 'rgba(5,150,105,1)';
+                if (ore >= 80)        return 'rgba(217,119,6,1)';
+                return                       'rgba(220,38,38,1)';
+            });
+
+            if (dipMeseCorr.length > 0) {
+                const ctx6 = document.getElementById('chartMeseDipendenti');
+                window.chartMeseDipendenti = new Chart(ctx6, {
+                    type: 'bar',
+                    data: {
+                        labels: meseLabels6,
+                        datasets: [{
+                            label: 'Ore ' + mesiLabels[meseCorrente - 1],
+                            data: meseDataDip,
+                            backgroundColor: meseColorsDip,
+                            borderColor: meseBordersDip,
+                            borderWidth: 1.5,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        ...base,
+                        plugins: {
+                            ...base.plugins,
+                            legend: { display: false },
+                            tooltip: {
+                                ...base.plugins.tooltip,
+                                callbacks: {
+                                    label: function(ctx) {
+                                        const ore = ctx.parsed.y;
+                                        const soglia = ore >= 160 ? ' (pieno)' : ore >= 80 ? ' (parziale)' : ' (basso)';
+                                        return ore + 'h' + soglia;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ...base.scales.x },
+                            y: { ...base.scales.y, beginAtZero: true,
+                                 ticks: { ...base.scales.y.ticks, callback: v => v + 'h' } }
+                        }
+                    }
+                });
+            }
+        }
+
+        /**
+         * Renderizza la tabella riepilogo mensile per cantieri e dipendenti.
+         * Popola entrambi i pannelli del tab riepilogo.
+         *
+         * CHIAMATA DA:  renderStatistiche
+         * CHIAMA:       buildTabellaHTML
+         *
+         * @param {Array} cantieriList - Righe riepilogo tipo 'cantiere'
+         * @param {Array} dipList      - Righe riepilogo tipo 'dipendente'
+         * @returns {void}
+         */
+        function renderTabellaRiepilogo(cantieriList, dipList) {
+            const cantieriPanel = document.getElementById('tabTabellaCantieriPanel');
+            const dipPanel      = document.getElementById('tabTabellaDipPanel');
+
+            if (cantieriPanel) cantieriPanel.innerHTML = buildTabellaHTML(cantieriList, 'Cantiere');
+            if (dipPanel)      dipPanel.innerHTML      = buildTabellaHTML(dipList,      'Dipendente');
+        }
+
+        /**
+         * Costruisce l'HTML di una tabella mensile riepilogativa per cantieri o dipendenti.
+         *
+         * CHIAMATA DA:  renderTabellaRiepilogo
+         *
+         * @param {Array}  lista     - Righe riepilogo (tipo 'cantiere' o 'dipendente')
+         * @param {string} entityLabel - Etichetta colonna nome ("Cantiere"/"Dipendente")
+         * @returns {string} HTML della tabella
+         */
+        function buildTabellaHTML(lista, entityLabel) {
+            if (!lista || lista.length === 0) {
+                return '<p style="color:#9ca3af;font-size:13px;padding:16px 0;">Nessun dato disponibile.</p>';
+            }
+
+            const mesi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+
+            // Calcola totali per colonna mese
+            const totaliMese = Array(12).fill(0);
+            lista.forEach(r => {
+                (r.mesi || Array(12).fill(0)).forEach((v, i) => {
+                    totaliMese[i] += (v || 0);
+                });
+            });
+            const totaleGenerale = totaliMese.reduce((acc, v) => acc + v, 0);
+
+            let html = '<div class="stats-table-wrap"><table class="stats-table"><thead><tr>';
+            html += `<th>${entityLabel}</th>`;
+            mesi.forEach(m => html += `<th>${m}</th>`);
+            html += '<th>Totale</th>';
+            html += '</tr></thead><tbody>';
+
+            lista.forEach(r => {
+                const meseArr = (r.mesi && r.mesi.length === 12) ? r.mesi : Array(12).fill(0);
+                html += '<tr>';
+                html += `<td title="${r.entityId || ''}">${r.nome || r.entityId}</td>`;
+                meseArr.forEach(v => {
+                    const ore = v || 0;
+                    if (ore === 0) {
+                        html += '<td><span class="stats-cell-zero">—</span></td>';
+                    } else {
+                        html += `<td><span class="stats-cell-hours">${ore}</span></td>`;
+                    }
+                });
+                html += `<td><strong>${r.totaleAnno || 0}</strong></td>`;
+                html += '</tr>';
+            });
+
+            // Riga totale
+            html += '<tr class="stats-row-total">';
+            html += '<td>Totale</td>';
+            totaliMese.forEach(v => html += `<td><strong>${v > 0 ? v : '—'}</strong></td>`);
+            html += `<td><strong>${totaleGenerale}</strong></td>`;
+            html += '</tr>';
+
+            html += '</tbody></table></div>';
+            return html;
+        }
+
+        /**
+         * Gestisce il cambio tab nella tabella riepilogo statistiche (Cantieri/Dipendenti).
+         *
+         * CHIAMATA DA:  onclick su .stats-table-tab
+         *
+         * @param {'cantieri'|'dipendenti'} tab - Tab da attivare
+         * @returns {void}
+         */
+        function switchStatsTab(tab) {
+            const cantieriPanel = document.getElementById('tabTabellaCantieriPanel');
+            const dipPanel      = document.getElementById('tabTabellaDipPanel');
+            const cantieriBtn   = document.getElementById('tabTabellaCantieriBtn');
+            const dipBtn        = document.getElementById('tabTabellaDipBtn');
+
+            if (tab === 'cantieri') {
+                cantieriPanel.style.display = '';
+                dipPanel.style.display      = 'none';
+                cantieriBtn.classList.add('active');
+                cantieriBtn.setAttribute('aria-selected', 'true');
+                dipBtn.classList.remove('active');
+                dipBtn.setAttribute('aria-selected', 'false');
+            } else {
+                dipPanel.style.display      = '';
+                cantieriPanel.style.display = 'none';
+                dipBtn.classList.add('active');
+                dipBtn.setAttribute('aria-selected', 'true');
+                cantieriBtn.classList.remove('active');
+                cantieriBtn.setAttribute('aria-selected', 'false');
+            }
+        }
+
+        /**
+         * Mostra lo stato vuoto quando non ci sono dati statistiche per l'anno.
+         *
+         * CHIAMATA DA:  loadStatistiche, renderStatistiche
+         *
+         * @param {number} anno - Anno per cui non ci sono dati
+         * @returns {void}
+         */
+        function showStatsEmptyState(anno) {
+            document.getElementById('statsContent').innerHTML = `
+                <div class="stats-empty-state" role="status" aria-live="polite">
+                    <div class="stats-empty-icon" aria-hidden="true">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <p class="stats-empty-title">Nessuna statistica disponibile per il ${anno}</p>
+                    <p class="stats-empty-desc">
+                        Esegui "Forza ricalcolo" per generare i dati,
+                        oppure attendi il calcolo automatico notturno.
+                    </p>
+                </div>
+            `;
+        }
+
+        /**
+         * Mostra un messaggio di errore nell'area statistiche.
+         *
+         * CHIAMATA DA:  loadStatistiche (catch)
+         *
+         * @param {number} anno - Anno di riferimento
+         * @returns {void}
+         */
+        function showStatsError(anno) {
+            document.getElementById('statsContent').innerHTML = `
+                <div class="stats-empty-state" role="alert" aria-live="assertive">
+                    <div class="stats-empty-icon" aria-hidden="true">
+                        <i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i>
+                    </div>
+                    <p class="stats-empty-title" style="color:#ef4444;">Errore caricamento statistiche ${anno}</p>
+                    <p class="stats-empty-desc">
+                        Controlla la connessione e riprova con il pulsante Aggiorna.
+                    </p>
+                </div>
+            `;
         }
     </script>
 

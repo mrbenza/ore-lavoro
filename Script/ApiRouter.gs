@@ -281,6 +281,19 @@ function doGet(e) {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // STATISTICHE ENDPOINTS (richiedono sessionToken di un utente con ruolo admin)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    else if (action === 'getStatistiche') {
+      // → Statistiche.gs
+      result = getStatisticheAdmin(e.parameter.sessionToken, e.parameter.anno);
+    }
+    else if (action === 'forzaAggregazione') {
+      // → Statistiche.gs
+      result = forzaAggregazioneAPI(e.parameter.sessionToken);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // AZIONE SCONOSCIUTA
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -295,7 +308,8 @@ function doGet(e) {
           'getOtherUserInfo', 'getOtherUserMonthlyData', 'getAllCantieriForAdmin',
           'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
           'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
-          'cambiaPassword', 'creaUtente', 'aggiornaStatoUtente'
+          'cambiaPassword', 'creaUtente', 'aggiornaStatoUtente',
+          'getStatistiche', 'forzaAggregazione'
         ]
       };
     }
@@ -520,6 +534,19 @@ function doPost(e) {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // STATISTICHE ENDPOINTS (richiedono sessionToken di un utente con ruolo admin)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    else if (params.action === 'getStatistiche') {
+      // → Statistiche.gs
+      result = getStatisticheAdmin(params.sessionToken, params.anno);
+    }
+    else if (params.action === 'forzaAggregazione') {
+      // → Statistiche.gs
+      result = forzaAggregazioneAPI(params.sessionToken);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // AZIONE SCONOSCIUTA
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -534,7 +561,8 @@ function doPost(e) {
           'getOtherUserInfo', 'getOtherUserMonthlyData', 'getAllCantieriForAdmin',
           'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
           'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
-          'cambiaPassword', 'creaUtente', 'aggiornaStatoUtente'
+          'cambiaPassword', 'creaUtente', 'aggiornaStatoUtente',
+          'getStatistiche', 'forzaAggregazione'
         ]
       };
     }

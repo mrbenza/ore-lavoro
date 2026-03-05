@@ -265,6 +265,35 @@ const ADMIN_DEBUG = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SHEET_STATS — mapping colonne del foglio "Amministrazione" (indici 0-based).
+// Usato da Statistiche.gs per leggere/scrivere le tre tabelle affiancate.
+//
+// TABELLA A (col A:F, indici 0-5)  — ore per cantiere, per mese
+// TABELLA B (col H:M, indici 7-12) — ore per dipendente, per mese
+// TABELLA C (col O:AE, indici 14-30) — riepilogo annuale con 12 mesi + totale
+//
+// ATTENZIONE: NON modificare questi indici senza allineare Statistiche.gs e
+// SHEET_SCHEMA.md (tramite Sheet Agent e Docs Agent).
+// ─────────────────────────────────────────────────────────────────────────────
+const SHEET_STATS = {
+  SHEET_NAME: 'Amministrazione',
+  CANTIERI: {
+    START_COL: 0,
+    ANNO: 0, MESE: 1, CANTIERE_ID: 2, NOME_CANTIERE: 3, ORE_TOTALI: 4, DATA_AGG: 5
+  },
+  DIPENDENTI: {
+    START_COL: 7,
+    ANNO: 7, MESE: 8, USER_ID: 9, NOME: 10, ORE_TOTALI: 11, DATA_AGG: 12
+  },
+  RIEPILOGO: {
+    START_COL: 14,
+    ANNO: 14, TIPO: 15, ENTITY_ID: 16, NOME: 17,
+    MESI_START: 18,
+    TOTALE_ANNO: 30
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // VALIDATION_RULES — regole di validazione condivise (duplica parziale di
 // CONFIG.VALIDATION per retrocompatibilità con moduli che la referenziano).
 // ─────────────────────────────────────────────────────────────────────────────
