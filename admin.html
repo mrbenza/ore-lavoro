@@ -3222,10 +3222,8 @@
             if (!select) return;
 
             const annoCorrente = new Date().getFullYear();
-            // +1 per coprire sfasamenti fuso orario tra browser e server GAS
-            const annoMax = annoCorrente + 1;
             let options = '';
-            for (let a = annoMax; a >= 2024; a--) {
+            for (let a = annoCorrente; a >= 2024; a--) {
                 options += `<option value="${a}" ${a === annoCorrente ? 'selected' : ''}>${a}</option>`;
             }
             select.innerHTML = options;
@@ -3275,13 +3273,7 @@
                 if (result && result.success && result.data &&
                     (result.data.cantieri.length > 0 || result.data.dipendenti.length > 0)) {
                     statsCache = result.data;
-                    // Sincronizza dropdown con l'anno che ha effettivamente dati
-                    const sel = document.getElementById('statsAnnoSelect');
-                    if (sel) sel.value = anno;
                     renderStatistiche(result.data, anno);
-                } else if (anno < new Date().getFullYear() + 1) {
-                    // Nessun dato per questo anno: prova l'anno successivo automaticamente
-                    await loadStatistiche(anno + 1);
                 } else {
                     showStatsEmptyState(anno);
                 }
@@ -3711,12 +3703,15 @@
                         datasets: riepilogoCantieriList.map((r, i) => ({
                             label: r.nome || r.entityId,
                             data: (r.mesi && r.mesi.length === 12) ? r.mesi : Array(12).fill(0),
-                            backgroundColor: getChartColor(i, 0.12),
+                            backgroundColor: getChartColor(i, 0.18),
                             borderColor: getChartColor(i),
-                            borderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            fill: false,
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: getChartColor(i),
+                            pointBorderColor: '#1e1e2e',
+                            pointBorderWidth: 1.5,
+                            fill: true,
                             tension: 0.3
                         }))
                     },
@@ -3755,12 +3750,15 @@
                             label: r.nome || r.entityId,
                             data: (r.mesi && r.mesi.length === 12) ? r.mesi : Array(12).fill(0),
                             // Dipendenti usano offset +6 per differenziarli dai cantieri
-                            backgroundColor: getChartColor(i + 6, 0.12),
+                            backgroundColor: getChartColor(i + 6, 0.18),
                             borderColor: getChartColor(i + 6),
-                            borderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            fill: false,
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: getChartColor(i + 6),
+                            pointBorderColor: '#1e1e2e',
+                            pointBorderWidth: 1.5,
+                            fill: true,
                             tension: 0.3
                         }))
                     },

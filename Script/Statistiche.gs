@@ -282,10 +282,45 @@ function forzaAggregazioneCompleta() {
   const meseCorrente = new Date().getMonth() + 1;
   for (let mese = 1; mese <= meseCorrente; mese++) {
     _aggiornaStatsMese(anno, mese);
-    Utilities.sleep(500); // evita throttling
+    Utilities.sleep(500);
   }
   _aggiornaRiepilogoAnnuale(anno);
   Logger.info('[Statistiche] Aggregazione completa anno ' + anno);
+}
+
+/**
+ * Ricalcola le statistiche per un anno storico specifico (tutti i 12 mesi).
+ * Da eseguire da menu per recuperare dati di anni passati mai aggregati.
+ *
+ * CHIAMATA DA: Main.gs → menu "Statistiche" → "Ricalcola anno storico..."
+ * CHIAMA:      _aggiornaStatsMese(), _aggiornaRiepilogoAnnuale()
+ */
+function forzaAggregazioneAnnoStorico() {
+  const ui = SpreadsheetApp.getUi();
+  const risposta = ui.prompt(
+    'Ricalcola anno storico',
+    'Inserisci l\'anno da ricalcolare (es. 2025):',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (risposta.getSelectedButton() !== ui.Button.OK) return;
+
+  const anno = parseInt(risposta.getResponseText().trim());
+  if (isNaN(anno) || anno < 2020 || anno > new Date().getFullYear()) {
+    ui.alert('Anno non valido. Inserisci un anno tra 2020 e ' + new Date().getFullYear() + '.');
+    return;
+  }
+
+  const annoCorrente = new Date().getFullYear();
+  const meseFine = (anno === annoCorrente) ? new Date().getMonth() + 1 : 12;
+
+  ui.alert('Avvio ricalcolo per il ' + anno + '. Attendere...');
+  for (let mese = 1; mese <= meseFine; mese++) {
+    _aggiornaStatsMese(anno, mese);
+    Utilities.sleep(500);
+  }
+  _aggiornaRiepilogoAnnuale(anno);
+  Logger.info('[Statistiche] Aggregazione storico anno ' + anno + ' completata');
+  ui.alert('Ricalcolo ' + anno + ' completato.');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
