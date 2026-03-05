@@ -679,7 +679,10 @@
                     </p>
                     <div style="display: flex; flex-direction: column; gap: 12px; max-width: 480px;">
                         <div class="utenti-form-group">
-                            <label class="utenti-form-label" for="statoUtenteSelect">Dipendente</label>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <label class="utenti-form-label" for="statoUtenteSelect" style="margin:0;">Dipendente</label>
+                                <button class="refresh-btn" onclick="caricaDipendentiStrumenti()" title="Ricarica lista dipendenti" style="padding:4px 8px; font-size:12px;"><i class="fas fa-sync-alt"></i></button>
+                            </div>
                             <select id="statoUtenteSelect" class="utenti-form-input"
                                     aria-label="Seleziona dipendente per cambio stato account"
                                     onchange="onStatoUtenteChange()">
