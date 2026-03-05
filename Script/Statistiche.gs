@@ -458,11 +458,13 @@ function _getUserIdByNomeFoglio(ss, nomeFoglio) {
   const colNome = colMap['Nome Completo'] !== undefined ? colMap['Nome Completo'] : COLUMNS.NOME;
   const colId = colMap['Username'] !== undefined ? colMap['Username'] : COLUMNS.USER_ID;
 
+  const nomeFoglioLower = nomeFoglio.trim().toLowerCase();
   for (let i = 1; i < allData.length; i++) {
-    if (String(allData[i][colNome]).trim() === nomeFoglio) {
+    if (String(allData[i][colNome]).trim().toLowerCase() === nomeFoglioLower) {
       return String(allData[i][colId]).trim();
     }
   }
+  Logger.warn('[Statistiche] UserId non trovato per foglio: ' + nomeFoglio + ' — verrà usato il nome foglio come ID');
   return null;
 }
 
