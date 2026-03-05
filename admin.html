@@ -2509,7 +2509,7 @@
                 try {
                     const data = await Utils.loadDipendentiList();
                     sel.innerHTML = '<option value="">Seleziona dipendente...</option>' +
-                        data.map(d => `<option value="${Utils.escapeHtml(d.userId)}">${Utils.escapeHtml(d.nome)}</option>`).join('');
+                        data.map(d => `<option value="${d.userId}">${d.nome}</option>`).join('');
                 } catch (e) {
                     ProductionLogger.error('[caricaDipendentiStrumenti] password list:', e.message);
                     sel.innerHTML = `<option value="">Errore: ${e.message}</option>`;
@@ -2530,7 +2530,7 @@
                         selStato.innerHTML = '<option value="">Seleziona dipendente...</option>' +
                             tuttiResult.data.map(d => {
                                 const badge = d.attivo === 'Si' ? '✓' : '✗';
-                                return `<option value="${Utils.escapeHtml(d.userId)}" data-attivo="${Utils.escapeHtml(d.attivo)}">${badge} ${Utils.escapeHtml(d.nome)} (${Utils.escapeHtml(d.attivo)})</option>`;
+                                return `<option value="${d.userId}" data-attivo="${d.attivo}">${badge} ${d.nome} (${d.attivo})</option>`;
                             }).join('');
                     } else {
                         selStato.innerHTML = `<option value="">Errore: ${tuttiResult.message || 'risposta non valida'}</option>`;
