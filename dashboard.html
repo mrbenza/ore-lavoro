@@ -2223,6 +2223,9 @@
                 return;
             }
 
+            elements.saveBtn.disabled = true;
+            elements.saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
+
             // Controlla se esistono ore già inserite per la data selezionata
             if (data.workDate) {
                 const [wy, wm, wd] = data.workDate.split('-').map(Number);
@@ -2231,12 +2234,13 @@
                 if (dayData && dayData.entries && dayData.entries.length > 0) {
                     const label = data.workDate.split('-').reverse().join('/');
                     const confirmed = await showDayConfirm(dayData.entries, dayData.totalHours, label);
-                    if (!confirmed) return;
+                    if (!confirmed) {
+                        elements.saveBtn.disabled = false;
+                        elements.saveBtn.innerHTML = 'Salva Ore';
+                        return;
+                    }
                 }
             }
-
-            elements.saveBtn.disabled = true;
-            elements.saveBtn.innerHTML = '<span class="loading"></span>Salvando...';
 
             try {
                 const result = await Utils.callAPI({
