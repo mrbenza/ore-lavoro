@@ -1934,7 +1934,6 @@
                     year: year,
                     month: month
                 });
-                console.log('[DayWarning] API result:', result);
                 const workDays = (result.success && result.data && result.data.workDays) ? result.data.workDays : {};
                 monthlyCache[key] = workDays;
                 return workDays;
@@ -1958,11 +1957,8 @@
             if (!dateStr) { hideDayWarning(); return; }
 
             const [year, month, day] = dateStr.split('-').map(Number);
-            console.log('[DayWarning] Data selezionata:', dateStr, '→ year:', year, 'month:', month, 'day:', day);
             const workDays = await fetchMonthData(year, month);
-            console.log('[DayWarning] workDays ricevuti:', workDays);
             const dayData = workDays[day] || workDays[String(day)];
-            console.log('[DayWarning] dayData per giorno', day, ':', dayData);
 
             if (dayData && dayData.entries && dayData.entries.length > 0) {
                 showDayWarning(dayData.entries, dayData.totalHours);
@@ -1983,8 +1979,9 @@
             const totalEl  = document.getElementById('dayWarningTotal');
             if (!banner || !list || !totalEl) return;
 
+            const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
             list.innerHTML = entries.map(e =>
-                `<li>• ${Utils.escapeHtml(e.cantiere)} — <strong>${e.ore}h</strong>${e.note ? ' (' + Utils.escapeHtml(e.note) + ')' : ''}</li>`
+                `<li>• ${esc(e.cantiere)} — <strong>${e.ore}h</strong>${e.note ? ' (' + esc(e.note) + ')' : ''}</li>`
             ).join('');
             totalEl.textContent = `Totale già inserito: ${totalHours}h`;
             banner.style.display = 'block';
