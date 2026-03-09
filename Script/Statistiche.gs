@@ -245,7 +245,7 @@ function aggregaDatiGiornalieri() {
  *   2. Delega a _aggiornaStatsMese(anno, mese)
  *
  * CHIAMATA DA: trigger time-based GAS (1° del mese ore 4)
- * CHIAMA:      _aggiornaStatsMese()
+ * CHIAMA:      _aggiornaStatsMese(), _aggiornaRiepilogoAnnuale()
  *
  * @returns {void}
  */
@@ -304,8 +304,9 @@ function forzaAggregazioneCompleta() {
  *
  * CHIAMATA DA: setupAmministrazioneSheet() (primo avvio)
  *              Main.gs → menu "Statistiche" → "Aggrega tutti i dati storici"
- * CHIAMA:      getMainSpreadsheet(), isSystemSheet(), _aggiornaStatsMese(),
- *              _aggiornaRiepilogoAnnuale(), Utilities.sleep()
+ * CHIAMA:      getMainSpreadsheet(), getSheetSafely(), isSystemSheet(),
+ *              _getUserIdByNomeFoglio(), _upsertStatsCantieri(),
+ *              _upsertStatsDipendenti(), _aggiornaRiepilogoAnnuale()
  *
  * @returns {{ anniProcessati: number[], mesiTotali: number, riepilogoTesto: string }}
  */
@@ -314,57 +315,103 @@ function forzaAggregazioneStorica() {
   const oggi = new Date();
   const annoCorrente = oggi.getFullYear();
   const meseCorrente = oggi.getMonth() + 1;
+  const dataAggiornamento = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy');
 
-  // 1. Trova anno minimo scansionando tutti i fogli dipendente
+  // 1. Legge la lista cantieri UNA SOLA VOLTA
+  const cantieri = {};
+  const sheetCantieri = getSheetSafely(ss, SHEET_NAMES.CANTIERI);
+  if (sheetCantieri) {
+    const righe = sheetCantieri.getDataRange().getValues();
+    for (var i = 1; i < righe.length; i++) {
+      var id = String(righe[i][0]).trim();
+      var nome = String(righe[i][1]).trim();
+      if (id) cantieri[id] = nome;
+    }
+  }
+
+  // 2. Scansiona tutti i fogli dipendente UNA SOLA VOLTA, aggrega in memoria
+  // struttura: aggregate[anno][mese] = { cantieri: {id:{nome,ore}}, dipendenti: {userId:{nome,ore}} }
+  var aggregate = {};
   var annoMinimo = annoCorrente;
-  const fogli = ss.getSheets().filter(s => !isSystemSheet(s.getName()));
+
+  var fogli = ss.getSheets().filter(function(s) { return !isSystemSheet(s.getName()); });
 
   for (var f = 0; f < fogli.length; f++) {
     var foglio = fogli[f];
+    var nomeFoglio = foglio.getName();
     var lastRow = foglio.getLastRow();
     if (lastRow < CONFIG.DATA_STRUCTURE.HEADER_ROWS + 1) continue;
 
     var dati = foglio.getRange(
       CONFIG.DATA_STRUCTURE.HEADER_ROWS + 1, 1,
-      lastRow - CONFIG.DATA_STRUCTURE.HEADER_ROWS, 1
+      lastRow - CONFIG.DATA_STRUCTURE.HEADER_ROWS, 5
     ).getValues();
 
-    for (var i = 0; i < dati.length; i++) {
-      var cella = dati[i][0];
-      if (!cella) continue;
-      var d = cella instanceof Date ? cella : new Date(cella);
+    var userId = _getUserIdByNomeFoglio(ss, nomeFoglio) || nomeFoglio;
+
+    for (var r = 0; r < dati.length; r++) {
+      var riga = dati[r];
+      var dataRiga = riga[CONFIG.DATA_STRUCTURE.COLUMNS.DATA];
+      if (!dataRiga) continue;
+
+      var d = dataRiga instanceof Date ? dataRiga : new Date(dataRiga);
       if (isNaN(d.getTime())) continue;
+
       var anno = d.getFullYear();
-      if (anno >= 2015 && anno < annoMinimo) annoMinimo = anno;
+      var mese = d.getMonth() + 1;
+
+      // Escludi mese corrente e futuri (aggreghiamo solo fino al mese precedente)
+      if (anno > annoCorrente) continue;
+      if (anno === annoCorrente && mese >= meseCorrente) continue;
+      if (anno < 2015) continue;
+
+      if (anno < annoMinimo) annoMinimo = anno;
+
+      var cantiereId = String(riga[CONFIG.DATA_STRUCTURE.COLUMNS.CANTIERE_ID] || '').trim();
+      var ore = parseFloat(riga[CONFIG.DATA_STRUCTURE.COLUMNS.ORE]) || 0;
+      if (ore <= 0) continue;
+
+      if (!aggregate[anno]) aggregate[anno] = {};
+      if (!aggregate[anno][mese]) aggregate[anno][mese] = { cantieri: {}, dipendenti: {} };
+
+      if (cantiereId) {
+        if (!aggregate[anno][mese].cantieri[cantiereId]) {
+          aggregate[anno][mese].cantieri[cantiereId] = { nome: cantieri[cantiereId] || cantiereId, ore: 0 };
+        }
+        aggregate[anno][mese].cantieri[cantiereId].ore += ore;
+      }
+
+      if (!aggregate[anno][mese].dipendenti[userId]) {
+        aggregate[anno][mese].dipendenti[userId] = { nome: nomeFoglio, ore: 0 };
+      }
+      aggregate[anno][mese].dipendenti[userId].ore += ore;
     }
   }
 
-  // 2. Aggrega mese per mese da annoMinimo fino al mese precedente a oggi
-  var anniProcessati = [];
+  // 3. Scrive tutto nel foglio Amministrazione
+  var sheetAmm = getSheetSafely(ss, SHEET_STATS.SHEET_NAME);
+  if (!sheetAmm) {
+    Logger.warn('[Statistiche] Foglio Amministrazione non trovato per aggregazione storica');
+    return { anniProcessati: [], mesiTotali: 0, riepilogoTesto: 'Foglio Amministrazione non trovato' };
+  }
+
+  var anniProcessati = Object.keys(aggregate).map(Number).sort(function(a, b) { return a - b; });
   var mesiTotali = 0;
-  var annoUltimoRiepilogo = -1;
 
-  for (var anno = annoMinimo; anno <= annoCorrente; anno++) {
-    var meseFine;
-    if (anno < annoCorrente) {
-      meseFine = 12;
-    } else {
-      // Anno corrente: fino al mese precedente (ieri incluso nel mese scorso se siamo il 1°)
-      meseFine = meseCorrente > 1 ? meseCorrente - 1 : 0;
-    }
+  for (var ai = 0; ai < anniProcessati.length; ai++) {
+    var annoTarget = anniProcessati[ai];
+    var mesiFine = (annoTarget < annoCorrente) ? 12 : meseCorrente - 1;
 
-    if (meseFine < 1) continue; // anno corrente e siamo a gennaio: niente da aggregare
-
-    for (var mese = 1; mese <= meseFine; mese++) {
-      _aggiornaStatsMese(anno, mese);
+    for (var mese = 1; mese <= mesiFine; mese++) {
+      if (!aggregate[annoTarget] || !aggregate[annoTarget][mese]) continue;
+      var datiMese = aggregate[annoTarget][mese];
+      _upsertStatsCantieri(sheetAmm, annoTarget, mese, datiMese.cantieri, dataAggiornamento);
+      _upsertStatsDipendenti(sheetAmm, annoTarget, mese, datiMese.dipendenti, dataAggiornamento);
       mesiTotali++;
-      Utilities.sleep(300);
     }
 
-    _aggiornaRiepilogoAnnuale(anno);
-    annoUltimoRiepilogo = anno;
-    anniProcessati.push(anno);
-    Logger.info('[Statistiche] Anno ' + anno + ' aggregato (' + meseFine + ' mesi)');
+    _aggiornaRiepilogoAnnuale(annoTarget);
+    Logger.info('[Statistiche] Anno ' + annoTarget + ' aggregato');
   }
 
   var riepilogoTesto =
@@ -372,7 +419,9 @@ function forzaAggregazioneStorica() {
     '• Anni processati: ' + (anniProcessati.length > 0 ? anniProcessati.join(', ') : 'nessuno') + '\n' +
     '• Mesi totali aggregati: ' + mesiTotali + '\n' +
     '• Anno più vecchio trovato: ' + annoMinimo + '\n' +
-    '• Dati aggiornati fino a: ' + (meseCorrente > 1 ? (meseCorrente - 1) + '/' + annoCorrente : '12/' + (annoCorrente - 1));
+    '• Dati aggiornati fino a: ' + (meseCorrente > 1
+      ? (meseCorrente - 1) + '/' + annoCorrente
+      : '12/' + (annoCorrente - 1));
 
   Logger.info('[Statistiche] ' + riepilogoTesto);
   return { anniProcessati: anniProcessati, mesiTotali: mesiTotali, riepilogoTesto: riepilogoTesto };
