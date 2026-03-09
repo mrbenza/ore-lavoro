@@ -1934,6 +1934,7 @@
                     year: year,
                     month: month
                 });
+                console.log('[DayWarning] API result:', result);
                 const workDays = (result.success && result.data && result.data.workDays) ? result.data.workDays : {};
                 monthlyCache[key] = workDays;
                 return workDays;
@@ -1957,8 +1958,11 @@
             if (!dateStr) { hideDayWarning(); return; }
 
             const [year, month, day] = dateStr.split('-').map(Number);
+            console.log('[DayWarning] Data selezionata:', dateStr, '→ year:', year, 'month:', month, 'day:', day);
             const workDays = await fetchMonthData(year, month);
-            const dayData = workDays[day];
+            console.log('[DayWarning] workDays ricevuti:', workDays);
+            const dayData = workDays[day] || workDays[String(day)];
+            console.log('[DayWarning] dayData per giorno', day, ':', dayData);
 
             if (dayData && dayData.entries && dayData.entries.length > 0) {
                 showDayWarning(dayData.entries, dayData.totalHours);
