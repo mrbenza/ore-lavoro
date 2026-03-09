@@ -190,10 +190,13 @@ function setupAmministrazioneSheet() {
 
     // 10. Popola subito con i dati disponibili (aggregazione completa anno corrente)
     SpreadsheetApp.flush();
-    forzaAggregazioneCompleta();
+    var risultato = forzaAggregazioneStorica();
+    _installaTriggers();
 
     SpreadsheetApp.getUi().alert(
-      'Foglio "Amministrazione" ricreato, formattato e popolato con i dati attuali!'
+      'Setup completato!\n\n' +
+      risultato.riepilogoTesto + '\n\n' +
+      '✅ Trigger giornaliero e mensile installati automaticamente.'
     );
 
   } catch (error) {
@@ -225,6 +228,7 @@ function setupAmministrazioneSheet() {
  */
 function aggregaDatiGiornalieri() {
   const now = new Date();
+  if (now.getDate() === 1) return; // il trigger mensile gestisce già il 1° del mese
   const anno = now.getFullYear();
   const mese = now.getMonth() + 1;
   _aggiornaStatsMese(anno, mese);
@@ -252,6 +256,7 @@ function aggregaDatiMensile() {
   const anno = dataPassata.getFullYear();
   const mese = dataPassata.getMonth() + 1;
   _aggiornaStatsMese(anno, mese);
+  _aggiornaRiepilogoAnnuale(anno);
   Logger.info('[Statistiche] Snapshot mese ' + mese + '/' + anno + ' completato');
 }
 
@@ -288,39 +293,89 @@ function forzaAggregazioneCompleta() {
   Logger.info('[Statistiche] Aggregazione completa anno ' + anno);
 }
 
+
 /**
- * Ricalcola le statistiche per un anno storico specifico (tutti i 12 mesi).
- * Da eseguire da menu per recuperare dati di anni passati mai aggregati.
+ * Aggrega TUTTI i dati storici presenti nei fogli dipendente.
  *
- * CHIAMATA DA: Main.gs → menu "Statistiche" → "Ricalcola anno storico..."
- * CHIAMA:      _aggiornaStatsMese(), _aggiornaRiepilogoAnnuale()
+ * Scansiona tutti i fogli non-sistema per trovare l'anno più vecchio con dati,
+ * poi aggrega mese per mese dal primo anno trovato fino al mese precedente
+ * rispetto alla data corrente. Al termine aggiorna il riepilogo annuale per
+ * ogni anno trovato e restituisce un riepilogo testuale dell'operazione.
+ *
+ * CHIAMATA DA: setupAmministrazioneSheet() (primo avvio)
+ *              Main.gs → menu "Statistiche" → "Aggrega tutti i dati storici"
+ * CHIAMA:      getMainSpreadsheet(), isSystemSheet(), _aggiornaStatsMese(),
+ *              _aggiornaRiepilogoAnnuale(), Utilities.sleep()
+ *
+ * @returns {{ anniProcessati: number[], mesiTotali: number, riepilogoTesto: string }}
  */
-function forzaAggregazioneAnnoStorico() {
-  const ui = SpreadsheetApp.getUi();
-  const risposta = ui.prompt(
-    'Ricalcola anno storico',
-    'Inserisci l\'anno da ricalcolare (es. 2025):',
-    ui.ButtonSet.OK_CANCEL
-  );
-  if (risposta.getSelectedButton() !== ui.Button.OK) return;
+function forzaAggregazioneStorica() {
+  const ss = getMainSpreadsheet();
+  const oggi = new Date();
+  const annoCorrente = oggi.getFullYear();
+  const meseCorrente = oggi.getMonth() + 1;
 
-  const anno = parseInt(risposta.getResponseText().trim());
-  if (isNaN(anno) || anno < 2020 || anno > new Date().getFullYear()) {
-    ui.alert('Anno non valido. Inserisci un anno tra 2020 e ' + new Date().getFullYear() + '.');
-    return;
+  // 1. Trova anno minimo scansionando tutti i fogli dipendente
+  var annoMinimo = annoCorrente;
+  const fogli = ss.getSheets().filter(s => !isSystemSheet(s.getName()));
+
+  for (var f = 0; f < fogli.length; f++) {
+    var foglio = fogli[f];
+    var lastRow = foglio.getLastRow();
+    if (lastRow < CONFIG.DATA_STRUCTURE.HEADER_ROWS + 1) continue;
+
+    var dati = foglio.getRange(
+      CONFIG.DATA_STRUCTURE.HEADER_ROWS + 1, 1,
+      lastRow - CONFIG.DATA_STRUCTURE.HEADER_ROWS, 1
+    ).getValues();
+
+    for (var i = 0; i < dati.length; i++) {
+      var cella = dati[i][0];
+      if (!cella) continue;
+      var d = cella instanceof Date ? cella : new Date(cella);
+      if (isNaN(d.getTime())) continue;
+      var anno = d.getFullYear();
+      if (anno >= 2015 && anno < annoMinimo) annoMinimo = anno;
+    }
   }
 
-  const annoCorrente = new Date().getFullYear();
-  const meseFine = (anno === annoCorrente) ? new Date().getMonth() + 1 : 12;
+  // 2. Aggrega mese per mese da annoMinimo fino al mese precedente a oggi
+  var anniProcessati = [];
+  var mesiTotali = 0;
+  var annoUltimoRiepilogo = -1;
 
-  ui.alert('Avvio ricalcolo per il ' + anno + '. Attendere...');
-  for (let mese = 1; mese <= meseFine; mese++) {
-    _aggiornaStatsMese(anno, mese);
-    Utilities.sleep(500);
+  for (var anno = annoMinimo; anno <= annoCorrente; anno++) {
+    var meseFine;
+    if (anno < annoCorrente) {
+      meseFine = 12;
+    } else {
+      // Anno corrente: fino al mese precedente (ieri incluso nel mese scorso se siamo il 1°)
+      meseFine = meseCorrente > 1 ? meseCorrente - 1 : 0;
+    }
+
+    if (meseFine < 1) continue; // anno corrente e siamo a gennaio: niente da aggregare
+
+    for (var mese = 1; mese <= meseFine; mese++) {
+      _aggiornaStatsMese(anno, mese);
+      mesiTotali++;
+      Utilities.sleep(300);
+    }
+
+    _aggiornaRiepilogoAnnuale(anno);
+    annoUltimoRiepilogo = anno;
+    anniProcessati.push(anno);
+    Logger.info('[Statistiche] Anno ' + anno + ' aggregato (' + meseFine + ' mesi)');
   }
-  _aggiornaRiepilogoAnnuale(anno);
-  Logger.info('[Statistiche] Aggregazione storico anno ' + anno + ' completata');
-  ui.alert('Ricalcolo ' + anno + ' completato.');
+
+  var riepilogoTesto =
+    'Aggregazione storica completata!\n\n' +
+    '• Anni processati: ' + (anniProcessati.length > 0 ? anniProcessati.join(', ') : 'nessuno') + '\n' +
+    '• Mesi totali aggregati: ' + mesiTotali + '\n' +
+    '• Anno più vecchio trovato: ' + annoMinimo + '\n' +
+    '• Dati aggiornati fino a: ' + (meseCorrente > 1 ? (meseCorrente - 1) + '/' + annoCorrente : '12/' + (annoCorrente - 1));
+
+  Logger.info('[Statistiche] ' + riepilogoTesto);
+  return { anniProcessati: anniProcessati, mesiTotali: mesiTotali, riepilogoTesto: riepilogoTesto };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -328,36 +383,51 @@ function forzaAggregazioneAnnoStorico() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Installa i trigger time-driven per l'aggregazione automatica.
+ * Installa i trigger time-driven per l'aggregazione automatica (logica core, senza UI).
  *
- * Da eseguire UNA VOLTA da menu. Rimuove eventuali trigger esistenti per le
- * funzioni aggregaDatiGiornalieri e aggregaDatiMensile prima di creare i nuovi.
+ * Rimuove eventuali trigger esistenti per le funzioni aggregaDatiGiornalieri e
+ * aggregaDatiMensile, poi ricrea entrambi. Non mostra alcun alert — usare
+ * setupTriggers() per la versione interattiva da menu.
  *
  * TRIGGER INSTALLATI:
  *   - aggregaDatiGiornalieri: ogni giorno tra le 4:00 e le 5:00
  *   - aggregaDatiMensile: il 1° di ogni mese tra le 4:00 e le 5:00
  *
- * CHIAMATA DA: Main.gs → menu "Statistiche" → "Installa trigger automatici"
+ * CHIAMATA DA: setupTriggers() (versione interattiva da menu)
+ *              setupAmministrazioneSheet() (primo avvio automatico)
  * CHIAMA:      ScriptApp.getProjectTriggers(), ScriptApp.deleteTrigger(),
  *              ScriptApp.newTrigger()
  *
  * @returns {void}
  */
-function setupTriggers() {
-  // Rimuovi trigger esistenti per queste funzioni
+function _installaTriggers() {
   ScriptApp.getProjectTriggers()
     .filter(t => ['aggregaDatiGiornalieri', 'aggregaDatiMensile'].includes(t.getHandlerFunction()))
     .forEach(t => ScriptApp.deleteTrigger(t));
 
-  // Trigger giornaliero: ogni giorno tra le 4:00 e le 5:00
   ScriptApp.newTrigger('aggregaDatiGiornalieri')
     .timeBased().everyDays(1).atHour(4).create();
 
-  // Trigger mensile: il 1° di ogni mese tra le 4:00 e le 5:00
   ScriptApp.newTrigger('aggregaDatiMensile')
     .timeBased().onMonthDay(1).atHour(4).create();
 
   Logger.info('[Statistiche] Trigger installati: giornaliero + mensile');
+}
+
+/**
+ * Installa i trigger time-driven e notifica l'utente con un alert.
+ *
+ * Versione interattiva di _installaTriggers() da eseguire UNA VOLTA da menu.
+ * Delega tutta la logica di installazione a _installaTriggers() e mostra
+ * un alert di conferma al termine.
+ *
+ * CHIAMATA DA: Main.gs → menu "Statistiche" → "Installa trigger automatici"
+ * CHIAMA:      _installaTriggers(), SpreadsheetApp.getUi()
+ *
+ * @returns {void}
+ */
+function setupTriggers() {
+  _installaTriggers();
   SpreadsheetApp.getUi().alert('Trigger installati correttamente!');
 }
 

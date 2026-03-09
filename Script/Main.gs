@@ -98,7 +98,6 @@ function onOpen() {
       .addSubMenu(ui.createMenu('📊 Statistiche')
         .addItem('Setup foglio Amministrazione', 'setupAmministrazioneSheet')
         .addItem('Forza aggregazione completa', 'forzaAggregazioneCompleta')
-        .addItem('Ricalcola anno storico...', 'forzaAggregazioneAnnoStorico')
         .addItem('Installa trigger automatici', 'setupTriggers'))
 
       .addSeparator();
