@@ -486,28 +486,10 @@
         }
 
         /* ═══════════════════════════════════════════
-           CAMBIA PASSWORD — Card separata sotto il form
-           inserimento ore. Pulsante con stile flat (bordo
-           viola, sfondo bianco) per distinguerlo dal
-           save-btn principale.
+           CAMBIA PASSWORD — Pulsante nella profilePage con
+           stile flat (bordo viola, sfondo bianco) per
+           distinguerlo dal save-btn principale.
            ═══════════════════════════════════════════ */
-        .change-pwd-section {
-            margin-top: 40px;
-        }
-
-        .change-pwd-section .form-section {
-            background: rgba(102, 126, 234, 0.04);
-            border: 1px solid rgba(102, 126, 234, 0.15);
-        }
-
-        @media (max-width: 768px) {
-            .change-pwd-section .form-section {
-                background: white;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-                border: 1px solid rgba(102, 126, 234, 0.12);
-            }
-        }
-
         .change-pwd-btn {
             background: white;
             color: #667eea;
@@ -1138,9 +1120,210 @@
         .icon {
             font-size: 20px;
         }
+
+        /* ═══════════════════════════════════════════
+           LAYOUT SIDEBAR DESKTOP / TAB BAR MOBILE
+           Pattern identico ad admin.html:
+           - Desktop (≥900px): sidebar fissa 220px a sinistra,
+             contenuto principale a destra, bottom-footer nascosta.
+           - Mobile (<900px): sidebar nascosta, bottom-footer
+             fissa in basso, body flex-direction column.
+           ═══════════════════════════════════════════ */
+
+        /* Body diventa flex row su desktop */
+        body {
+            display: flex !important;
+            flex-direction: row;
+            padding: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        /* Sidebar desktop */
+        .dash-sidebar {
+            width: 220px;
+            min-height: 100vh;
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 200;
+            flex-shrink: 0;
+        }
+
+        .dash-sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            min-height: 60px;
+        }
+
+        .dash-sidebar-logo {
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .dash-sidebar-nav {
+            list-style: none;
+            padding: 12px 0;
+            flex: 1;
+        }
+
+        /* Ogni voce della sidebar usa footer-item + footer-label
+           per restare compatibile con setupNavigation() */
+        .dash-sidebar-nav .footer-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            color: rgba(255,255,255,0.85);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            border-radius: 0;
+            margin: 0;
+            text-align: left;
+            background: none;
+        }
+
+        .dash-sidebar-nav .footer-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .dash-sidebar-nav .footer-item.active {
+            background: rgba(255,255,255,0.18);
+            color: white;
+            border-left-color: white;
+            font-weight: 600;
+        }
+
+        .dash-sidebar-nav .footer-icon {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+
+        .dash-sidebar-nav .footer-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Main content wrapper (destra della sidebar su desktop) */
+        .dash-main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Su desktop il dashboard-container non è più centrato:
+           scorre dentro dash-main */
+        .dashboard-container {
+            max-width: none !important;
+            margin: 0 !important;
+            padding-top: 100px !important;
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+        }
+
+        /* Header fisso: su desktop parte dalla sidebar (220px) e si estende
+           per il resto della viewport, senza il transform centrato */
+        .header {
+            left: 240px !important;
+            right: 20px !important;
+            width: auto !important;
+            max-width: none !important;
+            transform: none !important;
+            top: 20px !important;
+        }
+
+        /* Tab bar mobile — nascosta su desktop */
+        .bottom-footer {
+            display: none;
+        }
+
+        /* ─── MOBILE (<900px) ─── */
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column !important;
+                padding-bottom: 0 !important;
+            }
+
+            /* Nasconde la sidebar su mobile */
+            .dash-sidebar { display: none; }
+
+            /* Ripristina il dashboard-container centrato su mobile */
+            .dashboard-container {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding-top: 80px !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+
+            /* Ripristina header mobile full-width */
+            .header {
+                left: 0 !important;
+                right: 0 !important;
+                max-width: none !important;
+                width: 100% !important;
+                transform: none !important;
+                top: 0 !important;
+                border-radius: 0 !important;
+            }
+
+            /* Mostra bottom-footer su mobile */
+            .bottom-footer {
+                display: flex;
+                max-width: none !important;
+                left: 0 !important;
+                right: 0 !important;
+                transform: none !important;
+                border-radius: 0 !important;
+            }
+
+            /* Padding inferiore per non andare sotto la tab bar */
+            .dash-main {
+                padding-bottom: 80px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Sidebar navigazione (desktop ≥900px) -->
+    <nav class="dash-sidebar" id="dashSidebar" aria-label="Navigazione principale">
+        <div class="dash-sidebar-header">
+            <span class="dash-sidebar-logo">Ore Lavoro</span>
+        </div>
+        <ul class="dash-sidebar-nav">
+            <li class="footer-item active" role="button" tabindex="0" aria-label="Pagina Inserisci">
+                <span class="footer-icon" aria-hidden="true">✏️</span>
+                <span class="footer-label">Inserisci</span>
+            </li>
+            <li class="footer-item" role="button" tabindex="0" aria-label="Pagina Calendario">
+                <span class="footer-icon" aria-hidden="true">📅</span>
+                <span class="footer-label">Calendario</span>
+            </li>
+            <li class="footer-item" role="button" tabindex="0" aria-label="Pagina Profilo">
+                <span class="footer-icon" aria-hidden="true">👤</span>
+                <span class="footer-label">Profilo</span>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Contenuto principale -->
+    <div class="dash-main" id="dashMain">
+
     <div class="dashboard-container">
         <div class="header">
             <div class="header-content">
@@ -1230,43 +1413,6 @@
                     </div>
                 </div>
 
-                <!-- SEZIONE CAMBIA PASSWORD — card separata, sotto il form inserimento ore -->
-                <div class="change-pwd-section" aria-label="Sezione cambio password">
-                    <div class="form-section">
-                        <div class="section-title">
-                            <span class="icon" aria-hidden="true">🔒</span>
-                            Cambia Password
-                        </div>
-
-                        <div class="form-group">
-                            <label for="currentPassword">Password attuale</label>
-                            <input type="password" id="currentPassword"
-                                   autocomplete="current-password"
-                                   placeholder="Inserisci la password attuale">
-                        </div>
-
-                        <div class="form-group" style="margin-top: 15px;">
-                            <label for="newPassword">Nuova password</label>
-                            <input type="password" id="newPassword"
-                                   autocomplete="new-password"
-                                   placeholder="Minimo 4 caratteri">
-                        </div>
-
-                        <div class="form-group" style="margin-top: 15px;">
-                            <label for="confirmPassword">Conferma nuova password</label>
-                            <input type="password" id="confirmPassword"
-                                   autocomplete="new-password"
-                                   placeholder="Ripeti la nuova password">
-                        </div>
-
-                        <div style="margin-top: 25px;">
-                            <button type="button" class="change-pwd-btn" id="changePwdBtn"
-                                    aria-label="Aggiorna password">
-                                Aggiorna Password
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- PAGINA CALENDARIO -->
@@ -1303,8 +1449,48 @@
                     <p>Funzionalità in sviluppo...</p>
                 </div>
             </div>
+
+            <!-- PAGINA PROFILO -->
+            <div id="profilePage" class="page">
+                <div class="work-entry-form">
+                    <div class="form-section" style="grid-column: span 2;" aria-label="Sezione cambio password">
+                        <div class="section-title">
+                            <span class="icon" aria-hidden="true">🔒</span>
+                            Cambia Password
+                        </div>
+
+                        <div class="form-group">
+                            <label for="currentPassword">Password attuale</label>
+                            <input type="password" id="currentPassword"
+                                   autocomplete="current-password"
+                                   placeholder="Inserisci la password attuale">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="newPassword">Nuova password</label>
+                            <input type="password" id="newPassword"
+                                   autocomplete="new-password"
+                                   placeholder="Minimo 4 caratteri">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword">Conferma nuova password</label>
+                            <input type="password" id="confirmPassword"
+                                   autocomplete="new-password"
+                                   placeholder="Ripeti la nuova password">
+                        </div>
+
+                        <div style="margin-top: 10px;">
+                            <button type="button" class="change-pwd-btn" id="changePwdBtn"
+                                    aria-label="Aggiorna password">
+                                Aggiorna Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </div><!-- fine dash-main -->
 
     <!-- POPUP DETTAGLI GIORNO -->
     <div class="day-details-popup" id="dayDetailsPopup">
@@ -1320,17 +1506,21 @@
         </div>
     </div>
 
-    <!-- BARRA DI NAVIGAZIONE INFERIORE -->
-    <div class="bottom-footer">
-        <div class="footer-item active">
-            <div class="footer-icon">✏️</div>
+    <!-- BARRA DI NAVIGAZIONE INFERIORE (visibile solo su mobile <900px) -->
+    <nav class="bottom-footer" aria-label="Navigazione principale">
+        <div class="footer-item active" role="button" tabindex="0" aria-label="Pagina Inserisci">
+            <div class="footer-icon" aria-hidden="true">✏️</div>
             <div class="footer-label">Inserisci</div>
         </div>
-        <div class="footer-item">
-            <div class="footer-icon">📅</div>
+        <div class="footer-item" role="button" tabindex="0" aria-label="Pagina Calendario">
+            <div class="footer-icon" aria-hidden="true">📅</div>
             <div class="footer-label">Calendario</div>
         </div>
-    </div>
+        <div class="footer-item" role="button" tabindex="0" aria-label="Pagina Profilo">
+            <div class="footer-icon" aria-hidden="true">👤</div>
+            <div class="footer-label">Profilo</div>
+        </div>
+    </nav>
 
     <div id="notification" class="notification"></div>
 
@@ -1557,17 +1747,35 @@
          * @returns {void}
          */
         function setupNavigation() {
-            if (!elements.footerItems) return;
+            if (!elements.footerItems || elements.footerItems.length === 0) return;
 
             elements.footerItems.forEach(item => {
                 item.addEventListener('click', function() {
-                    const label = this.querySelector('.footer-label').textContent;
+                    const labelEl = this.querySelector('.footer-label');
+                    if (!labelEl) return;
+                    const label = labelEl.textContent.trim();
                     navigateToPage(label);
 
+                    // Deseleziona tutti i footer-item (sidebar + tab bar mobile)
                     elements.footerItems.forEach(footerItem => {
                         footerItem.classList.remove('active');
                     });
-                    this.classList.add('active');
+                    // Attiva l'item cliccato e il suo corrispondente
+                    // (stesso testo) nell'altro set di navigazione
+                    elements.footerItems.forEach(footerItem => {
+                        const fl = footerItem.querySelector('.footer-label');
+                        if (fl && fl.textContent.trim() === label) {
+                            footerItem.classList.add('active');
+                        }
+                    });
+                });
+
+                // Supporto navigazione da tastiera (Enter/Space)
+                item.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
                 });
             });
         }
@@ -1602,6 +1810,9 @@
                 case 'Report':
                     document.getElementById('reportPage').classList.add('active');
                     showNotification('Report in sviluppo', 'warning');
+                    break;
+                case 'Profilo':
+                    document.getElementById('profilePage').classList.add('active');
                     break;
             }
         }
@@ -2491,10 +2702,7 @@
          */
         function setupPasswordChange() {
             const btn = document.getElementById('changePwdBtn');
-            if (!btn) return;
-            btn.addEventListener('click', function() {
-                cambiaPassword();
-            });
+            if (btn) btn.addEventListener('click', cambiaPassword);
         }
 
         /**
@@ -2516,64 +2724,48 @@
          * @returns {Promise<void>}
          */
         async function cambiaPassword() {
-            const currentPasswordEl = document.getElementById('currentPassword');
-            const newPasswordEl     = document.getElementById('newPassword');
-            const confirmPasswordEl = document.getElementById('confirmPassword');
-            const btn               = document.getElementById('changePwdBtn');
-
-            const currentPassword = currentPasswordEl ? currentPasswordEl.value.trim() : '';
-            const newPassword     = newPasswordEl     ? newPasswordEl.value             : '';
-            const confirmPassword = confirmPasswordEl ? confirmPasswordEl.value         : '';
+            const currentPwd = document.getElementById('currentPassword')?.value.trim();
+            const newPwd     = document.getElementById('newPassword')?.value.trim();
+            const confirmPwd = document.getElementById('confirmPassword')?.value.trim();
+            const btn        = document.getElementById('changePwdBtn');
 
             // Validazioni client-side
-            if (!currentPassword || !newPassword || !confirmPassword) {
-                showNotification('Compila tutti i campi password', 'error');
+            if (!currentPwd || !newPwd || !confirmPwd) {
+                showNotification('Compila tutti i campi', 'error');
                 return;
             }
-
-            if (newPassword.length < 4) {
-                showNotification('La nuova password deve essere di almeno 4 caratteri', 'error');
+            if (newPwd.length < 4) {
+                showNotification('La nuova password deve avere almeno 4 caratteri', 'error');
                 return;
             }
-
-            if (newPassword !== confirmPassword) {
+            if (newPwd !== confirmPwd) {
                 showNotification('Le password non coincidono', 'error');
                 return;
             }
 
-            // Stato loading
-            if (btn) {
-                btn.disabled    = true;
-                btn.textContent = 'Aggiornamento...';
-            }
-
+            btn.disabled = true;
+            btn.textContent = 'Aggiornamento...';
             try {
                 const result = await Utils.callAPI({
-                    action:          'cambiaPasswordUtente',
-                    sessionToken:    sessionToken,
-                    vecchiaPassword: currentPassword,
-                    nuovaPassword:   newPassword
+                    action: 'cambiaPasswordUtente',
+                    sessionToken: sessionToken,
+                    vecchiaPassword: currentPwd,
+                    nuovaPassword: newPwd
                 });
-
-                if (result && result.success) {
+                if (result.success) {
                     showNotification('Password aggiornata!', 'success');
-                    // Svuota i campi dopo il successo
-                    if (currentPasswordEl) currentPasswordEl.value = '';
-                    if (newPasswordEl)     newPasswordEl.value     = '';
-                    if (confirmPasswordEl) confirmPasswordEl.value = '';
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
                 } else {
-                    const msg = (result && result.message) ? result.message : 'Errore durante il cambio password';
-                    showNotification(msg, 'error');
+                    showNotification(result.message || 'Errore aggiornamento password', 'error');
                 }
-            } catch (err) {
-                console.error('Errore GAS cambiaPassword:', err);
-                showNotification('Errore di rete. Riprova.', 'error');
+            } catch (e) {
+                console.error('Errore GAS cambiaPassword:', e);
+                showNotification('Errore di rete', 'error');
             } finally {
-                // Ripristina pulsante
-                if (btn) {
-                    btn.disabled    = false;
-                    btn.textContent = 'Aggiorna Password';
-                }
+                btn.disabled = false;
+                btn.textContent = 'Aggiorna Password';
             }
         }
 
