@@ -961,11 +961,6 @@
             to { transform: rotate(360deg); }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-4px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
         /* ═══════════════════════════════════════════
            FORM VALIDATION — Bordo rosso + shadow per
            campi non validi. Classe aggiunta da
@@ -984,40 +979,107 @@
         }
 
         /* ═══════════════════════════════════════════
-           DAY WARNING — Banner ore già inserite per la data selezionata
+           SAVE CONFIRM MODAL — Modal di conferma quando
+           si tenta di salvare ore in un giorno già
+           con registrazioni esistenti.
            ═══════════════════════════════════════════ */
-        .day-warning {
+        .save-confirm-overlay {
             display: none;
-            background: linear-gradient(135deg, #fff3cd, #ffeeba);
-            border: 1px solid #ffc107;
-            border-left: 4px solid #ff9800;
-            border-radius: 8px;
-            padding: 10px 14px;
-            margin-top: 8px;
-            font-size: 13px;
-            color: #664d03;
-            animation: fadeIn 0.2s ease;
-        }
-        .day-warning .day-warning-title {
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: #7d4e00;
-        }
-        .day-warning .day-warning-entries {
-            list-style: none;
-            margin: 0;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 10001;
+            justify-content: center;
+            align-items: flex-end;
             padding: 0;
         }
-        .day-warning .day-warning-entries li {
-            padding: 2px 0;
-            font-size: 12px;
+        .save-confirm-overlay.show {
+            display: flex;
         }
-        .day-warning .day-warning-total {
-            margin-top: 6px;
+        .save-confirm-modal {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 24px 24px 32px;
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(60px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+        .save-confirm-title {
+            font-size: 17px;
             font-weight: 700;
-            color: #7d4e00;
-            border-top: 1px solid #ffc10780;
-            padding-top: 4px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .save-confirm-subtitle {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 16px;
+        }
+        .save-confirm-entries {
+            list-style: none;
+            margin: 0 0 12px;
+            padding: 0;
+            background: #f8f9ff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .save-confirm-entries li {
+            padding: 10px 14px;
+            font-size: 14px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .save-confirm-entries li:last-child { border-bottom: none; }
+        .save-confirm-entries li span { color: #667eea; font-weight: 700; }
+        .save-confirm-total {
+            font-size: 14px;
+            font-weight: 700;
+            color: #444;
+            margin-bottom: 20px;
+            padding: 8px 14px;
+            background: linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.08));
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+        .save-confirm-btns {
+            display: flex;
+            gap: 12px;
+        }
+        .save-confirm-btns button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .save-confirm-btns button:active { opacity: 0.75; }
+        .save-confirm-cancel {
+            background: #f0f0f0;
+            color: #555;
+        }
+        .save-confirm-ok {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        @media (min-width: 520px) {
+            .save-confirm-overlay {
+                align-items: center;
+                padding: 20px;
+            }
+            .save-confirm-modal {
+                border-radius: 20px;
+            }
         }
 
         .decimal-hint {
@@ -1070,11 +1132,6 @@
                             <label for="workDate">Seleziona Data</label>
                             <input type="date" id="workDate" name="workDate" required>
                             <div class="validation-message">Seleziona una data valida</div>
-                            <div class="day-warning" id="dayWarning">
-                                <div class="day-warning-title">⚠️ Ore già inserite in questa data</div>
-                                <ul class="day-warning-entries" id="dayWarningEntries"></ul>
-                                <div class="day-warning-total" id="dayWarningTotal"></div>
-                            </div>
                         </div>
                     </div>
 
@@ -1882,6 +1939,9 @@
         async function loadCantieri() {
             if (!elements.cantiere) return;
 
+            elements.cantiere.innerHTML = '<option value="">Caricamento cantieri...</option>';
+            elements.cantiere.disabled = true;
+
             try {
                 const result = await Utils.callAPI({
                     action: 'getCantieri',
@@ -1909,6 +1969,8 @@
                 console.error('Errore cantieri:', error);
                 elements.cantiere.innerHTML = '<option value="">Errore caricamento cantieri</option>';
                 showNotification('Errore nel caricamento cantieri', 'error');
+            } finally {
+                elements.cantiere.disabled = false;
             }
         }
 
@@ -1916,7 +1978,7 @@
          * Recupera i dati di un mese specifico: usa monthlyCache se disponibile,
          * altrimenti chiama getMonthlyWorkData via API e mette in cache.
          *
-         * CHIAMATA DA: checkDayWarning
+         * CHIAMATA DA: saveWorkEntry
          * CHIAMA: Utils.callAPI
          *
          * @param {number} year
@@ -1938,7 +2000,7 @@
                 monthlyCache[key] = workDays;
                 return workDays;
             } catch (e) {
-                console.warn('[checkDayWarning] fetchMonthData error:', e);
+                console.warn('[fetchMonthData] Errore API:', e);
                 return {};
             }
         }
@@ -1948,51 +2010,46 @@
          * Se nessuna entry, nasconde il banner.
          *
          * CHIAMATA DA: setupForm (change su #workDate)
-         * CHIAMA: fetchMonthData, showDayWarning, hideDayWarning
+         * CHIAMA: fetchMonthData
          *
-         * @param {string} dateStr  - formato 'YYYY-MM-DD' (valore nativo input[type=date])
-         * @returns {Promise<void>}
+         * @param {Array}  entries     - [{ cantiere, ore, note }]
+         * @param {number} totalHours  - Totale ore già inserite nel giorno
+         * @param {string} dateLabel   - Etichetta data da mostrare (es. "05/03/2026")
+         * @returns {Promise<boolean>} true = utente ha confermato, false = annullato
          */
-        async function checkDayWarning(dateStr) {
-            if (!dateStr) { hideDayWarning(); return; }
+        function showDayConfirm(entries, totalHours, dateLabel) {
+            return new Promise(resolve => {
+                const overlay  = document.getElementById('saveConfirmOverlay');
+                const subtitle = document.getElementById('saveConfirmSubtitle');
+                const list     = document.getElementById('saveConfirmEntries');
+                const totalEl  = document.getElementById('saveConfirmTotal');
+                const btnOk    = document.getElementById('saveConfirmOk');
+                const btnCancel= document.getElementById('saveConfirmCancel');
+                if (!overlay) { resolve(true); return; }
 
-            const [year, month, day] = dateStr.split('-').map(Number);
-            const workDays = await fetchMonthData(year, month);
-            const dayData = workDays[day] || workDays[String(day)];
+                const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                subtitle.textContent = `Il ${dateLabel} hai già inserito:`;
+                list.innerHTML = entries.map(e =>
+                    `<li>${esc(e.cantiere)}${e.note ? ' — ' + esc(e.note) : ''}<span>${e.ore}h</span></li>`
+                ).join('');
+                totalEl.textContent = `Totale già inserito: ${totalHours}h`;
+                overlay.classList.add('show');
 
-            if (dayData && dayData.entries && dayData.entries.length > 0) {
-                showDayWarning(dayData.entries, dayData.totalHours);
-            } else {
-                hideDayWarning();
-            }
-        }
+                function cleanup(result) {
+                    overlay.classList.remove('show');
+                    btnOk.removeEventListener('click', onOk);
+                    btnCancel.removeEventListener('click', onCancel);
+                    overlay.removeEventListener('click', onOverlay);
+                    resolve(result);
+                }
+                const onOk      = () => cleanup(true);
+                const onCancel  = () => cleanup(false);
+                const onOverlay = e => { if (e.target === overlay) cleanup(false); };
 
-        /**
-         * Popola e mostra il banner warning con le entry esistenti per il giorno.
-         *
-         * @param {Array} entries       - [{ cantiere, ore, note }]
-         * @param {number} totalHours
-         */
-        function showDayWarning(entries, totalHours) {
-            const banner   = document.getElementById('dayWarning');
-            const list     = document.getElementById('dayWarningEntries');
-            const totalEl  = document.getElementById('dayWarningTotal');
-            if (!banner || !list || !totalEl) return;
-
-            const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-            list.innerHTML = entries.map(e =>
-                `<li>• ${esc(e.cantiere)} — <strong>${e.ore}h</strong>${e.note ? ' (' + esc(e.note) + ')' : ''}</li>`
-            ).join('');
-            totalEl.textContent = `Totale già inserito: ${totalHours}h`;
-            banner.style.display = 'block';
-        }
-
-        /**
-         * Nasconde il banner warning.
-         */
-        function hideDayWarning() {
-            const banner = document.getElementById('dayWarning');
-            if (banner) banner.style.display = 'none';
+                btnOk.addEventListener('click', onOk);
+                btnCancel.addEventListener('click', onCancel);
+                overlay.addEventListener('click', onOverlay);
+            });
         }
 
         /**
@@ -2027,12 +2084,6 @@
                 }
                 clearValidation(e.target);
             });
-
-            if (elements.workDate) {
-                elements.workDate.addEventListener('change', function(e) {
-                    checkDayWarning(e.target.value);
-                });
-            }
 
             elements.form.addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -2170,6 +2221,18 @@
             if (!isValid) {
                 showNotification('Per favore completa tutti i campi obbligatori', 'error');
                 return;
+            }
+
+            // Controlla se esistono ore già inserite per la data selezionata
+            if (data.workDate) {
+                const [wy, wm, wd] = data.workDate.split('-').map(Number);
+                const workDays = await fetchMonthData(wy, wm);
+                const dayData = workDays[wd] || workDays[String(wd)];
+                if (dayData && dayData.entries && dayData.entries.length > 0) {
+                    const label = data.workDate.split('-').reverse().join('/');
+                    const confirmed = await showDayConfirm(dayData.entries, dayData.totalHours, label);
+                    if (!confirmed) return;
+                }
             }
 
             elements.saveBtn.disabled = true;
@@ -2352,5 +2415,19 @@
             }, APP_CONFIG.AUTO_REFRESH_INTERVAL);
         }
     </script>
+
+    <!-- MODAL CONFERMA SALVATAGGIO — appare quando si tenta di salvare su un giorno con ore già inserite -->
+    <div class="save-confirm-overlay" id="saveConfirmOverlay">
+        <div class="save-confirm-modal">
+            <div class="save-confirm-title">⚠️ Ore già registrate in questa data</div>
+            <div class="save-confirm-subtitle" id="saveConfirmSubtitle">Vuoi aggiungere altre ore?</div>
+            <ul class="save-confirm-entries" id="saveConfirmEntries"></ul>
+            <div class="save-confirm-total" id="saveConfirmTotal"></div>
+            <div class="save-confirm-btns">
+                <button class="save-confirm-cancel" id="saveConfirmCancel">Annulla</button>
+                <button class="save-confirm-ok" id="saveConfirmOk">Conferma e Salva</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
