@@ -213,3 +213,7 @@ Queste anomalie sono state identificate durante la code review del 2026-03-04 e 
 3. `updateUserPassword()` scrive password in chiaro + hash nel foglio
 4. `invalidateAdminCache()` è uno stub → cache scade solo per timeout
 5. `ProductionLogger.api()` legge chiave config errata → API logging disabilitato
+
+## Note tecniche — Cache e ottimizzazioni frontend (2026-03-09)
+
+- `dashboard.html` usa `monthlyCache` (oggetto JS in memoria, chiave `'YYYY-MM'`) per evitare chiamate ripetute a `getMonthlyWorkData`. La cache viene invalidata dopo ogni `saveWorkEntry` riuscito, garantendo dati freschi al salvataggio successivo.

@@ -1,5 +1,21 @@
 ## Changelog
 
+### 2026-03-09 — ui-frontend-developer — Warning ore duplicate + UX miglioramenti dashboard
+
+- **FEAT-21**: `dashboard.html` → warning ore duplicate al salvataggio. Nuova variabile `monthlyCache` (cache mesi già caricati). Nuova funzione `fetchMonthData(year, month)` (cache-first, chiama `getMonthlyWorkData`). Nuova funzione `showDayConfirm(entries, totalHours, dateLabel)` (modal Promise-based, sheet-style su mobile). `saveWorkEntry()` modificato: spinner parte immediatamente al click, poi controlla ore esistenti via `fetchMonthData`, se trovate mostra `showDayConfirm` → Annulla riabilita il bottone, Conferma procede con salvataggio. Cache invalidata dopo ogni salvataggio riuscito. Funziona su qualsiasi data passata o futura, non solo il mese corrente.
+- **FEAT-22**: `dashboard.html` → `loadCantieri()` — select `#cantiere` mostra "Caricamento cantieri..." e viene disabilitato durante il fetch API. Riabilitato in `finally` indipendentemente dal risultato.
+
+---
+
+### 2026-03-09 — MILESTONE v2.1
+Tutte le funzionalità pianificate per v2.1 sono completate:
+- Gestione utenti completa (crea, attiva/disattiva, cambio password)
+- Dashboard admin con grafici statistiche (foglio Amministrazione)
+- Warning ore duplicate al salvataggio (qualsiasi data)
+- UX miglioramenti: caricamento cantieri, animazione salva, modal mobile-friendly
+
+---
+
 ### 2026-03-05 — gas-code-agent + ui-frontend-developer — Cambia stato attività utente (Si/No)
 
 - **FEAT-18**: `GestioneUtenti.gs` → `aggiornaStatoUtenteAPI(sessionToken, targetUserId, nuovoStato)` — aggiorna colonna "Attivo" (Si/No) nel foglio Utenti. Verifica ruolo admin, valida che `nuovoStato` sia esattamente `'Si'` o `'No'`, mapping dinamico colonne, `getRange(i+1, attivoCol+1).setValue()`.
