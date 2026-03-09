@@ -85,7 +85,9 @@ function onOpen() {
         .addSeparator()
         .addItem('🧪 Test report (dipendente singolo)', 'testSingleReport')
         .addSeparator()
-        .addItem('📖 Come generare report', 'showReportInstructions'))
+        .addItem('📖 Come generare report', 'showReportInstructions')
+        .addSeparator()
+        .addItem('⚙️ Configura dati azienda', 'configuraDatiAzienda'))
 
       // Sottomenu Cantieri
       .addSubMenu(ui.createMenu('🗏️ Gestione Cantieri')

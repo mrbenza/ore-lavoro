@@ -694,133 +694,86 @@ function createEmployeeMonthlyReport(employeeData, monthName, year, targetFolder
   let row = 1;
 
   // ===== HEADER AZIENDALE =====
-  sheet.getRange(row, 1, 1, 4).merge();
+  sheet.getRange(row, 1, 1, 2).merge();
   sheet.getRange(row, 1).setValue(`REPORT ORE LAVORATE - ${CONFIG.COMPANY.NAME}`);
   sheet.getRange(row, 1)
     .setFontSize(16)
     .setFontWeight('bold')
     .setHorizontalAlignment('center')
-    .setBackground('#1a73e8')
+    .setBackground('#1e3a5f')
     .setFontColor('#ffffff');
   row++;
 
-  sheet.getRange(row, 1, 1, 4).merge();
+  sheet.getRange(row, 1, 1, 2).merge();
   sheet.getRange(row, 1).setValue(`${CONFIG.COMPANY.ADDRESS} - P.IVA: ${CONFIG.COMPANY.VAT}`);
   sheet.getRange(row, 1)
     .setHorizontalAlignment('center')
     .setFontSize(10)
-    .setBackground('#e8f0fe');
+    .setBackground('#dbeafe');
   row += 2;
 
   // ===== INFORMAZIONI REPORT =====
   const infoStyle = {
-    labelColor: '#1a73e8',
+    labelColor: '#1e3a5f',
     valueColor: '#202124'
   };
 
   sheet.getRange(row, 1).setValue('DIPENDENTE:').setFontWeight('bold').setFontColor(infoStyle.labelColor);
-  sheet.getRange(row, 2, 1, 3).merge();
   sheet.getRange(row, 2).setValue(employeeData.employeeName).setFontSize(11);
   row++;
 
   sheet.getRange(row, 1).setValue('PERIODO:').setFontWeight('bold').setFontColor(infoStyle.labelColor);
-  sheet.getRange(row, 2, 1, 3).merge();
   sheet.getRange(row, 2).setValue(`${monthName} ${year}`).setFontSize(11).setFontWeight('bold');
   row++;
 
   sheet.getRange(row, 1).setValue('ORE TOTALI:').setFontWeight('bold').setFontColor(infoStyle.labelColor);
-  sheet.getRange(row, 2).setValue(employeeData.totalHours).setNumberFormat('#,##0.0').setFontWeight('bold');
+  sheet.getRange(row, 2).setValue(employeeData.totalHours).setNumberFormat('#,##0.0').setFontWeight('bold').setFontColor('#1e3a5f');
   row++;
 
   sheet.getRange(row, 1).setValue('GIORNI LAVORATI:').setFontWeight('bold').setFontColor(infoStyle.labelColor);
   sheet.getRange(row, 2).setValue(employeeData.rows.length);
-  row++;
-
-  const avgHours = employeeData.rows.length > 0 ? employeeData.totalHours / employeeData.rows.length : 0;
-  sheet.getRange(row, 1).setValue('MEDIA ORE/GIORNO:').setFontWeight('bold').setFontColor(infoStyle.labelColor);
-  sheet.getRange(row, 2).setValue(avgHours).setNumberFormat('#,##0.0');
   row += 2;
 
-  // ===== RIEPILOGO CANTIERI =====
-  if (Object.keys(employeeData.constructionSitesSummary).length > 0) {
-    sheet.getRange(row, 1, 1, 4).merge();
-    sheet.getRange(row, 1).setValue('RIEPILOGO CANTIERI')
-      .setFontWeight('bold')
-      .setFontSize(12)
-      .setBackground('#f1f3f4')
-      .setHorizontalAlignment('center');
-    row++;
-
-    const siteHeaders = ['Nome Cantiere', 'Ore Totali', 'Giorni', 'Media Ore'];
-    for (let i = 0; i < siteHeaders.length; i++) {
-      sheet.getRange(row, i + 1)
-        .setValue(siteHeaders[i])
-        .setFontWeight('bold')
-        .setHorizontalAlignment('center')
-        .setBackground('#1a73e8')
-        .setFontColor('#ffffff');
-    }
-    row++;
-
-    const siteStartRow = row;
-    Object.keys(employeeData.constructionSitesSummary).forEach(siteId => {
-      const site = employeeData.constructionSitesSummary[siteId];
-      const avgSiteHours = site.daysCount > 0 ? site.totalHours / site.daysCount : 0;
-      const rowColor = (row - siteStartRow) % 2 === 0 ? '#ffffff' : '#f8f9fa';
-
-      sheet.getRange(row, 1).setValue(site.name).setBackground(rowColor);
-      sheet.getRange(row, 2).setValue(site.totalHours).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center');
-      sheet.getRange(row, 3).setValue(site.daysCount).setBackground(rowColor).setHorizontalAlignment('center');
-      sheet.getRange(row, 4).setValue(avgSiteHours).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center');
-      row++;
-    });
-
-    const siteTableRows = Object.keys(employeeData.constructionSitesSummary).length + 1;
-    sheet.getRange(siteStartRow - 1, 1, siteTableRows, 4)
-      .setBorder(true, true, true, true, true, true, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
-
-    row += 2;
-  }
-
   // ===== DETTAGLIO GIORNALIERO =====
-  sheet.getRange(row, 1, 1, 4).merge();
+  sheet.getRange(row, 1, 1, 2).merge();
   sheet.getRange(row, 1).setValue('DETTAGLIO GIORNALIERO')
     .setFontWeight('bold')
     .setFontSize(12)
-    .setBackground('#f1f3f4')
+    .setBackground('#1e3a5f')
+    .setFontColor('#ffffff')
     .setHorizontalAlignment('center');
   row++;
 
-  const detailHeaders = ['Data', 'Nome Cantiere', 'Ore'];
+  const detailHeaders = ['Data', 'Ore'];
   for (let i = 0; i < detailHeaders.length; i++) {
     sheet.getRange(row, i + 1)
       .setValue(detailHeaders[i])
       .setFontWeight('bold')
       .setHorizontalAlignment('center')
-      .setBackground('#1a73e8')
+      .setBackground('#2563eb')
       .setFontColor('#ffffff');
   }
   row++;
 
   const detailStartRow = row;
   employeeData.rows.forEach((dayData, index) => {
-    const rowColor = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
+    const rowColor = index % 2 === 0 ? '#ffffff' : '#eff6ff';
 
     sheet.getRange(row, 1).setValue(dayData.dateFormatted).setBackground(rowColor).setHorizontalAlignment('center');
-    sheet.getRange(row, 2).setValue(dayData.siteName).setBackground(rowColor);
-    sheet.getRange(row, 3).setValue(dayData.hours).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center');
+    sheet.getRange(row, 2).setValue(dayData.hours).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center');
     row++;
   });
 
   if (employeeData.rows.length > 0) {
-    sheet.getRange(detailStartRow - 1, 1, employeeData.rows.length + 1, 3)
-      .setBorder(true, true, true, true, true, true, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
+    sheet.getRange(detailStartRow - 1, 1, employeeData.rows.length + 1, 2)
+      .setBorder(true, true, true, true, true, true, '#93c5fd', SpreadsheetApp.BorderStyle.SOLID);
   }
 
   // ===== FORMATTAZIONE FINALE =====
-  sheet.setColumnWidth(1, 120);
-  sheet.setColumnWidth(2, 250);
-  sheet.setColumnWidth(3, 80);
+  // Auto-adatta le colonne al contenuto, poi garantisce larghezze minime leggibili
+  sheet.autoResizeColumns(1, 2);
+  if (sheet.getColumnWidth(1) < 110) sheet.setColumnWidth(1, 110); // Data
+  if (sheet.getColumnWidth(2) < 80)  sheet.setColumnWidth(2, 80);  // Ore
 
   sheet.setFrozenRows(2);
 
@@ -861,51 +814,52 @@ function createSummaryReport(employeeResults, targetFolder, monthName, year) {
 
   let row = 1;
 
-  sheet.getRange(row, 1, 1, 5).merge();
+  sheet.getRange(row, 1, 1, 4).merge();
   sheet.getRange(row, 1).setValue(`RIEPILOGO GENERALE - ${monthName} ${year}`);
   sheet.getRange(row, 1)
     .setFontSize(16)
     .setFontWeight('bold')
     .setHorizontalAlignment('center')
-    .setBackground('#1a73e8')
+    .setBackground('#1e3a5f')
     .setFontColor('#ffffff');
   row += 2;
 
   const totalHours = employeeResults.reduce((sum, emp) => sum + emp.totalHours, 0);
   const totalDays = employeeResults.reduce((sum, emp) => sum + emp.daysWorked, 0);
 
-  sheet.getRange(row, 1).setValue('ORE TOTALI MENSILI:').setFontWeight('bold').setFontColor('#1a73e8');
-  sheet.getRange(row, 2).setValue(totalHours).setNumberFormat('#,##0.0').setFontWeight('bold');
+  sheet.getRange(row, 1).setValue('ORE TOTALI MENSILI:').setFontWeight('bold').setFontColor('#1e3a5f');
+  sheet.getRange(row, 2).setValue(totalHours).setNumberFormat('#,##0.0').setFontWeight('bold').setFontColor('#1e3a5f');
   row++;
 
-  sheet.getRange(row, 1).setValue('DIPENDENTI ATTIVI:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 1).setValue('DIPENDENTI ATTIVI:').setFontWeight('bold').setFontColor('#1e3a5f');
   sheet.getRange(row, 2).setValue(employeeResults.length).setFontWeight('bold');
   row++;
 
-  sheet.getRange(row, 1).setValue('GIORNI TOTALI:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 1).setValue('GIORNI TOTALI:').setFontWeight('bold').setFontColor('#1e3a5f');
   sheet.getRange(row, 2).setValue(totalDays);
   row++;
 
   const avgHoursPerEmployee = employeeResults.length > 0 ? totalHours / employeeResults.length : 0;
-  sheet.getRange(row, 1).setValue('MEDIA ORE/DIPENDENTE:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 1).setValue('MEDIA ORE/DIPENDENTE:').setFontWeight('bold').setFontColor('#1e3a5f');
   sheet.getRange(row, 2).setValue(avgHoursPerEmployee).setNumberFormat('#,##0.0');
   row += 2;
 
-  sheet.getRange(row, 1, 1, 5).merge();
+  sheet.getRange(row, 1, 1, 4).merge();
   sheet.getRange(row, 1).setValue('DETTAGLIO PER DIPENDENTE')
     .setFontWeight('bold')
     .setFontSize(12)
-    .setBackground('#f1f3f4')
+    .setBackground('#1e3a5f')
+    .setFontColor('#ffffff')
     .setHorizontalAlignment('center');
   row++;
 
-  const headers = ['Dipendente', 'Ore Totali', 'Giorni Lavorati', 'Media Ore', 'Cantieri'];
+  const headers = ['Dipendente', 'Ore Totali', 'Giorni Lavorati', 'Media Ore'];
   for (let i = 0; i < headers.length; i++) {
     sheet.getRange(row, i + 1)
       .setValue(headers[i])
       .setFontWeight('bold')
       .setHorizontalAlignment('center')
-      .setBackground('#1a73e8')
+      .setBackground('#2563eb')
       .setFontColor('#ffffff');
   }
   row++;
@@ -913,21 +867,19 @@ function createSummaryReport(employeeResults, targetFolder, monthName, year) {
   const tableStartRow = row;
   employeeResults.forEach((employee, index) => {
     const avgDaily = employee.daysWorked > 0 ? employee.totalHours / employee.daysWorked : 0;
-    const sitesCount = Object.keys(employee.constructionSites || {}).length;
-    const rowColor = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
+    const rowColor = index % 2 === 0 ? '#ffffff' : '#eff6ff';
 
     sheet.getRange(row, 1).setValue(employee.name).setBackground(rowColor);
-    sheet.getRange(row, 2).setValue(employee.totalHours).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center');
+    sheet.getRange(row, 2).setValue(employee.totalHours).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center').setFontWeight('bold').setFontColor('#1e3a5f');
     sheet.getRange(row, 3).setValue(employee.daysWorked).setBackground(rowColor).setHorizontalAlignment('center');
     sheet.getRange(row, 4).setValue(avgDaily).setNumberFormat('#,##0.0').setBackground(rowColor).setHorizontalAlignment('center');
-    sheet.getRange(row, 5).setValue(sitesCount).setBackground(rowColor).setHorizontalAlignment('center');
     row++;
   });
 
-  const tableRange = sheet.getRange(tableStartRow - 1, 1, employeeResults.length + 1, 5);
-  tableRange.setBorder(true, true, true, true, true, true, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
+  const tableRange = sheet.getRange(tableStartRow - 1, 1, employeeResults.length + 1, 4);
+  tableRange.setBorder(true, true, true, true, true, true, '#93c5fd', SpreadsheetApp.BorderStyle.SOLID);
 
-  sheet.autoResizeColumns(1, 5);
+  sheet.autoResizeColumns(1, 4);
   sheet.setFrozenRows(1);
 
   const file = DriveApp.getFileById(spreadsheet.getId());
@@ -1039,7 +991,7 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
     .setFontSize(16)
     .setFontWeight('bold')
     .setHorizontalAlignment('center')
-    .setBackground('#1a73e8')
+    .setBackground('#1e3a5f')
     .setFontColor('#ffffff');
   row++;
 
@@ -1048,21 +1000,21 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
   sheet.getRange(row, 1)
     .setHorizontalAlignment('center')
     .setFontSize(10)
-    .setBackground('#e8f0fe');
+    .setBackground('#dbeafe');
   row += 2;
 
   const totalHours = annualData.reduce((sum, emp) => sum + emp.totalHours, 0);
 
-  sheet.getRange(row, 1).setValue('ORE TOTALI ANNO:').setFontWeight('bold').setFontColor('#1a73e8');
-  sheet.getRange(row, 2).setValue(totalHours).setNumberFormat('#,##0.0').setFontWeight('bold');
+  sheet.getRange(row, 1).setValue('ORE TOTALI ANNO:').setFontWeight('bold').setFontColor('#1e3a5f');
+  sheet.getRange(row, 2).setValue(totalHours).setNumberFormat('#,##0.0').setFontWeight('bold').setFontColor('#1e3a5f');
   row++;
 
-  sheet.getRange(row, 1).setValue('DIPENDENTI ATTIVI:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 1).setValue('DIPENDENTI ATTIVI:').setFontWeight('bold').setFontColor('#1e3a5f');
   sheet.getRange(row, 2).setValue(annualData.length).setFontWeight('bold');
   row++;
 
   const avgHoursPerEmployee = annualData.length > 0 ? totalHours / annualData.length : 0;
-  sheet.getRange(row, 1).setValue('MEDIA ORE/DIPENDENTE:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 1).setValue('MEDIA ORE/DIPENDENTE:').setFontWeight('bold').setFontColor('#1e3a5f');
   sheet.getRange(row, 2).setValue(avgHoursPerEmployee).setNumberFormat('#,##0.0');
   row += 2;
 
@@ -1070,7 +1022,8 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
   sheet.getRange(row, 1).setValue('RIEPILOGO MENSILE PER DIPENDENTE')
     .setFontWeight('bold')
     .setFontSize(12)
-    .setBackground('#f1f3f4')
+    .setBackground('#1e3a5f')
+    .setFontColor('#ffffff')
     .setHorizontalAlignment('center');
   row++;
 
@@ -1080,14 +1033,14 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
       .setValue(monthHeaders[i])
       .setFontWeight('bold')
       .setHorizontalAlignment('center')
-      .setBackground('#1a73e8')
+      .setBackground('#2563eb')
       .setFontColor('#ffffff');
   }
   row++;
 
   const tableStartRow = row;
   annualData.forEach((employee, index) => {
-    const rowColor = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
+    const rowColor = index % 2 === 0 ? '#ffffff' : '#eff6ff';
 
     sheet.getRange(row, 1).setValue(employee.name).setBackground(rowColor);
 
@@ -1112,7 +1065,7 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
   sheet.getRange(row, 1)
     .setValue('TOTALI MENSILI')
     .setFontWeight('bold')
-    .setBackground('#e8f0fe')
+    .setBackground('#dbeafe')
     .setHorizontalAlignment('center');
 
   for (let month = 1; month <= 12; month++) {
@@ -1125,7 +1078,7 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
       .setValue(monthTotal)
       .setNumberFormat('#,##0.0')
       .setFontWeight('bold')
-      .setBackground('#e8f0fe')
+      .setBackground('#dbeafe')
       .setHorizontalAlignment('center');
   }
 
@@ -1133,13 +1086,13 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
     .setValue(totalHours)
     .setNumberFormat('#,##0.0')
     .setFontWeight('bold')
-    .setBackground('#1a73e8')
+    .setBackground('#1e3a5f')
     .setFontColor('#ffffff')
     .setHorizontalAlignment('center');
   row++;
 
   const tableRange = sheet.getRange(tableStartRow - 1, 1, annualData.length + 2, 14);
-  tableRange.setBorder(true, true, true, true, true, true, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
+  tableRange.setBorder(true, true, true, true, true, true, '#93c5fd', SpreadsheetApp.BorderStyle.SOLID);
 
   row += 2;
 
@@ -1148,7 +1101,8 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
   sheet.getRange(row, 1).setValue('STATISTICHE ANNUALI')
     .setFontWeight('bold')
     .setFontSize(12)
-    .setBackground('#f1f3f4')
+    .setBackground('#1e3a5f')
+    .setFontColor('#ffffff')
     .setHorizontalAlignment('center');
   row++;
 
@@ -1173,12 +1127,12 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
     emp.totalHours > max.totalHours ? emp : max
   , annualData[0]);
 
-  sheet.getRange(row, 1).setValue('MESE PIU\' PRODUTTIVO:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 1).setValue('MESE PIU\' PRODUTTIVO:').setFontWeight('bold').setFontColor('#1e3a5f');
   sheet.getRange(row, 2, 1, 2).merge();
   sheet.getRange(row, 2).setValue(`${getMonthName(maxMonth)} (${formatNumberItalian(maxHours)} ore)`);
   row++;
 
-  sheet.getRange(row, 1).setValue('DIPENDENTE TOP:').setFontWeight('bold').setFontColor('#1a73e8');
+  sheet.getRange(row, 1).setValue('DIPENDENTE TOP:').setFontWeight('bold').setFontColor('#1e3a5f');
   sheet.getRange(row, 2, 1, 2).merge();
   sheet.getRange(row, 2).setValue(`${topEmployee.name} (${formatNumberItalian(topEmployee.totalHours)} ore)`);
   row++;
@@ -1193,7 +1147,8 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
   sheet.getRange(row, 1).setValue('RIEPILOGO TRIMESTRALE')
     .setFontWeight('bold')
     .setFontSize(11)
-    .setBackground('#f1f3f4')
+    .setBackground('#1e3a5f')
+    .setFontColor('#ffffff')
     .setHorizontalAlignment('center');
   row++;
 
@@ -1203,7 +1158,7 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
       .setValue(quarterHeaders[i])
       .setFontWeight('bold')
       .setHorizontalAlignment('center')
-      .setBackground('#1a73e8')
+      .setBackground('#2563eb')
       .setFontColor('#ffffff');
   }
   row++;
@@ -1216,7 +1171,7 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
   ];
 
   quarters.forEach((quarter, index) => {
-    const rowColor = index % 2 === 0 ? '#ffffff' : '#f8f9fa';
+    const rowColor = index % 2 === 0 ? '#ffffff' : '#eff6ff';
     const avgMonthly = quarter.total / 3;
 
     sheet.getRange(row, 1).setValue(quarter.name).setBackground(rowColor);
@@ -1226,14 +1181,16 @@ function createAnnualReportFile(annualData, year, targetFolder, fileName) {
   });
 
   const quarterTableRange = sheet.getRange(row - 5, 1, 5, 3);
-  quarterTableRange.setBorder(true, true, true, true, true, true, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
+  quarterTableRange.setBorder(true, true, true, true, true, true, '#93c5fd', SpreadsheetApp.BorderStyle.SOLID);
 
-  for (let col = 2; col <= 13; col++) {
-    sheet.setColumnWidth(col, 60);
+  // Auto-adatta tutte le colonne al contenuto, poi garantisce larghezze minime leggibili
+  sheet.autoResizeColumns(1, sheet.getLastColumn());
+  // Larghezza minima per le colonne mesi (colonne 3-14)
+  for (let c = 3; c <= 14; c++) {
+    if (sheet.getColumnWidth(c) < 55) sheet.setColumnWidth(c, 55);
   }
-
-  sheet.setColumnWidth(1, 180);
-  sheet.setColumnWidth(14, 80);
+  if (sheet.getColumnWidth(1) < 180) sheet.setColumnWidth(1, 180); // Nome dipendente
+  if (sheet.getColumnWidth(2) < 80)  sheet.setColumnWidth(2, 80);  // Totale anno
   sheet.setFrozenRows(3);
 
   const file = DriveApp.getFileById(spreadsheet.getId());

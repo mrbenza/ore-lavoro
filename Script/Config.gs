@@ -42,14 +42,19 @@ const CONFIG = {
     'Tracking Archivi'
   ],
 
-  // Dati azienda — usati da ReportCommercialista.gs nella generazione report PDF/Excel
-  COMPANY: {
-    NAME: 'La Tua Azienda SRL',
-    ADDRESS: 'Via Roma 123, 00100 Roma',
-    VAT: 'IT12345678901',
-    PHONE: '+39 06 1234567',
-    EMAIL: 'info@tuaazienda.it'
-  },
+  // Dati azienda — usati da ReportCommercialista.gs nella generazione report PDF/Excel.
+  // I valori vengono letti da PropertiesService (script properties) con fallback sui default.
+  // Per aggiornare i dati usare: menu → Report Commercialista → Configura dati azienda.
+  COMPANY: (function() {
+    const p = PropertiesService.getScriptProperties();
+    return {
+      NAME:    p.getProperty('COMPANY_NAME')    || 'La Tua Azienda SRL',
+      ADDRESS: p.getProperty('COMPANY_ADDRESS') || 'Via Roma 123, 00100 Roma',
+      VAT:     p.getProperty('COMPANY_VAT')     || 'IT12345678901',
+      PHONE:   p.getProperty('COMPANY_PHONE')   || '+39 06 1234567',
+      EMAIL:   p.getProperty('COMPANY_EMAIL')   || 'info@tuaazienda.it'
+    };
+  })(),
 
   // Cartelle Drive — usate da ArchivioOre.gs e ReportCommercialista.gs
   FOLDERS: {
@@ -516,4 +521,60 @@ function testConfig() {
   }
 
   console.log('=== TEST COMPLETATO ===');
+}
+
+/**
+ * Dialog step-by-step per configurare i dati azienda salvati in PropertiesService.
+ *
+ * Presenta in sequenza un prompt per ciascun campo (mostrando il valore attuale
+ * come riferimento). Se l'utente annulla in un qualsiasi passaggio, nessun dato
+ * viene salvato. Solo i campi con un valore non-vuoto vengono scritti nelle
+ * script properties; i campi lasciati vuoti mantengono il valore precedente.
+ *
+ * I valori salvati sono letti da CONFIG.COMPANY all'avvio della sessione GAS;
+ * diventano attivi al successivo caricamento del modulo (prossima esecuzione
+ * che tocca CONFIG.COMPANY, es. generazione report).
+ *
+ * CHIAMATA DA: onOpen() → menu "Report Commercialista" → "Configura dati azienda"
+ * CHIAMA:      PropertiesService.getScriptProperties(), SpreadsheetApp.getUi()
+ */
+function configuraDatiAzienda() {
+  const ui = SpreadsheetApp.getUi();
+  const p  = PropertiesService.getScriptProperties();
+
+  const campi = [
+    { chiave: 'COMPANY_NAME',    etichetta: 'Nome azienda' },
+    { chiave: 'COMPANY_ADDRESS', etichetta: 'Indirizzo' },
+    { chiave: 'COMPANY_VAT',     etichetta: 'Partita IVA' },
+    { chiave: 'COMPANY_PHONE',   etichetta: 'Telefono' },
+    { chiave: 'COMPANY_EMAIL',   etichetta: 'Email' }
+  ];
+
+  const nuovi = {};
+  for (const campo of campi) {
+    const attuale = p.getProperty(campo.chiave) || '';
+    const risposta = ui.prompt(
+      'Configura dati azienda',
+      campo.etichetta + (attuale ? ' (attuale: ' + attuale + ')' : '') + ':',
+      ui.ButtonSet.OK_CANCEL
+    );
+    if (risposta.getSelectedButton() !== ui.Button.OK) {
+      ui.alert('Configurazione annullata — nessun dato salvato.');
+      return;
+    }
+    const valore = risposta.getResponseText().trim();
+    if (valore) nuovi[campo.chiave] = valore;
+  }
+
+  p.setProperties(nuovi);
+  ui.alert(
+    'Dati azienda salvati',
+    'I dati saranno usati nei prossimi report generati.\n\n' +
+    'Nome: '      + (nuovi['COMPANY_NAME']    || '(invariato)') + '\n' +
+    'Indirizzo: ' + (nuovi['COMPANY_ADDRESS'] || '(invariato)') + '\n' +
+    'P.IVA: '     + (nuovi['COMPANY_VAT']     || '(invariato)') + '\n' +
+    'Telefono: '  + (nuovi['COMPANY_PHONE']   || '(invariato)') + '\n' +
+    'Email: '     + (nuovi['COMPANY_EMAIL']   || '(invariato)'),
+    ui.ButtonSet.OK
+  );
 }
