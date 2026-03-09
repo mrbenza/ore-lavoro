@@ -3,7 +3,7 @@
 //
 // Questo file è il cuore della configurazione del sistema.
 // Contiene TUTTE le costanti condivise tra i moduli GAS e le funzioni
-// helper di configurazione (initializeSystem, validateConfiguration, ecc.).
+// helper di configurazione (validateConfiguration, getMainSpreadsheet, ecc.).
 //
 // USATO DA: tutti gli altri file .gs del progetto.
 // NON modificare i valori di COLUMNS o COLUMNS_CANTIERI senza allineare SheetsDAO.gs,
@@ -23,14 +23,13 @@ const PRODUCTION_CONFIG = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIG — oggetto principale di configurazione.
-// Contiene ID spreadsheet (letto da ScriptProperties), lista fogli di sistema,
-// dati azienda, cartelle Drive, struttura dati, validazioni.
-// USATO DA: tutti i moduli. Modificare SPREADSHEET_ID aggiornando la
-// PropertiesService (via initializeSystem()), non hardcoding diretto.
+// Contiene ID spreadsheet (letto dallo spreadsheet attivo, script container-bound),
+// lista fogli di sistema, dati azienda, cartelle Drive, struttura dati, validazioni.
+// USATO DA: tutti i moduli.
 // ─────────────────────────────────────────────────────────────────────────────
 const CONFIG = {
-  // Database principale
-  SPREADSHEET_ID: PropertiesService.getScriptProperties().getProperty('MAIN_SHEET_ID') || '',
+  // Database principale — script container-bound, usa sempre lo spreadsheet collegato
+  SPREADSHEET_ID: SpreadsheetApp.getActiveSpreadsheet().getId(),
 
   // Fogli di sistema (non processare come dipendenti)
   SYSTEM_SHEETS: [
@@ -338,65 +337,19 @@ const SUCCESS_MESSAGES = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Salva l'ID dello spreadsheet attivo nelle ScriptProperties.
+ * Restituisce lo spreadsheet principale del sistema.
  *
- * Questa funzione deve essere eseguita manualmente la prima volta che lo script
- * viene collegato a un nuovo spreadsheet. Imposta MAIN_SHEET_ID che viene poi
- * letto da CONFIG.SPREADSHEET_ID all'avvio del runtime GAS.
- *
- * FLUSSO INTERNO:
- *   1. Legge l'ID dello spreadsheet attivo tramite SpreadsheetApp.getActiveSpreadsheet()
- *   2. Salva l'ID in ScriptProperties con chiave 'MAIN_SHEET_ID'
- *   3. Restituisce oggetto {success, message}
- *
- * CHIAMATA DA: Main.gs → initializeSystemSetup() → executeSystemInitialization()
- * CHIAMA:      SpreadsheetApp.getActiveSpreadsheet(), PropertiesService.getScriptProperties()
- *
- * @returns {{ success: boolean, message: string }} Risultato operazione.
- *
- * @example
- * const res = initializeSystem();
- * // res → { success: true, message: 'Sistema inizializzato correttamente' }
- */
-function initializeSystem() {
-  try {
-    const spreadsheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
-    PropertiesService.getScriptProperties().setProperty('MAIN_SHEET_ID', spreadsheetId);
-    console.log('Sistema inizializzato con ID:', spreadsheetId);
-    return { success: true, message: 'Sistema inizializzato correttamente' };
-  } catch (error) {
-    console.error('Errore inizializzazione:', error);
-    return { success: false, message: error.toString() };
-  }
-}
-
-/**
- * Apre e restituisce lo spreadsheet principale del sistema.
- *
- * Prova prima con CONFIG.SPREADSHEET_ID (da ScriptProperties); se non presente
- * usa lo spreadsheet attivo come fallback. Lancia eccezione se inaccessibile.
- *
- * FLUSSO INTERNO:
- *   1. Legge CONFIG.SPREADSHEET_ID (da PropertiesService)
- *   2. Se presente apre con SpreadsheetApp.openById()
- *   3. Altrimenti usa SpreadsheetApp.getActiveSpreadsheet()
+ * Script container-bound: usa sempre SpreadsheetApp.getActiveSpreadsheet(),
+ * che restituisce il foglio collegato. Non usa PropertiesService né openById().
  *
  * CHIAMATA DA: ArchivioOre.gs, CalcoloCantieri.gs, ReportCommercialista.gs,
  *              GestionePassword.gs, Authentication.gs (validateAdmin),
  *              SystemDiagnostic.gs
- * CHIAMA:      SpreadsheetApp.openById()
  *
  * @returns {GoogleAppsScript.Spreadsheet.Spreadsheet} Lo spreadsheet principale.
- * @throws {Error} Se lo spreadsheet non è accessibile.
  */
 function getMainSpreadsheet() {
-  try {
-    var id = CONFIG.SPREADSHEET_ID || SpreadsheetApp.getActiveSpreadsheet().getId();
-    return SpreadsheetApp.openById(id);
-  } catch (error) {
-    console.error('Errore apertura spreadsheet principale:', error);
-    throw new Error('Impossibile accedere al database principale');
-  }
+  return SpreadsheetApp.getActiveSpreadsheet();
 }
 
 /**

@@ -1,13 +1,22 @@
-// ===== SYSTEM_DIAGNOSTICS.GS - DIAGNOSTICA SISTEMA - VERSIONE SINTASSI CORRETTA =====
+// ─────────────────────────────────────────────────────────────────────────────
+// SYSTEM_DIAGNOSTIC.GS — DIAGNOSTICA SISTEMA
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HEALTH CHECK VELOCE — usato da onOpen() per menu dinamico
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Check veloce dello stato sistema per menu dinamico
- * Esegue solo controlli essenziali (< 2 secondi)
+ * Health check veloce per il menu dinamico (< 2 secondi).
+ * Controlla: database, moduli critici, fogli obbligatori, accesso Drive.
+ *
+ * @returns {{ needsAttention: boolean, status: string, issues: Array,
+ *             lastCheck: string, criticalErrors: number, warnings: number }}
  */
 function checkSystemHealth() {
   const healthCheck = {
     needsAttention: false,
-    status: 'healthy', // healthy|warning|critical
+    status: 'healthy', // healthy | warning | critical
     issues: [],
     lastCheck: new Date().toLocaleString('it-IT'),
     criticalErrors: 0,
@@ -15,307 +24,142 @@ function checkSystemHealth() {
   };
 
   try {
-    // 1. TEST CONNESSIONE DATABASE
+    // 1. CONNESSIONE DATABASE
     try {
-      const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-      const spreadsheetName = spreadsheet.getName();
-      
-      // Verifica che non sia un foglio vuoto/demo
-      if (spreadsheetName.toLowerCase().includes('untitled') || 
-          spreadsheetName.toLowerCase().includes('senza titolo')) {
+      const name = SpreadsheetApp.getActiveSpreadsheet().getName();
+      if (name.toLowerCase().includes('untitled') || name.toLowerCase().includes('senza titolo')) {
         healthCheck.issues.push({
-          type: 'warning',
-          module: 'Database',
-          message: 'Spreadsheet senza nome configurato',
-          severity: 'medium'
+          type: 'warning', module: 'Database',
+          message: 'Spreadsheet senza nome configurato', severity: 'medium'
         });
         healthCheck.warnings++;
       }
-      
-    } catch (error) {
+    } catch (e) {
       healthCheck.issues.push({
-        type: 'error',
-        module: 'Database',
+        type: 'error', module: 'Database',
         message: 'Impossibile accedere al database principale',
-        severity: 'critical',
-        details: error.message
+        severity: 'critical', details: e.message
       });
       healthCheck.criticalErrors++;
     }
 
-    // 2. TEST CONFIGURAZIONE PROPERTIES
-    try {
-      const storedSheetId = PropertiesService.getScriptProperties().getProperty('MAIN_SHEET_ID');
-      const activeSheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
-      
-      if (!storedSheetId || storedSheetId === '' || storedSheetId === 'null') {
-        healthCheck.issues.push({
-          type: 'error',
-          module: 'Configurazione',
-          message: 'Sistema non inizializzato - ID spreadsheet mancante',
-          severity: 'critical',
-          solution: 'Esegui "Inizializza sistema" dal menu'
-        });
-        healthCheck.criticalErrors++;
-      } else if (storedSheetId !== activeSheetId) {
-        healthCheck.issues.push({
-          type: 'warning',
-          module: 'Configurazione',
-          message: 'Conflitto configurazione - Sistema configurato per altro spreadsheet',
-          severity: 'high',
-          solution: 'Ri-configura sistema per questo spreadsheet'
-        });
-        healthCheck.warnings++;
-      }
-      
-    } catch (error) {
-      healthCheck.issues.push({
-        type: 'error',
-        module: 'Configurazione',
-        message: 'Errore lettura configurazione sistema',
-        severity: 'critical',
-        details: error.message
-      });
-      healthCheck.criticalErrors++;
-    }
-
-    // 3. TEST MODULI SCRIPT CRITICI
+    // 2. MODULI SCRIPT CRITICI
     const criticalFunctions = [
-      'getMainSpreadsheet',
-      'getActiveEmployeeNames', 
-      'getUsersList',
-      'generatePasswordHash'
+      'getMainSpreadsheet', 'getActiveEmployeeNames',
+      'getUsersList', 'generatePasswordHash'
     ];
-    
-    let missingFunctions = [];
-    criticalFunctions.forEach(funcName => {
-      try {
-        if (typeof eval(funcName) !== 'function') {
-          missingFunctions.push(funcName);
-        }
-      } catch (error) {
-        missingFunctions.push(funcName);
-      }
+    const missing = criticalFunctions.filter(fn => {
+      try { return typeof eval(fn) !== 'function'; } catch (_) { return true; }
     });
-    
-    if (missingFunctions.length > 0) {
+    if (missing.length > 0) {
       healthCheck.issues.push({
-        type: 'error',
-        module: 'Moduli Script',
-        message: 'Funzioni critiche mancanti: ' + missingFunctions.join(', '),
+        type: 'error', module: 'Moduli Script',
+        message: 'Funzioni critiche mancanti: ' + missing.join(', '),
         severity: 'critical',
         solution: 'Verifica che tutti i file .gs siano presenti e salvati'
       });
       healthCheck.criticalErrors++;
     }
 
-    // 4. TEST FOGLI CRITICI
+    // 3. FOGLI CRITICI
     try {
-      const spreadsheet = getMainSpreadsheet();
-      const sheets = spreadsheet.getSheets();
-      const sheetNames = sheets.map(sheet => sheet.getName());
-      
-      // Verifica fogli di sistema essenziali
-      const criticalSheets = ['Utenti'];
-      const missingCriticalSheets = criticalSheets.filter(name => !sheetNames.includes(name));
-      
-      if (missingCriticalSheets.length > 0) {
+      const ss = getMainSpreadsheet();
+      const names = ss.getSheets().map(s => s.getName());
+
+      const missingSheets = ['Utenti'].filter(n => !names.includes(n));
+      if (missingSheets.length > 0) {
         healthCheck.issues.push({
-          type: 'error',
-          module: 'Fogli Sistema',
-          message: 'Fogli critici mancanti: ' + missingCriticalSheets.join(', '),
+          type: 'error', module: 'Fogli Sistema',
+          message: 'Fogli critici mancanti: ' + missingSheets.join(', '),
           severity: 'critical',
           solution: 'Crea i fogli mancanti con le intestazioni corrette'
         });
         healthCheck.criticalErrors++;
       }
-      
-      // Verifica fogli dipendenti (warning se mancanti)
-      const employeeSheets = sheets.filter(sheet => !isSystemSheet(sheet.getName()));
-      if (employeeSheets.length === 0) {
+
+      const employees = ss.getSheets().filter(s => !isSystemSheet(s.getName()));
+      if (employees.length === 0) {
         healthCheck.issues.push({
-          type: 'warning',
-          module: 'Dipendenti',
-          message: 'Nessun foglio dipendente trovato',
-          severity: 'medium',
+          type: 'warning', module: 'Dipendenti',
+          message: 'Nessun foglio dipendente trovato', severity: 'medium',
           solution: 'Aggiungi almeno un foglio dipendente per testare il sistema'
         });
         healthCheck.warnings++;
       }
-      
-    } catch (error) {
+    } catch (e) {
       healthCheck.issues.push({
-        type: 'error',
-        module: 'Fogli Sistema',
+        type: 'error', module: 'Fogli Sistema',
         message: 'Errore lettura struttura fogli',
-        severity: 'critical',
-        details: error.message
+        severity: 'critical', details: e.message
       });
       healthCheck.criticalErrors++;
     }
 
-    // 5. TEST ACCESSO DRIVE (controllo base)
+    // 4. ACCESSO DRIVE
     try {
-      // Test semplice: prova ad accedere a Drive
       DriveApp.getRootFolder().getName();
-    } catch (error) {
+    } catch (e) {
       healthCheck.issues.push({
-        type: 'error',
-        module: 'Google Drive',
+        type: 'error', module: 'Google Drive',
         message: 'Impossibile accedere a Google Drive',
-        severity: 'critical',
-        details: 'Verifica permessi script',
+        severity: 'critical', details: 'Verifica permessi script',
         solution: 'Autorizza nuovamente lo script ad accedere a Drive'
       });
       healthCheck.criticalErrors++;
     }
 
-    // 6. DETERMINA STATO FINALE
+    // 5. STATO FINALE
     if (healthCheck.criticalErrors > 0) {
       healthCheck.status = 'critical';
       healthCheck.needsAttention = true;
     } else if (healthCheck.warnings > 0) {
       healthCheck.status = 'warning';
       healthCheck.needsAttention = true;
-    } else {
-      healthCheck.status = 'healthy';
-      healthCheck.needsAttention = false;
     }
 
-    // Log per debug
-    console.log('System Health Check completato:', {
-      status: healthCheck.status,
-      issues: healthCheck.issues.length,
-      errors: healthCheck.criticalErrors,
-      warnings: healthCheck.warnings
-    });
-
+    console.log('Health check:', healthCheck.status,
+      '— errori:', healthCheck.criticalErrors, '— avvisi:', healthCheck.warnings);
     return healthCheck;
 
-  } catch (error) {
-    // Fallback in caso di errore nel check stesso
-    console.error('Errore critico nel system health check:', error);
-    
+  } catch (e) {
+    console.error('Errore critico nel health check:', e);
     return {
-      needsAttention: true,
-      status: 'critical',
-      issues: [{
-        type: 'error',
-        module: 'Sistema',
-        message: 'Errore grave nel sistema di diagnostica',
-        severity: 'critical',
-        details: error.message
-      }],
+      needsAttention: true, status: 'critical',
+      issues: [{ type: 'error', module: 'Sistema',
+                 message: 'Errore grave nel sistema di diagnostica',
+                 severity: 'critical', details: e.message }],
       lastCheck: new Date().toLocaleString('it-IT'),
-      criticalErrors: 1,
-      warnings: 0
+      criticalErrors: 1, warnings: 0
     };
   }
 }
 
-/**
- * Mostra dialog con warning e problemi rilevati (versione semplificata)
- */
-function showSystemWarnings() {
-  try {
-    const healthCheck = checkSystemHealth();
-    showHealthStatusDialogSimple(healthCheck);
-  } catch (error) {
-    console.error('Errore visualizzazione warning:', error);
-    SpreadsheetApp.getUi().alert(
-      'Errore Sistema',
-      'Impossibile visualizzare stato sistema:\n\n' + error.message,
-      SpreadsheetApp.getUi().ButtonSet.OK
-    );
-  }
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// DIAGNOSTICA COMPLETA — voce di menu "Diagnostica sistema"
+// ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Dialog semplificato per stato sistema (evita problemi sintassi HTML)
- */
-function showHealthStatusDialogSimple(healthCheck) {
-  let message = 'STATO SISTEMA\n\n';
-  
-  // Determina icona e status
-  let statusIcon = '';
-  let statusText = '';
-  
-  switch (healthCheck.status) {
-    case 'healthy':
-      statusIcon = '✅';
-      statusText = 'Sistema in Salute - Tutti i controlli superati';
-      break;
-    case 'warning':
-      statusIcon = '⚠️';
-      statusText = 'Attenzione Richiesta - ' + healthCheck.warnings + ' problema/i rilevato/i';
-      break;
-    case 'critical':
-      statusIcon = '🚨';
-      statusText = 'Errori Critici - ' + healthCheck.criticalErrors + ' errore/i critico/i';
-      break;
-  }
-  
-  message += statusIcon + ' ' + statusText + '\n';
-  message += 'Ultimo controllo: ' + healthCheck.lastCheck + '\n\n';
-  
-  // Aggiungi dettagli problemi se presenti
-  if (healthCheck.issues.length > 0) {
-    message += 'PROBLEMI RILEVATI:\n\n';
-    
-    healthCheck.issues.forEach((issue, index) => {
-      const problemIcon = issue.type === 'error' ? '❌' : '⚠️';
-      message += (index + 1) + '. ' + problemIcon + ' ' + issue.module.toUpperCase() + '\n';
-      message += '   ' + issue.message + '\n';
-      
-      if (issue.details) {
-        message += '   Dettagli: ' + issue.details + '\n';
-      }
-      
-      if (issue.solution) {
-        message += '   Soluzione: ' + issue.solution + '\n';
-      }
-      
-      message += '\n';
-    });
-  }
-  
-  // Aggiungi raccomandazioni
-  if (healthCheck.status === 'critical') {
-    message += 'AZIONE IMMEDIATA RICHIESTA:\n';
-    message += 'Il sistema presenta errori critici che potrebbero impedire il corretto funzionamento.\n';
-    message += 'Risolvere tutti i problemi evidenziati prima di procedere.\n\n';
-  } else if (healthCheck.status === 'warning') {
-    message += 'ATTENZIONE:\n';
-    message += 'Il sistema è funzionante ma presenta alcuni problemi minori.\n';
-    message += 'La risoluzione di questi avvisi migliorerà l\'affidabilità del sistema.\n\n';
-  }
-  
-  message += 'Riepilogo: ' + healthCheck.criticalErrors + ' errori critici, ' + healthCheck.warnings + ' avvisi';
-  
-  const title = statusIcon + ' Stato Sistema - ' + statusText.split(' - ')[0];
-  
-  SpreadsheetApp.getUi().alert(title, message);
-}
-
-/**
- * Esegue diagnostica completa del sistema
- */
+/** Esegue la diagnostica completa e mostra il risultato in una dialog. */
 function runSystemDiagnostics() {
   try {
-    const diagnostics = performSystemDiagnostics();
-    showDiagnosticsDialogSimple(diagnostics);
-  } catch (error) {
-    console.error('Errore diagnostica completa:', error);
+    showDiagnosticsDialogSimple(performSystemDiagnostics());
+  } catch (e) {
+    console.error('Errore diagnostica completa:', e);
     SpreadsheetApp.getUi().alert(
       'Errore Diagnostica',
-      'Impossibile eseguire diagnostica completa:\n\n' + error.message,
+      'Impossibile eseguire diagnostica completa:\n\n' + e.message,
       SpreadsheetApp.getUi().ButtonSet.OK
     );
   }
 }
 
 /**
- * Diagnostica completa del sistema (versione ottimizzata)
+ * Diagnostica completa del sistema — raccoglie metriche su database, utenti,
+ * permessi, cartelle Drive, funzioni critiche e configurazione.
+ *
+ * @returns {{ timestamp: string, healthScore: number, spreadsheet: Object,
+ *             sheets: Object, users: Object, folders: Object,
+ *             configuration: Object, permissions: Object,
+ *             functions: Object, errors: string[] }}
  */
 function performSystemDiagnostics() {
   const results = {
@@ -335,33 +179,27 @@ function performSystemDiagnostics() {
   let passedChecks = 0;
 
   try {
-    // 1. TEST DATABASE PRINCIPALE
+    // 1. DATABASE PRINCIPALE
     totalChecks++;
     try {
-      const spreadsheet = getMainSpreadsheet();
+      const ss = getMainSpreadsheet();
       results.spreadsheet.status = 'ok';
-      results.spreadsheet.details = spreadsheet.getName();
+      results.spreadsheet.details = ss.getName();
       passedChecks++;
-      
-      const sheets = spreadsheet.getSheets();
+
+      const sheets = ss.getSheets();
       results.sheets.count = sheets.length;
-      
-      sheets.forEach(sheet => {
-        const name = sheet.getName();
-        if (isSystemSheet(name)) {
-          results.sheets.system++;
-        } else {
-          results.sheets.employees++;
-        }
+      sheets.forEach(s => {
+        if (isSystemSheet(s.getName())) results.sheets.system++;
+        else results.sheets.employees++;
       });
-      
-    } catch (error) {
+    } catch (e) {
       results.spreadsheet.status = 'error';
-      results.spreadsheet.details = error.message;
-      results.errors.push('Errore connessione database: ' + error.message);
+      results.spreadsheet.details = e.message;
+      results.errors.push('Errore connessione database: ' + e.message);
     }
 
-    // 2. TEST GESTIONE UTENTI
+    // 2. GESTIONE UTENTI
     totalChecks++;
     try {
       const users = getUsersList();
@@ -369,107 +207,86 @@ function performSystemDiagnostics() {
       results.users.active = users.filter(u => u.attivo === 'Si').length;
       results.users.withPassword = users.filter(u => u.hasPassword).length;
       passedChecks++;
-    } catch (error) {
-      results.errors.push('Impossibile leggere foglio Utenti: ' + error.message);
+    } catch (e) {
+      results.errors.push('Impossibile leggere foglio Utenti: ' + e.message);
     }
 
-    // 3. TEST PERMESSI
+    // 3. PERMESSI
     totalChecks += 3;
-    
-    // Drive
     try {
       DriveApp.getRootFolder().getName();
       results.permissions.drive = true;
       passedChecks++;
-    } catch (error) {
-      results.errors.push('Errore accesso Drive: ' + error.message);
-    }
-    
-    // Properties
+    } catch (e) { results.errors.push('Errore accesso Drive: ' + e.message); }
+
     try {
       PropertiesService.getScriptProperties().getProperty('test') || '';
       results.permissions.properties = true;
       passedChecks++;
-    } catch (error) {
-      results.errors.push('Errore accesso Properties: ' + error.message);
-    }
-    
-    // Sheets
+    } catch (e) { results.errors.push('Errore accesso Properties: ' + e.message); }
+
     try {
       SpreadsheetApp.getActiveSpreadsheet().getName();
       results.permissions.sheets = true;
       passedChecks++;
-    } catch (error) {
-      results.errors.push('Errore accesso Sheets: ' + error.message);
-    }
+    } catch (e) { results.errors.push('Errore accesso Sheets: ' + e.message); }
 
-    // 4. TEST CARTELLE
+    // 4. CARTELLE DRIVE
     totalChecks += 2;
     try {
       results.folders.archive = DriveApp.getFoldersByName(CONFIG.FOLDERS.ARCHIVE).hasNext();
       if (results.folders.archive) passedChecks++;
-      
+
       results.folders.reports = DriveApp.getFoldersByName(CONFIG.FOLDERS.REPORTS).hasNext();
       if (results.folders.reports) passedChecks++;
-    } catch (error) {
-      results.errors.push('Errore controllo cartelle: ' + error.message);
-    }
+    } catch (e) { results.errors.push('Errore controllo cartelle: ' + e.message); }
 
-    // 5. TEST FUNZIONI CRITICHE
+    // 5. FUNZIONI CRITICHE
     const criticalFunctions = [
-      'getMainSpreadsheet',
-      'getActiveEmployeeNames',
-      'getUsersList',
-      'generatePasswordHash',
-      'formatDateItalian'
+      'getMainSpreadsheet', 'getActiveEmployeeNames',
+      'getUsersList', 'generatePasswordHash', 'formatDateItalian'
     ];
-    
     results.functions.critical = criticalFunctions.length;
     totalChecks += criticalFunctions.length;
-    
-    criticalFunctions.forEach(funcName => {
+
+    criticalFunctions.forEach(fn => {
       try {
-        if (typeof eval(funcName) === 'function') {
+        if (typeof eval(fn) === 'function') {
           results.functions.working++;
-          results.functions.tests.push({ name: funcName, status: 'ok' });
+          results.functions.tests.push({ name: fn, status: 'ok' });
           passedChecks++;
         } else {
           results.functions.broken++;
-          results.functions.tests.push({ name: funcName, status: 'error', error: 'Funzione non trovata' });
+          results.functions.tests.push({ name: fn, status: 'error', error: 'Funzione non trovata' });
         }
-      } catch (error) {
+      } catch (e) {
         results.functions.broken++;
-        results.functions.tests.push({ name: funcName, status: 'error', error: error.message });
+        results.functions.tests.push({ name: fn, status: 'error', error: e.message });
       }
     });
 
-    // 6. TEST CONFIGURAZIONE
+    // 6. CONFIGURAZIONE
     totalChecks++;
     try {
-      // Verifica struttura CONFIG
       if (typeof CONFIG !== 'undefined' && CONFIG.SPREADSHEET_ID && CONFIG.FOLDERS) {
         results.configuration.valid = true;
         passedChecks++;
       } else {
         results.configuration.issues.push('Oggetto CONFIG mancante o incompleto');
       }
-    } catch (error) {
-      results.configuration.issues.push('Errore lettura configurazione: ' + error.message);
+    } catch (e) {
+      results.configuration.issues.push('Errore lettura configurazione: ' + e.message);
     }
 
-    // 7. CALCOLA HEALTH SCORE
+    // 7. HEALTH SCORE
     results.healthScore = totalChecks > 0 ? Math.round((passedChecks / totalChecks) * 100) : 0;
-    
-    console.log('Diagnostica completa:', {
-      healthScore: results.healthScore,
-      totalChecks: totalChecks,
-      passedChecks: passedChecks,
-      errors: results.errors.length
-    });
+    console.log('Diagnostica completa — score:', results.healthScore,
+      '— checks:', passedChecks + '/' + totalChecks,
+      '— errori:', results.errors.length);
 
-  } catch (error) {
-    console.error('Errore nella diagnostica completa:', error);
-    results.errors.push('Errore grave nel sistema di diagnostica: ' + error.message);
+  } catch (e) {
+    console.error('Errore nella diagnostica completa:', e);
+    results.errors.push('Errore grave nel sistema di diagnostica: ' + e.message);
     results.healthScore = 0;
   }
 
@@ -477,112 +294,55 @@ function performSystemDiagnostics() {
 }
 
 /**
- * Dialog semplificato per diagnostica completa
+ * Mostra il risultato della diagnostica completa in una dialog alert.
+ *
+ * @param {Object} diagnostics - Oggetto restituito da performSystemDiagnostics().
  */
 function showDiagnosticsDialogSimple(diagnostics) {
-  let message = 'DIAGNOSTICA SISTEMA COMPLETATA\n\n';
-  
-  // Header con health score
-  const healthIcon = diagnostics.healthScore >= 80 ? '✅' : 
-                    diagnostics.healthScore >= 50 ? '⚠️' : '🚨';
-  const healthStatus = diagnostics.healthScore >= 80 ? 'ECCELLENTE' : 
-                      diagnostics.healthScore >= 50 ? 'ATTENZIONE' : 'CRITICO';
-  
-  message += healthIcon + ' Health Score: ' + diagnostics.healthScore + '/100 - ' + healthStatus + '\n';
-  message += 'Timestamp: ' + diagnostics.timestamp + '\n\n';
-  
-  // Riepilogo generale
-  message += 'RIEPILOGO GENERALE:\n';
-  message += 'Database: ' + (diagnostics.spreadsheet.status === 'ok' ? '✅' : '❌') + ' ' + diagnostics.spreadsheet.status + '\n';
-  message += 'Fogli totali: ' + diagnostics.sheets.count + '\n';
-  message += 'Dipendenti: ' + diagnostics.sheets.employees + '\n';
-  message += 'Utenti sistema: ' + diagnostics.users.total + '\n';
-  message += 'Funzioni critiche: ' + diagnostics.functions.working + '/' + diagnostics.functions.critical + '\n';
-  message += 'Errori rilevati: ' + diagnostics.errors.length + '\n\n';
-  
-  // Dettagli controlli
-  message += 'DETTAGLI CONTROLLI:\n';
-  message += 'Permessi Drive: ' + (diagnostics.permissions.drive ? '✅' : '❌') + '\n';
-  message += 'Permessi Properties: ' + (diagnostics.permissions.properties ? '✅' : '❌') + '\n';
-  message += 'Cartella archivi: ' + (diagnostics.folders.archive ? '✅' : '❌') + '\n';
-  message += 'Cartella report: ' + (diagnostics.folders.reports ? '✅' : '❌') + '\n';
-  message += 'Configurazione: ' + (diagnostics.configuration.valid ? '✅' : '❌') + '\n\n';
-  
-  // Errori se presenti
+  const healthIcon   = diagnostics.healthScore >= 80 ? '✅' : diagnostics.healthScore >= 50 ? '⚠️' : '🚨';
+  const healthStatus = diagnostics.healthScore >= 80 ? 'ECCELLENTE' : diagnostics.healthScore >= 50 ? 'ATTENZIONE' : 'CRITICO';
+
+  let msg = 'DIAGNOSTICA SISTEMA COMPLETATA\n\n';
+  msg += healthIcon + ' Health Score: ' + diagnostics.healthScore + '/100 - ' + healthStatus + '\n';
+  msg += 'Timestamp: ' + diagnostics.timestamp + '\n\n';
+
+  msg += 'RIEPILOGO GENERALE:\n';
+  msg += 'Database: ' + (diagnostics.spreadsheet.status === 'ok' ? '✅' : '❌') + ' ' + diagnostics.spreadsheet.status + '\n';
+  msg += 'Fogli totali: ' + diagnostics.sheets.count + '\n';
+  msg += 'Dipendenti: ' + diagnostics.sheets.employees + '\n';
+  msg += 'Utenti sistema: ' + diagnostics.users.total + '\n';
+  msg += 'Funzioni critiche: ' + diagnostics.functions.working + '/' + diagnostics.functions.critical + '\n';
+  msg += 'Errori rilevati: ' + diagnostics.errors.length + '\n\n';
+
+  msg += 'DETTAGLI CONTROLLI:\n';
+  msg += 'Permessi Drive: '       + (diagnostics.permissions.drive      ? '✅' : '❌') + '\n';
+  msg += 'Permessi Properties: '  + (diagnostics.permissions.properties ? '✅' : '❌') + '\n';
+  msg += 'Cartella archivi: '     + (diagnostics.folders.archive        ? '✅' : '❌') + '\n';
+  msg += 'Cartella report: '      + (diagnostics.folders.reports        ? '✅' : '❌') + '\n';
+  msg += 'Configurazione: '       + (diagnostics.configuration.valid    ? '✅' : '❌') + '\n\n';
+
   if (diagnostics.errors.length > 0) {
-    message += 'ERRORI RILEVATI:\n';
-    diagnostics.errors.slice(0, 5).forEach((error, index) => {
-      message += (index + 1) + '. ' + error + '\n';
-    });
-    
-    if (diagnostics.errors.length > 5) {
-      message += '... e altri ' + (diagnostics.errors.length - 5) + ' errori\n';
-    }
-    message += '\n';
+    msg += 'ERRORI RILEVATI:\n';
+    diagnostics.errors.slice(0, 5).forEach((err, i) => { msg += (i + 1) + '. ' + err + '\n'; });
+    if (diagnostics.errors.length > 5) msg += '... e altri ' + (diagnostics.errors.length - 5) + ' errori\n';
+    msg += '\n';
   }
-  
-  // Raccomandazioni
-  message += 'RACCOMANDAZIONI:\n';
+
+  msg += 'RACCOMANDAZIONI:\n';
   if (diagnostics.healthScore >= 90) {
-    message += '• Sistema in perfetta salute - continua l\'uso normale\n';
-    message += '• Esegui diagnostica mensile per monitoraggio preventivo\n';
+    msg += '• Sistema in perfetta salute — continua l\'uso normale\n';
+    msg += '• Esegui diagnostica mensile per monitoraggio preventivo\n';
   } else if (diagnostics.healthScore >= 75) {
-    message += '• Sistema generalmente stabile con piccoli problemi risolvibili\n';
-    message += '• Risolvi gli errori minori elencati sopra quando possibile\n';
+    msg += '• Sistema generalmente stabile con piccoli problemi risolvibili\n';
+    msg += '• Risolvi gli errori minori elencati sopra quando possibile\n';
   } else if (diagnostics.healthScore >= 50) {
-    message += '• Risolvi IMMEDIATAMENTE gli errori critici evidenziati\n';
-    message += '• Evita operazioni massive fino alla risoluzione dei problemi\n';
+    msg += '• Risolvi IMMEDIATAMENTE gli errori critici evidenziati\n';
+    msg += '• Evita operazioni massive fino alla risoluzione dei problemi\n';
   } else {
-    message += '• STOP - Non usare il sistema fino alla risoluzione completa\n';
-    message += '• Risolvi TUTTI gli errori prima di procedere con qualsiasi operazione\n';
+    msg += '• STOP — Non usare il sistema fino alla risoluzione completa\n';
+    msg += '• Risolvi TUTTI gli errori prima di procedere con qualsiasi operazione\n';
   }
-  
-  const title = healthIcon + ' Diagnostica Sistema - Health Score: ' + diagnostics.healthScore + '/100';
-  
-  SpreadsheetApp.getUi().alert(title, message);
-}
 
-/**
- * Test veloce funzioni base (per debug)
- */
-function quickSystemTest() {
-  const results = [];
-  
-  // Test connessione
-  try {
-    getMainSpreadsheet();
-    results.push('✅ Database: OK');
-  } catch (error) {
-    results.push('❌ Database: ' + error.message);
-  }
-  
-  // Test dipendenti
-  try {
-    const employees = getActiveEmployeeNames();
-    results.push('✅ Dipendenti: ' + employees.length + ' trovati');
-  } catch (error) {
-    results.push('❌ Dipendenti: ' + error.message);
-  }
-  
-  // Test utenti
-  try {
-    const users = getUsersList();
-    results.push('✅ Utenti: ' + users.length + ' nel sistema');
-  } catch (error) {
-    results.push('❌ Utenti: ' + error.message);
-  }
-  
-  const message = 'QUICK SYSTEM TEST\n\n' + results.join('\n') + '\n\nTimestamp: ' + new Date().toLocaleString('it-IT');
-  SpreadsheetApp.getUi().alert('🧪 Test Rapido Sistema', message);
-}
-
-/**
- * Utility: Verifica se una funzione esiste ed è accessibile
- */
-function functionExists(functionName) {
-  try {
-    return typeof eval(functionName) === 'function';
-  } catch (error) {
-    return false;
-  }
+  const title = healthIcon + ' Diagnostica Sistema — Health Score: ' + diagnostics.healthScore + '/100';
+  SpreadsheetApp.getUi().alert(title, msg, SpreadsheetApp.getUi().ButtonSet.OK);
 }

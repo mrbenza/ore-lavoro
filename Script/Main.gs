@@ -24,33 +24,33 @@
 /**
  * Trigger GAS onOpen — costruisce il menu "Sistema Gestionale" all'apertura.
  *
- * Rileva lo stato del sistema tramite checkSystemInitializationStatus() e
- * costruisce un menu dinamico: se il sistema è 'healthy' nasconde la voce
- * di inizializzazione; se è 'needs_setup' la mostra; se è 'conflict' mostra
- * "Riconfigura". In caso di errore nella costruzione, crea un menu di fallback
- * ridotto. Il menu è organizzato in sottomenu per modulo funzionale.
+ * Rileva lo stato del sistema tramite checkSystemHealth() (SystemDiagnostic.gs)
+ * e costruisce un menu dinamico: se il sistema è 'healthy' mostra solo diagnostica
+ * e info; se è 'warning' o 'critical' aggiunge una voce di avviso in evidenza.
+ * In caso di errore nella costruzione, crea un menu di fallback ridotto.
+ * Il menu è organizzato in sottomenu per modulo funzionale.
  *
  * FLUSSO INTERNO:
- *   1. Chiama checkSystemInitializationStatus() per rilevare stato
+ *   1. Chiama checkSystemHealth() per rilevare stato sistema
  *   2. Costruisce il menu con sottomenu Archivio, Password, Report, Cantieri
- *   3. Aggiunge voci dinamiche in base a initStatus.systemHealth
+ *   3. Aggiunge voci diagnostiche in base a healthCheck.status
  *   4. addToUi() per mostrare il menu
  *   5. In caso di errore → crea menu semplificato di fallback
  *
  * CHIAMATA DA: GAS runtime (trigger di apertura foglio, automatico)
- * CHIAMA:      checkSystemInitializationStatus()
+ * CHIAMA:      checkSystemHealth() (SystemDiagnostic.gs)
  *
  * @returns {void}
  */
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
-  
+
   try {
-    // Controlla stato inizializzazione per menu dinamico
-    const initStatus = checkSystemInitializationStatus();
-    
+    // Controlla lo stato del sistema per menu dinamico
+    const healthCheck = checkSystemHealth();
+
     const menu = ui.createMenu('🏢 Sistema Gestionale')
-      
+
       // Sottomenu Archivio
       .addSubMenu(ui.createMenu('📁 Archivio')
         .addItem('📅 Archivia anno precedente (tutti)', 'archiveAllPreviousYear')
@@ -60,7 +60,7 @@ function onOpen() {
         .addItem('📋 Stato archivi', 'showArchiveStatus')
         .addSeparator()
         .addItem('📖 Come archiviare', 'showArchiveInstructions'))
-      
+
       // Sottomenu Password
       .addSubMenu(ui.createMenu('🔐 Gestione Password')
         .addItem('👤 Cambia password dipendente', 'changeEmployeePassword')
@@ -69,7 +69,7 @@ function onOpen() {
         .addItem('🔍 Debug hash password', 'debugPasswordHash')
         .addSeparator()
         .addItem('📖 Come gestire password', 'showPasswordInstructions'))
-      
+
       // Sottomenu Gestione Utenti
       .addSubMenu(ui.createMenu('👥 Gestione Utenti')
         .addItem('➕ Crea nuovo utente', 'createNewUser')
@@ -86,7 +86,7 @@ function onOpen() {
         .addItem('🧪 Test report (dipendente singolo)', 'testSingleReport')
         .addSeparator()
         .addItem('📖 Come generare report', 'showReportInstructions'))
-      
+
       // Sottomenu Cantieri
       .addSubMenu(ui.createMenu('🗏️ Gestione Cantieri')
         .addItem('🔄 Ricalcola totali ore cantieri', 'recalculateConstructionSites')
@@ -101,49 +101,26 @@ function onOpen() {
         .addItem('Installa trigger automatici', 'setupTriggers'))
 
       .addSeparator();
-    
-    // MENU DINAMICO BASATO SULLO STATO DEL SISTEMA
-    if (initStatus.systemHealth === 'healthy') {
-      // Sistema OK - Nessuna inizializzazione, solo diagnostica e info
+
+    // MENU DINAMICO BASATO SULLO STATO DI SALUTE DEL SISTEMA
+    if (healthCheck.status === 'healthy') {
       menu.addItem('🔧 Diagnostica sistema', 'runSystemDiagnostics')
           .addItem('ℹ️ Informazioni Sistema', 'showSystemInformation');
-      
-      console.log('Menu caricato - Sistema operativo (inizializzazione nascosta)');
-      
-    } else if (initStatus.systemHealth === 'needs_setup') {
-      // Primo setup necessario
-      menu.addItem('🚀 Inizializza sistema', 'initializeSystemSetup')
-          .addItem('🔧 Diagnostica sistema', 'runSystemDiagnostics')
+    } else if (healthCheck.status === 'warning') {
+      menu.addItem('⚠️ Diagnostica sistema (avvisi)', 'runSystemDiagnostics')
           .addItem('ℹ️ Informazioni Sistema', 'showSystemInformation');
-      
-      console.log('Menu caricato - Primo setup necessario');
-      
-    } else if (initStatus.systemHealth === 'conflict') {
-      // Conflitto di configurazione
-      menu.addItem('⚠️ Riconfigura sistema', 'initializeSystemSetup')
-          .addItem('🔧 Diagnostica sistema', 'runSystemDiagnostics')
-          .addItem('ℹ️ Informazioni Sistema', 'showSystemInformation');
-      
-      console.log('Menu caricato - Conflitto rilevato');
-      
     } else {
-      // Errore - Mostra tutto per debug
-      menu.addItem('❌ Inizializza sistema (Errore)', 'initializeSystemSetup')
-          .addItem('🔧 Diagnostica sistema', 'runSystemDiagnostics')
+      // critical o unknown
+      menu.addItem('🚨 Diagnostica sistema (errori critici)', 'runSystemDiagnostics')
           .addItem('ℹ️ Informazioni Sistema', 'showSystemInformation');
-      
-      console.log('Menu caricato - Errore sistema');
     }
-    
     menu.addToUi();
-    
-    console.log('Menu sistema caricato correttamente con stato:', initStatus.systemHealth);
-    
+    console.log('Menu sistema caricato — stato:', healthCheck.status);
+
   } catch (error) {
     console.error('Errore creazione menu:', error);
     // Fallback: crea menu semplificato
     ui.createMenu('🏢 Sistema')
-      .addItem('⚙️ Inizializza', 'initializeSystemSetup')
       .addItem('🔧 Diagnostica', 'runSystemDiagnostics')
       .addItem('ℹ️ Info', 'showSystemInformation')
       .addToUi();
@@ -1332,803 +1309,14 @@ function showConstructionSiteInstructions() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SISTEMA — inizializzazione, stato, diagnostica
+// SISTEMA — diagnostica
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Entry point menu per l'inizializzazione/reconfigurazione del sistema.
- *
- * Controlla lo stato corrente del sistema e mostra il dialog appropriato.
- * Non esegue modifiche direttamente: delega a showSystemInitializationDialog().
- *
- * FLUSSO INTERNO:
- *   1. Chiama checkSystemInitializationStatus() per rilevare lo stato
- *   2. Passa il risultato a showSystemInitializationDialog()
- *
- * CHIAMATA DA: onOpen() → menu "🚀 Inizializza sistema" / "⚠️ Riconfigura sistema"
- * CHIAMA:      checkSystemInitializationStatus(), showSystemInitializationDialog(),
- *              handleGlobalError()
- *
- * @returns {void}
- */
-function initializeSystemSetup() {
-  try {
-    // Prima controlla lo stato attuale del sistema
-    const currentStatus = checkSystemInitializationStatus();
-    showSystemInitializationDialog(currentStatus);
-  } catch (error) {
-    handleGlobalError('initializeSystemSetup', error);
-  }
-}
+// Le funzioni di diagnostica sono in SystemDiagnostic.gs:
+//   checkSystemHealth()       — health check veloce, usato da onOpen()
+//   runSystemDiagnostics()    — diagnostica completa con dialog
 
-/**
- * Controlla lo stato di inizializzazione del sistema e restituisce un oggetto status.
- *
- * Confronta l'ID dello spreadsheet attivo con quello salvato in PropertiesService.
- * Determina se il sistema è 'healthy' (IDs corrispondono), 'needs_setup' (nessun ID
- * salvato), 'conflict' (IDs diversi), o 'error' (eccezione).
- * Usato da onOpen() per costruire il menu dinamico e da initializeSystemSetup()
- * per decidere quale dialog mostrare.
- *
- * FLUSSO INTERNO:
- *   1. Legge activeSpreadsheetId da SpreadsheetApp.getActiveSpreadsheet()
- *   2. Legge storedSpreadsheetId da PropertiesService.getScriptProperties()
- *   3. Confronta i due ID e imposta systemHealth di conseguenza
- *   4. Ritorna l'oggetto status completo
- *
- * CHIAMATA DA: onOpen(), initializeSystemSetup()
- * CHIAMA:      SpreadsheetApp.getActiveSpreadsheet(), PropertiesService.getScriptProperties()
- *
- * @returns {{ isInitialized: boolean, currentSpreadsheetId: string|null,
- *             storedSpreadsheetId: string|null, activeSpreadsheetId: string|null,
- *             needsInitialization: boolean, hasConflict: boolean,
- *             systemHealth: 'healthy'|'needs_setup'|'conflict'|'error'|'unknown',
- *             error?: string }} Oggetto con lo stato completo del sistema.
- */
-function checkSystemInitializationStatus() {
-  const status = {
-    isInitialized: false,
-    currentSpreadsheetId: null,
-    storedSpreadsheetId: null,
-    activeSpreadsheetId: null,
-    needsInitialization: false,
-    hasConflict: false,
-    systemHealth: 'unknown'
-  };
-  
-  try {
-    // ID dello spreadsheet attivo
-    status.activeSpreadsheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
-    
-    // ID salvato nelle properties
-    status.storedSpreadsheetId = PropertiesService.getScriptProperties().getProperty('MAIN_SHEET_ID');
-    
-    // Debug logging
-    console.log('Active spreadsheet ID:', status.activeSpreadsheetId);
-    console.log('Stored spreadsheet ID:', status.storedSpreadsheetId);
-    
-    // Determina stato con logica più rigorosa
-    if (!status.storedSpreadsheetId || status.storedSpreadsheetId === '' || status.storedSpreadsheetId === 'null') {
-      // Nessuna configurazione salvata
-      status.needsInitialization = true;
-      status.systemHealth = 'needs_setup';
-      console.log('Sistema non inizializzato - primo setup necessario');
-    } else if (status.storedSpreadsheetId === status.activeSpreadsheetId) {
-      // Perfetta corrispondenza - sistema operativo
-      status.isInitialized = true;
-      status.currentSpreadsheetId = status.storedSpreadsheetId;
-      status.systemHealth = 'healthy';
-      status.needsInitialization = false; // IMPORTANTE: sistema OK, non serve inizializzazione
-      console.log('Sistema già inizializzato correttamente');
-    } else {
-      // IDs diversi - conflitto
-      status.hasConflict = true;
-      status.currentSpreadsheetId = status.storedSpreadsheetId;
-      status.systemHealth = 'conflict';
-      status.needsInitialization = true;
-      console.log('Conflitto rilevato - re-configurazione necessaria');
-    }
-    
-  } catch (error) {
-    status.systemHealth = 'error';
-    status.error = error.message;
-    console.error('Errore controllo stato sistema:', error);
-  }
-  
-  return status;
-}
 
-/**
- * Mostra il dialog HTML di inizializzazione sistema adattato allo stato corrente.
- *
- * Genera un dialog modale con contenuto dinamico in base a status.systemHealth:
- *   - 'healthy': mostra messaggio "già inizializzato", nessuna azione richiesta
- *   - 'needs_setup': mostra pulsante "Inizializza Sistema" → chiama executeSystemInitialization()
- *   - 'conflict': mostra pulsante "Ri-configura Sistema" → chiama executeSystemReconfiguration()
- *   - altri: mostra messaggio di errore con suggerimenti
- * Il dialog contiene uno <script> client-side che invoca le funzioni GAS via
- * google.script.run.
- *
- * FLUSSO INTERNO:
- *   1. Costruisce statusInfo (colori, icona, titolo) in base a status.systemHealth
- *   2. Genera htmlContent con template literal (HTML + CSS + JS inline)
- *   3. Crea HtmlOutput 650x700 e mostra il dialog
- *
- * CHIAMATA DA: initializeSystemSetup()
- * CHIAMA:      HtmlService.createHtmlOutput(), SpreadsheetApp.getUi()
- *              (il JS client chiama executeSystemInitialization() o executeSystemReconfiguration())
- *
- * @param {{ systemHealth: string, activeSpreadsheetId: string, storedSpreadsheetId: string,
- *           error?: string }} status - Oggetto stato da checkSystemInitializationStatus().
- * @returns {void}
- */
-function showSystemInitializationDialog(status) {
-  const getStatusInfo = () => {
-    switch (status.systemHealth) {
-      case 'healthy':
-        return {
-          color: '#28a745',
-          gradient: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-          icon: '✅',
-          title: 'Sistema Già Inizializzato',
-          message: 'Il sistema è già configurato correttamente'
-        };
-      case 'needs_setup':
-        return {
-          color: '#007bff',
-          gradient: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
-          icon: '🚀',
-          title: 'Sistema da Inizializzare',
-          message: 'Primo setup necessario per iniziare'
-        };
-      case 'conflict':
-        return {
-          color: '#ffc107',
-          gradient: 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)',
-          icon: '⚠️',
-          title: 'Conflitto Configurazione',
-          message: 'Sistema configurato per altro spreadsheet'
-        };
-      default:
-        return {
-          color: '#dc3545',
-          gradient: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
-          icon: '❌',
-          title: 'Errore Sistema',
-          message: 'Impossibile determinare stato sistema'
-        };
-    }
-  };
-  
-  const statusInfo = getStatusInfo();
-  
-  const htmlContent = `
-    <div style="font-family: Arial, sans-serif; padding: 25px; line-height: 1.6; color: #333; max-width: 600px;">
-      
-      <div style="text-align: center; margin-bottom: 25px; padding: 20px; background: ${statusInfo.gradient}; color: white; border-radius: 10px;">
-        <h2 style="margin: 0; font-size: 24px;">${statusInfo.icon} Inizializzazione Sistema</h2>
-        <p style="margin: 8px 0 0 0; opacity: 0.9;">${statusInfo.title}</p>
-        <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 5px;">
-          <strong>${statusInfo.message}</strong>
-        </div>
-      </div>
-      
-      <div style="background: #f8f9fa; border-left: 5px solid ${statusInfo.color}; padding: 20px; margin: 20px 0; border-radius: 5px;">
-        <h3 style="margin: 0 0 10px 0; color: ${statusInfo.color};">📊 Stato Attuale Sistema</h3>
-        <div style="margin-top: 15px;">
-          <strong>Spreadsheet attivo:</strong><br>
-          <code style="background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-size: 12px;">
-            ${status.activeSpreadsheetId || 'Non rilevato'}
-          </code><br><br>
-          
-          <strong>Configurazione salvata:</strong><br>
-          <code style="background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-size: 12px;">
-            ${status.storedSpreadsheetId || 'Nessuna configurazione'}
-          </code><br><br>
-          
-          <strong>Stato sistema:</strong> 
-          <span style="color: ${statusInfo.color}; font-weight: bold;">
-            ${status.systemHealth === 'healthy' ? 'Operativo' : 
-              status.systemHealth === 'needs_setup' ? 'Da configurare' :
-              status.systemHealth === 'conflict' ? 'Conflitto rilevato' : 'Errore'}
-          </span>
-        </div>
-      </div>
-      
-      ${status.systemHealth === 'healthy' ? `
-        <div style="background: #d4edda; border: 2px solid #28a745; border-radius: 8px; padding: 20px; margin: 25px 0;">
-          <h3 style="margin: 0 0 15px 0; color: #155724;">✅ Sistema Già Operativo</h3>
-          <p style="margin: 0; color: #155724;">
-            Il sistema è già inizializzato correttamente per questo spreadsheet. 
-            <strong>Non è necessaria nessuna azione.</strong>
-          </p>
-          <div style="background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #28a745;">
-            <h4 style="margin: 0 0 8px 0; color: #155724;">💡 Cosa puoi fare ora:</h4>
-            <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-              <li>Usare normalmente tutte le funzioni del sistema</li>
-              <li>Eseguire "🔧 Diagnostica sistema" per controlli di salute</li>
-              <li>Consultare "ℹ️ Informazioni Sistema" per maggiori dettagli</li>
-            </ul>
-          </div>
-        </div>
-      ` : status.systemHealth === 'needs_setup' ? `
-        <div style="background: #cce7ff; border: 2px solid #007bff; border-radius: 8px; padding: 20px; margin: 25px 0;">
-          <h3 style="margin: 0 0 15px 0; color: #004085;">🚀 Setup Iniziale Richiesto</h3>
-          <p style="margin: 0; color: #004085;">
-            Questo è il primo avvio del sistema. È necessario salvare la configurazione 
-            per collegare il sistema a questo spreadsheet.
-          </p>
-          <div style="background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #007bff;">
-            <h4 style="margin: 0 0 8px 0; color: #004085;">📋 Cosa farà l'inizializzazione:</h4>
-            <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-              <li>Salverà l'ID di questo spreadsheet come database principale</li>
-              <li>Configurerà il sistema per operare correttamente</li>
-              <li>Abiliterà tutte le funzioni (archivio, report, cantieri, password)</li>
-              <li>Preparerà il sistema per l'uso quotidiano</li>
-            </ul>
-          </div>
-          <div style="text-align: center; margin: 20px 0;">
-            <button onclick="performInitialization()" 
-                    style="background: #007bff; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
-              🚀 Inizializza Sistema
-            </button>
-          </div>
-        </div>
-      ` : status.systemHealth === 'conflict' ? `
-        <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 20px; margin: 25px 0;">
-          <h3 style="margin: 0 0 15px 0; color: #856404;">⚠️ Conflitto di Configurazione</h3>
-          <p style="margin: 0; color: #856404;">
-            Il sistema è configurato per un altro spreadsheet. Questo può succedere se hai 
-            copiato il sistema o se stai lavorando su una copia del database.
-          </p>
-          <div style="background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;">
-            <h4 style="margin: 0 0 8px 0; color: #856404;">🔄 Opzioni disponibili:</h4>
-            <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-              <li><strong>Ri-configura:</strong> Aggiorna la configurazione per questo spreadsheet</li>
-              <li><strong>Mantieni:</strong> Continua a usare la configurazione esistente (sconsigliato)</li>
-              <li><strong>Backup:</strong> Salva la configurazione attuale prima di modificare</li>
-            </ul>
-          </div>
-          <div style="text-align: center; margin: 20px 0;">
-            <button onclick="performReconfiguration()" 
-                    style="background: #ffc107; color: #856404; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 10px;">
-              🔄 Ri-configura Sistema
-            </button>
-          </div>
-        </div>
-      ` : `
-        <div style="background: #f8d7da; border: 2px solid #dc3545; border-radius: 8px; padding: 20px; margin: 25px 0;">
-          <h3 style="margin: 0 0 15px 0; color: #721c24;">❌ Errore di Sistema</h3>
-          <p style="margin: 0; color: #721c24;">
-            Si è verificato un errore durante il controllo dello stato del sistema:
-            <br><strong>${status.error || 'Errore sconosciuto'}</strong>
-          </p>
-          <div style="background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #dc3545;">
-            <h4 style="margin: 0 0 8px 0; color: #721c24;">🛠️ Possibili soluzioni:</h4>
-            <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-              <li>Verifica i permessi di accesso al spreadsheet</li>
-              <li>Controlla che il sistema sia attivato correttamente</li>
-              <li>Prova a ricaricare la pagina e ripetere l'operazione</li>
-              <li>Consulta l'amministratore se il problema persiste</li>
-            </ul>
-          </div>
-        </div>
-      `}
-      
-      <div style="background: #e2e3e5; border-radius: 8px; padding: 20px; margin: 25px 0;">
-        <h3 style="margin: 0 0 15px 0; color: #383d41;">ℹ️ Informazioni Tecniche</h3>
-        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #6c757d;">
-          <p style="margin: 0; font-size: 14px; color: #495057;">
-            <strong>Scopo:</strong> L'inizializzazione salva l'ID di questo spreadsheet nelle 
-            PropertiesService di Google Apps Script, permettendo al sistema di identificare 
-            univocamente il database principale anche quando eseguito da altri contesti.
-            <br><br>
-            <strong>Sicurezza:</strong> Questa operazione è completamente sicura e reversibile. 
-            Non modifica i dati nel spreadsheet, solo la configurazione del sistema.
-          </p>
-        </div>
-      </div>
-      
-      <div style="text-align: center; margin-top: 30px;">
-        <button onclick="google.script.host.close()" 
-                style="background: #6c757d; color: white; border: none; padding: 12px 30px; border-radius: 25px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-          Chiudi
-        </button>
-      </div>
-      
-      <div id="status" style="margin-top: 15px; padding: 10px; text-align: center; font-weight: bold; border-radius: 5px; display: none;"></div>
-      
-    </div>
-    
-    <script>
-      function performInitialization() {
-        const btn = event.target;
-        const originalText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '⏳ Inizializzazione...';
-        
-        const statusDiv = document.getElementById('status');
-        statusDiv.style.display = 'block';
-        statusDiv.innerHTML = 'Configurazione sistema in corso...';
-        statusDiv.style.backgroundColor = '#cce7ff';
-        statusDiv.style.color = '#004085';
-        
-        google.script.run
-          .withSuccessHandler(function(result) {
-            if (result.success) {
-              statusDiv.innerHTML = '✅ Sistema inizializzato con successo!<br>ID Spreadsheet salvato: ' + result.spreadsheetId;
-              statusDiv.style.backgroundColor = '#d4edda';
-              statusDiv.style.color = '#155724';
-              
-              btn.innerHTML = '✅ Completato';
-              btn.style.backgroundColor = '#28a745';
-              
-              setTimeout(() => {
-                google.script.host.close();
-              }, 3000);
-            } else {
-              statusDiv.innerHTML = '❌ Errore: ' + result.message;
-              statusDiv.style.backgroundColor = '#f8d7da';
-              statusDiv.style.color = '#721c24';
-              
-              btn.disabled = false;
-              btn.innerHTML = originalText;
-            }
-          })
-          .withFailureHandler(function(error) {
-            statusDiv.innerHTML = '❌ Errore tecnico: ' + error.message;
-            statusDiv.style.backgroundColor = '#f8d7da';
-            statusDiv.style.color = '#721c24';
-            
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-          })
-          .executeSystemInitialization();
-      }
-      
-      function performReconfiguration() {
-        const btn = event.target;
-        const originalText = btn.innerHTML;
-        
-        if (!confirm('Sei sicuro di voler ri-configurare il sistema per questo spreadsheet?\\n\\nQuesta operazione aggiornerà la configurazione esistente.')) {
-          return;
-        }
-        
-        btn.disabled = true;
-        btn.innerHTML = '⏳ Ri-configurazione...';
-        
-        const statusDiv = document.getElementById('status');
-        statusDiv.style.display = 'block';
-        statusDiv.innerHTML = 'Aggiornamento configurazione...';
-        statusDiv.style.backgroundColor = '#fff3cd';
-        statusDiv.style.color = '#856404';
-        
-        google.script.run
-          .withSuccessHandler(function(result) {
-            if (result.success) {
-              statusDiv.innerHTML = '✅ Sistema ri-configurato con successo!<br>Configurazione precedente: ' + result.previousId + '<br>Nuova configurazione: ' + result.newId;
-              statusDiv.style.backgroundColor = '#d4edda';
-              statusDiv.style.color = '#155724';
-              
-              btn.innerHTML = '✅ Completato';
-              btn.style.backgroundColor = '#28a745';
-              
-              setTimeout(() => {
-                google.script.host.close();
-              }, 4000);
-            } else {
-              statusDiv.innerHTML = '❌ Errore: ' + result.message;
-              statusDiv.style.backgroundColor = '#f8d7da';
-              statusDiv.style.color = '#721c24';
-              
-              btn.disabled = false;
-              btn.innerHTML = originalText;
-            }
-          })
-          .withFailureHandler(function(error) {
-            statusDiv.innerHTML = '❌ Errore tecnico: ' + error.message;
-            statusDiv.style.backgroundColor = '#f8d7da';
-            statusDiv.style.color = '#721c24';
-            
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-          })
-          .executeSystemReconfiguration();
-      }
-    </script>
-  `;
-  
-  const htmlOutput = HtmlService.createHtmlOutput(htmlContent)
-    .setWidth(650)
-    .setHeight(700);
-    
-  const title = status.systemHealth === 'healthy' ? 
-    '✅ Sistema Inizializzato' : 
-    status.systemHealth === 'needs_setup' ? 
-    '🚀 Setup Sistema' :
-    status.systemHealth === 'conflict' ?
-    '⚠️ Conflitto Configurazione' :
-    '❌ Errore Sistema';
-    
-  SpreadsheetApp.getUi().showModalDialog(htmlOutput, title);
-}
-
-/**
- * Esegue l'inizializzazione del sistema salvando l'ID spreadsheet corrente.
- *
- * Legge l'ID dello spreadsheet attivo e lo salva in PropertiesService con la
- * chiave 'MAIN_SHEET_ID'. Chiamata dal JS client nel dialog via google.script.run.
- * Restituisce un oggetto strutturato per il callback del dialog.
- *
- * FLUSSO INTERNO:
- *   1. Legge ID spreadsheet attivo
- *   2. setProperty('MAIN_SHEET_ID', spreadsheetId)
- *   3. Ritorna { success: true, spreadsheetId }
- *
- * CHIAMATA DA: showSystemInitializationDialog() → client JS → google.script.run
- * CHIAMA:      SpreadsheetApp.getActiveSpreadsheet(), PropertiesService.getScriptProperties()
- *
- * @returns {{ success: boolean, message: string, spreadsheetId?: string }}
- */
-function executeSystemInitialization() {
-  try {
-    const spreadsheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
-    
-    // Salva la configurazione
-    PropertiesService.getScriptProperties().setProperty('MAIN_SHEET_ID', spreadsheetId);
-    
-    // Log per debug
-    console.log('Sistema inizializzato con ID:', spreadsheetId);
-    
-    return { 
-      success: true, 
-      message: 'Sistema inizializzato correttamente',
-      spreadsheetId: spreadsheetId
-    };
-  } catch (error) {
-    console.error('Errore inizializzazione:', error);
-    return { 
-      success: false, 
-      message: error.toString() 
-    };
-  }
-}
-
-/**
- * Esegue la riconfigura del sistema aggiornando l'ID spreadsheet in PropertiesService.
- *
- * Salva il vecchio ID (previousId) per il feedback nel dialog, poi aggiorna
- * 'MAIN_SHEET_ID' con l'ID dello spreadsheet corrente. Usata quando il sistema
- * era configurato per un altro spreadsheet (stato 'conflict').
- *
- * FLUSSO INTERNO:
- *   1. Legge l'ID attivo e il precedente
- *   2. setProperty('MAIN_SHEET_ID', currentSpreadsheetId)
- *   3. Ritorna { success: true, previousId, newId }
- *
- * CHIAMATA DA: showSystemInitializationDialog() → client JS → google.script.run
- * CHIAMA:      SpreadsheetApp.getActiveSpreadsheet(), PropertiesService.getScriptProperties()
- *
- * @returns {{ success: boolean, message: string, previousId?: string, newId?: string }}
- */
-function executeSystemReconfiguration() {
-  try {
-    const currentSpreadsheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
-    const previousId = PropertiesService.getScriptProperties().getProperty('MAIN_SHEET_ID');
-    
-    // Aggiorna la configurazione
-    PropertiesService.getScriptProperties().setProperty('MAIN_SHEET_ID', currentSpreadsheetId);
-    
-    // Log per debug
-    console.log('Sistema ri-configurato da', previousId, 'a', currentSpreadsheetId);
-    
-    return { 
-      success: true, 
-      message: 'Sistema ri-configurato correttamente',
-      previousId: previousId,
-      newId: currentSpreadsheetId
-    };
-  } catch (error) {
-    console.error('Errore ri-configurazione:', error);
-    return { 
-      success: false, 
-      message: error.toString() 
-    };
-  }
-}
-
-/**
- * Menu bridge: avvia il ciclo completo di diagnostica e mostra i risultati.
- *
- * Chiama performSystemDiagnostics() per raccogliere i dati, poi passa il
- * risultato a showDiagnosticsDialog() per la visualizzazione HTML.
- *
- * CHIAMATA DA: onOpen() → menu "🔧 Diagnostica sistema"
- * CHIAMA:      performSystemDiagnostics(), showDiagnosticsDialog(), handleGlobalError()
- *
- * @returns {void}
- */
-function runSystemDiagnostics() {
-  try {
-    const diagnostics = performSystemDiagnostics();
-    showDiagnosticsDialog(diagnostics);
-  } catch (error) {
-    handleGlobalError('runSystemDiagnostics', error);
-  }
-}
-
-/**
- * Raccoglie i dati diagnostici del sistema senza mostrare UI.
- *
- * Verifica connessione al database, conta fogli (sistema vs dipendenti),
- * legge la lista utenti per verificare quanti hanno password, e controlla
- * l'esistenza delle cartelle Drive di archivio e report. Tutti gli errori
- * parziali vengono registrati in results.errors senza interrompere l'analisi.
- *
- * FLUSSO INTERNO:
- *   1. getMainSpreadsheet() → verifica connessione database
- *   2. getSheets() → classifica fogli con isSystemSheet()
- *   3. getUsersList() → conta utenti attivi e con password
- *   4. DriveApp.getFoldersByName() → verifica cartelle archivio e report
- *   5. Ritorna oggetto results con tutti i dati raccolti
- *
- * CHIAMATA DA: runSystemDiagnostics()
- * CHIAMA:      getMainSpreadsheet() (Config.gs), isSystemSheet() (Config.gs),
- *              getUsersList() (GestionePassword.gs), DriveApp.getFoldersByName(),
- *              CONFIG.FOLDERS
- *
- * @returns {{ timestamp: string, spreadsheet: { status: string, details: string },
- *             sheets: { count: number, employees: number, system: number },
- *             users: { total: number, active: number, withPassword: number },
- *             folders: { archive: boolean, reports: boolean },
- *             errors: string[] }} Oggetto con tutti i risultati diagnostici.
- */
-function performSystemDiagnostics() {
-  const results = {
-    timestamp: new Date().toLocaleString('it-IT'),
-    spreadsheet: { status: 'unknown', details: '' },
-    sheets: { count: 0, employees: 0, system: 0 },
-    users: { total: 0, active: 0, withPassword: 0 },
-    folders: { archive: false, reports: false },
-    errors: []
-  };
-  
-  try {
-    const spreadsheet = getMainSpreadsheet();
-    results.spreadsheet.status = 'ok';
-    results.spreadsheet.details = spreadsheet.getName();
-    
-    const sheets = spreadsheet.getSheets();
-    results.sheets.count = sheets.length;
-    
-    sheets.forEach(sheet => {
-      const name = sheet.getName();
-      if (isSystemSheet(name)) {
-        results.sheets.system++;
-      } else {
-        results.sheets.employees++;
-      }
-    });
-    
-    try {
-      const users = getUsersList();
-      results.users.total = users.length;
-      results.users.active = users.filter(u => u.attivo === 'Si').length;
-      results.users.withPassword = users.filter(u => u.hasPassword).length;
-    } catch (error) {
-      results.errors.push('Impossibile leggere foglio Utenti: ' + error.message);
-    }
-    
-    try {
-      results.folders.archive = DriveApp.getFoldersByName(CONFIG.FOLDERS.ARCHIVE).hasNext();
-      results.folders.reports = DriveApp.getFoldersByName(CONFIG.FOLDERS.REPORTS).hasNext();
-    } catch (error) {
-      results.errors.push('Errore accesso Drive: ' + error.message);
-    }
-    
-  } catch (error) {
-    results.spreadsheet.status = 'error';
-    results.spreadsheet.details = error.message;
-    results.errors.push('Errore connessione database: ' + error.message);
-  }
-  
-  return results;
-}
-
-/**
- * Mostra i risultati della diagnostica in una dialog HTML modale.
- *
- * Genera un dialog 650x700 con riepilogo generale (database, fogli, utenti, errori),
- * dettagli per ogni area (database, struttura fogli, gestione utenti, cartelle Drive),
- * lista degli errori rilevati (se presenti) e raccomandazioni. Il colore e l'icona
- * dell'header si adattano automaticamente alla presenza o assenza di errori.
- *
- * CHIAMATA DA: runSystemDiagnostics()
- * CHIAMA:      HtmlService.createHtmlOutput(), SpreadsheetApp.getUi()
- *
- * @param {{ timestamp: string, spreadsheet: object, sheets: object,
- *           users: object, folders: object, errors: string[] }} diagnostics
- *   - Oggetto risultati da performSystemDiagnostics().
- * @returns {void}
- */
-function showDiagnosticsDialog(diagnostics) {
-  const statusIcon = diagnostics.errors.length === 0 ? '✅' : '⚠️';
-  const overallStatus = diagnostics.errors.length === 0 ? 'ECCELLENTE' : 'PROBLEMI RILEVATI';
-  const statusColor = diagnostics.errors.length === 0 ? '#28a745' : '#dc3545';
-  const gradientColor = diagnostics.errors.length === 0 ? 
-    'linear-gradient(135deg, #28a745 0%, #20c997 100%)' : 
-    'linear-gradient(135deg, #dc3545 0%, #fd7e14 100%)';
-  
-  const htmlContent = `
-    <div style="font-family: Arial, sans-serif; padding: 25px; line-height: 1.6; color: #333; max-width: 600px;">
-      
-      <div style="text-align: center; margin-bottom: 25px; padding: 20px; background: ${gradientColor}; color: white; border-radius: 10px;">
-        <h2 style="margin: 0; font-size: 24px;">${statusIcon} Diagnostica Sistema</h2>
-        <p style="margin: 8px 0 0 0; opacity: 0.9;">${diagnostics.timestamp}</p>
-        <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 5px;">
-          <strong style="font-size: 18px;">STATO: ${overallStatus}</strong>
-        </div>
-      </div>
-      
-      <div style="background: #f8f9fa; border-left: 5px solid ${statusColor}; padding: 20px; margin: 20px 0; border-radius: 5px;">
-        <h3 style="margin: 0 0 10px 0; color: ${statusColor};">📊 Riepilogo Generale</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-          <div>
-            <strong>Database:</strong> ${diagnostics.spreadsheet.status === 'ok' ? '✅' : '❌'} ${diagnostics.spreadsheet.status}<br>
-            <strong>Fogli totali:</strong> ${diagnostics.sheets.count}<br>
-            <strong>Dipendenti:</strong> ${diagnostics.sheets.employees}
-          </div>
-          <div>
-            <strong>Utenti sistema:</strong> ${diagnostics.users.total}<br>
-            <strong>Utenti attivi:</strong> ${diagnostics.users.active}<br>
-            <strong>Errori rilevati:</strong> <span style="color: ${diagnostics.errors.length === 0 ? '#28a745' : '#dc3545'}; font-weight: bold;">${diagnostics.errors.length}</span>
-          </div>
-        </div>
-      </div>
-      
-      <h3 style="color: #2c3e50; border-bottom: 2px solid #6c757d; padding-bottom: 8px; margin: 25px 0 15px 0;">🔍 Dettagli Diagnostica</h3>
-      
-      <div style="margin: 20px 0;">
-        <div style="background: #fff; border: 2px solid ${diagnostics.spreadsheet.status === 'ok' ? '#28a745' : '#dc3545'}; border-radius: 8px; padding: 15px; margin: 15px 0;">
-          <h4 style="margin: 0 0 10px 0; color: ${diagnostics.spreadsheet.status === 'ok' ? '#28a745' : '#dc3545'}; display: flex; align-items: center;">
-            <span style="background: ${diagnostics.spreadsheet.status === 'ok' ? '#28a745' : '#dc3545'}; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 12px;">💾</span>
-            DATABASE PRINCIPALE
-          </h4>
-          <ul style="margin: 10px 0; padding-left: 20px;">
-            <li><strong>Stato connessione:</strong> ${diagnostics.spreadsheet.status === 'ok' ? '✅ Connesso' : '❌ Errore'}</li>
-            <li><strong>Nome database:</strong> ${diagnostics.spreadsheet.details}</li>
-            <li><strong>Accessibilità:</strong> ${diagnostics.spreadsheet.status === 'ok' ? 'Pieno accesso' : 'Problemi di accesso'}</li>
-          </ul>
-        </div>
-        
-        <div style="background: #fff; border: 2px solid #007bff; border-radius: 8px; padding: 15px; margin: 15px 0;">
-          <h4 style="margin: 0 0 10px 0; color: #007bff; display: flex; align-items: center;">
-            <span style="background: #007bff; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 12px;">📄</span>
-            STRUTTURA FOGLI
-          </h4>
-          <ul style="margin: 10px 0; padding-left: 20px;">
-            <li><strong>Fogli totali:</strong> ${diagnostics.sheets.count}</li>
-            <li><strong>Fogli dipendenti:</strong> ${diagnostics.sheets.employees} (dati operativi)</li>
-            <li><strong>Fogli di sistema:</strong> ${diagnostics.sheets.system} (configurazione)</li>
-            <li><strong>Rapporto:</strong> ${diagnostics.sheets.employees > 0 ? '✅ Struttura corretta' : '⚠️ Pochi dipendenti'}</li>
-          </ul>
-        </div>
-        
-        <div style="background: #fff; border: 2px solid ${diagnostics.users.total > 0 ? '#28a745' : '#ffc107'}; border-radius: 8px; padding: 15px; margin: 15px 0;">
-          <h4 style="margin: 0 0 10px 0; color: ${diagnostics.users.total > 0 ? '#28a745' : '#ffc107'}; display: flex; align-items: center;">
-            <span style="background: ${diagnostics.users.total > 0 ? '#28a745' : '#ffc107'}; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 12px;">👥</span>
-            GESTIONE UTENTI
-          </h4>
-          <ul style="margin: 10px 0; padding-left: 20px;">
-            <li><strong>Utenti totali:</strong> ${diagnostics.users.total}</li>
-            <li><strong>Utenti attivi:</strong> ${diagnostics.users.active} ${diagnostics.users.active > 0 ? '✅' : '⚠️'}</li>
-            <li><strong>Con password:</strong> ${diagnostics.users.withPassword} ${diagnostics.users.withPassword > 0 ? '✅' : '❌'}</li>
-            <li><strong>Sicurezza:</strong> ${diagnostics.users.withPassword === diagnostics.users.total ? '✅ Tutti protetti' : '⚠️ Alcuni senza password'}</li>
-          </ul>
-        </div>
-        
-        <div style="background: #fff; border: 2px solid ${(diagnostics.folders.archive && diagnostics.folders.reports) ? '#28a745' : '#ffc107'}; border-radius: 8px; padding: 15px; margin: 15px 0;">
-          <h4 style="margin: 0 0 10px 0; color: ${(diagnostics.folders.archive && diagnostics.folders.reports) ? '#28a745' : '#ffc107'}; display: flex; align-items: center;">
-            <span style="background: ${(diagnostics.folders.archive && diagnostics.folders.reports) ? '#28a745' : '#ffc107'}; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 12px;">🗂️</span>
-            CARTELLE GOOGLE DRIVE
-          </h4>
-          <ul style="margin: 10px 0; padding-left: 20px;">
-            <li><strong>Cartella archivi:</strong> ${diagnostics.folders.archive ? '✅ Trovata' : '❌ Mancante'}</li>
-            <li><strong>Cartella report:</strong> ${diagnostics.folders.reports ? '✅ Trovata' : '❌ Mancante'}</li>
-            <li><strong>Stato generale:</strong> ${(diagnostics.folders.archive && diagnostics.folders.reports) ? '✅ Configurazione completa' : '⚠️ Alcune cartelle mancanti'}</li>
-          </ul>
-        </div>
-      </div>
-      
-      ${diagnostics.errors.length > 0 ? `
-      <div style="background: #f8d7da; border: 2px solid #dc3545; border-radius: 8px; padding: 20px; margin: 25px 0;">
-        <h3 style="margin: 0 0 15px 0; color: #721c24;">❌ Errori Rilevati</h3>
-        <div style="background: white; padding: 15px; border-radius: 5px;">
-          ${diagnostics.errors.map((error, i) => `
-            <div style="margin: 10px 0; padding: 10px; background: #fff5f5; border-left: 4px solid #dc3545; border-radius: 3px;">
-              <strong>${i + 1}.</strong> ${error}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-      ` : `
-      <div style="background: #d4edda; border: 2px solid #28a745; border-radius: 8px; padding: 20px; margin: 25px 0;">
-        <h3 style="margin: 0 0 15px 0; color: #155724;">✅ Sistema in Perfetta Salute</h3>
-        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #28a745;">
-          <p style="margin: 0; color: #155724;">
-            <strong>Congratulazioni!</strong> Tutti i controlli sono stati superati con successo. 
-            Il sistema è configurato correttamente e pronto per l'uso.
-          </p>
-        </div>
-      </div>
-      `}
-      
-      <div style="background: #e3f2fd; border-radius: 8px; padding: 20px; margin: 25px 0;">
-        <h3 style="margin: 0 0 15px 0; color: #1976d2;">💡 Raccomandazioni</h3>
-        
-        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #2196f3;">
-          ${diagnostics.errors.length === 0 ? `
-            <h4 style="margin: 0 0 8px 0; color: #1976d2;">🚀 SISTEMA OTTIMALE</h4>
-            <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-              <li>Esegui diagnostica settimanalmente per monitoraggio</li>
-              <li>Controlla periodicamente che nuovi dipendenti abbiano password</li>
-              <li>Usa le funzioni di test prima di operazioni massive</li>
-              <li>Mantieni backup regolari delle configurazioni</li>
-            </ul>
-          ` : `
-            <h4 style="margin: 0 0 8px 0; color: #dc3545;">🔧 AZIONI CORRETTIVE</h4>
-            <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-              ${diagnostics.users.withPassword < diagnostics.users.total ? '<li>Imposta password per utenti senza credenziali</li>' : ''}
-              ${!diagnostics.folders.archive ? '<li>La cartella "Archivi Ore Lavorate" verrà creata automaticamente al primo uso</li>' : ''}
-              ${!diagnostics.folders.reports ? '<li>La cartella "Report Commercialista" verrà creata automaticamente al primo uso</li>' : ''}
-              ${diagnostics.sheets.employees === 0 ? '<li>Verifica che esistano fogli dipendenti nel database</li>' : ''}
-              <li>Risolvi gli errori elencati sopra prima di procedere</li>
-              <li>Riesegui la diagnostica dopo le correzioni</li>
-            </ul>
-          `}
-        </div>
-      </div>
-      
-      <div style="background: #fff3cd; border-radius: 8px; padding: 20px; margin: 25px 0;">
-        <h3 style="margin: 0 0 15px 0; color: #856404;">🔄 Prossimi Passi</h3>
-        
-        <div style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
-          <ol style="margin: 0; padding-left: 20px; font-size: 14px;">
-            ${diagnostics.errors.length === 0 ? `
-              <li>Sistema pronto! Puoi iniziare a usare tutte le funzioni</li>
-              <li>Prova "🧪 Test report" per verificare la generazione report</li>
-              <li>Controlla "📋 Lista utenti" per gestione password</li>
-              <li>Leggi le guide "📖 Come..." per ogni modulo</li>
-            ` : `
-              <li>Risolvi gli errori evidenziati in rosso</li>
-              <li>Se mancano cartelle, prova a eseguire una funzione che le crea</li>
-              <li>Per problemi utenti, vai in "🔐 Password" → "📋 Lista utenti"</li>
-              <li>Riesegui questa diagnostica dopo le correzioni</li>
-            `}
-          </ol>
-        </div>
-      </div>
-      
-      <div style="text-align: center; margin-top: 30px;">
-        <button onclick="google.script.host.close()" 
-                style="background: ${gradientColor}; color: white; border: none; padding: 12px 30px; border-radius: 25px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-          ${statusIcon} Chiudi Diagnostica
-        </button>
-      </div>
-      
-    </div>
-  `;
-  
-  const htmlOutput = HtmlService.createHtmlOutput(htmlContent)
-    .setWidth(650)
-    .setHeight(700);
-    
-  const title = diagnostics.errors.length === 0 ? 
-    '✅ Diagnostica Sistema - Tutto OK' : 
-    '⚠️ Diagnostica Sistema - Problemi Rilevati';
-    
-  SpreadsheetApp.getUi().showModalDialog(htmlOutput, title);
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GESTIONE ERRORI GLOBALE — logging e notifica utente
@@ -2171,5 +1359,5 @@ function handleGlobalError(functionName, error) {
   }
   
   const userMessage = `❌ Si è verificato un errore:\n\n${error.message}\n\nFunzione: ${functionName}\nData: ${timestamp}\n\nContatta l'amministratore se il problema persiste.`;
-  SpreadsheetApp.getUi().alert('Errore Sistema', userMessage);
+  SpreadsheetApp.getUi().alert('Errore Sistema', userMessage, SpreadsheetApp.getUi().ButtonSet.OK);
 }
