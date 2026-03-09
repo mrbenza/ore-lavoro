@@ -408,6 +408,128 @@ function displayUsersList() {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SELF-SERVICE — cambio password da parte dell'utente autenticato
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Cambio password self-service — consente all'utente autenticato di cambiare
+ * la propria password verificando prima quella attuale.
+ *
+ * A differenza di cambiaPasswordDipendente() (riservata agli admin), questa
+ * funzione non richiede privilegi di amministratore: chiunque con un session
+ * token valido può cambiare la propria password purché conosca quella corrente.
+ *
+ * FLUSSO INTERNO:
+ *   1. validateSessionToken(sessionToken) → se falso, errore sessione non valida
+ *   2. Estrae userId = sessionToken.split('_')[0]
+ *   3. getMainSpreadsheet() + getSheetSafe() → foglio Utenti
+ *   4. getColumnMapping() → mappa dinamica colonne
+ *   5. Scansiona righe per trovare la riga con Username = userId
+ *   6. Se non trovato → errore 'Utente non trovato'
+ *   7. Legge hash attuale dalla colonna 'Password Hash'
+ *   8. generatePasswordHash(vecchiaPassword) e confronta
+ *   9. Se non corrisponde → errore 'Password attuale non corretta'
+ *  10. Valida nuovaPassword (minimo 4 caratteri)
+ *  11. Scrive generatePasswordHash(nuovaPassword) e nuovaPassword nelle
+ *      rispettive colonne (stesso comportamento di updateUserPassword)
+ *  12. Ritorna { success: true, message: 'Password aggiornata con successo' }
+ *
+ * CHIAMATA DA: ApiRouter.gs → doGet/doPost (action='cambiaPasswordUtente')
+ * CHIAMA:      validateSessionToken() (Authentication.gs),
+ *              getMainSpreadsheet() (Config.gs), getSheetSafe() (UtilsMenu.gs),
+ *              getColumnMapping(), generatePasswordHash() (Utils.gs),
+ *              handleError() (Utils.gs), SHEET_NAMES.UTENTI
+ *
+ * @param {string} sessionToken - Token di sessione dell'utente corrente.
+ * @param {string} vecchiaPassword - Password attuale in chiaro (per verifica).
+ * @param {string} nuovaPassword - Nuova password in chiaro (minimo 4 caratteri).
+ * @returns {{ success: boolean, message: string }} Esito dell'operazione.
+ *
+ * @example
+ * var res = cambiaPasswordUtente('mario_abc123', 'vecchia', 'nuova1234');
+ * // res → { success: true, message: 'Password aggiornata con successo' }
+ */
+function cambiaPasswordUtente(sessionToken, vecchiaPassword, nuovaPassword) {
+  try {
+    // 1. Valida sessione
+    if (!validateSessionToken(sessionToken)) {
+      Logger.warn('cambiaPasswordUtente: sessione non valida');
+      return { success: false, message: 'Sessione non valida' };
+    }
+
+    // 2. Estrai userId dal token
+    var userId = sessionToken.split('_')[0];
+    Logger.info('cambiaPasswordUtente: richiesta cambio password per userId=' + userId);
+
+    // 3. Accedi al foglio Utenti
+    var spreadsheet = getMainSpreadsheet();
+    var usersSheet = getSheetSafe(spreadsheet, SHEET_NAMES.UTENTI);
+
+    // 4. Lettura dinamica colonne
+    var colMap = getColumnMapping(usersSheet);
+
+    // Verifica presenza colonne obbligatorie
+    var required = ['Username', 'Password', 'Password Hash'];
+    for (var i = 0; i < required.length; i++) {
+      if (colMap[required[i]] === undefined) {
+        return { success: false, message: 'Configurazione foglio non valida: colonna "' + required[i] + '" mancante' };
+      }
+    }
+
+    // 5. Trova la riga dell'utente
+    var data = usersSheet.getDataRange().getValues();
+    var userRowIndex = -1;
+    var userRowData = null;
+
+    for (var r = 1; r < data.length; r++) {  // parte da 1, salta header
+      var rowUsername = (data[r][colMap['Username']] || '').toString().trim();
+      if (rowUsername === userId) {
+        userRowIndex = r + 1;  // converti in 1-based per getRange
+        userRowData = data[r];
+        break;
+      }
+    }
+
+    // 6. Utente non trovato
+    if (userRowIndex === -1) {
+      Logger.warn('cambiaPasswordUtente: utente non trovato - userId=' + userId);
+      return { success: false, message: 'Utente non trovato' };
+    }
+
+    // 7. Leggi hash attuale dalla colonna 'Password Hash'
+    var hashAttuale = (userRowData[colMap['Password Hash']] || '').toString().trim();
+
+    // 8. Verifica vecchia password
+    var hashVecchia = generatePasswordHash(vecchiaPassword);
+    if (hashVecchia !== hashAttuale) {
+      Logger.warn('cambiaPasswordUtente: password attuale non corretta per userId=' + userId);
+      return { success: false, message: 'Password attuale non corretta' };
+    }
+
+    // 9. Valida nuova password
+    if (!nuovaPassword || nuovaPassword.length < 4) {
+      return { success: false, message: 'La nuova password deve avere almeno 4 caratteri' };
+    }
+
+    // 10. Aggiorna Password e Password Hash (stesso pattern di updateUserPassword)
+    var passwordCol = colMap['Password'] + 1;      // +1: getRange è 1-based
+    var hashCol = colMap['Password Hash'] + 1;
+    var nuovoHash = generatePasswordHash(nuovaPassword);
+
+    usersSheet.getRange(userRowIndex, passwordCol).setValue(nuovaPassword);
+    usersSheet.getRange(userRowIndex, hashCol).setValue(nuovoHash);
+
+    Logger.info('cambiaPasswordUtente: password aggiornata con successo per userId=' + userId);
+
+    // 11. Risposta di successo
+    return { success: true, message: 'Password aggiornata con successo' };
+
+  } catch (error) {
+    return handleError('cambiaPasswordUtente', error);
+  }
+}
+
 /**
  * Mostra il riepilogo dello stato password per tutti i dipendenti.
  *

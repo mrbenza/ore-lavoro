@@ -486,6 +486,52 @@
         }
 
         /* ═══════════════════════════════════════════
+           CAMBIA PASSWORD — Card separata sotto il form
+           inserimento ore. Pulsante con stile flat (bordo
+           viola, sfondo bianco) per distinguerlo dal
+           save-btn principale.
+           ═══════════════════════════════════════════ */
+        .change-pwd-section {
+            margin-top: 40px;
+        }
+
+        .change-pwd-section .form-section {
+            background: rgba(102, 126, 234, 0.04);
+            border: 1px solid rgba(102, 126, 234, 0.15);
+        }
+
+        @media (max-width: 768px) {
+            .change-pwd-section .form-section {
+                background: white;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+                border: 1px solid rgba(102, 126, 234, 0.12);
+            }
+        }
+
+        .change-pwd-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .change-pwd-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .change-pwd-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ═══════════════════════════════════════════
            CALENDARIO — Griglia 7 colonne per il
            calendario mensile. Header giorni settimana
            con gradiente viola. Giorni normali bianchi,
@@ -1183,6 +1229,44 @@
                         I totali si aggiornano automaticamente
                     </div>
                 </div>
+
+                <!-- SEZIONE CAMBIA PASSWORD — card separata, sotto il form inserimento ore -->
+                <div class="change-pwd-section" aria-label="Sezione cambio password">
+                    <div class="form-section">
+                        <div class="section-title">
+                            <span class="icon" aria-hidden="true">🔒</span>
+                            Cambia Password
+                        </div>
+
+                        <div class="form-group">
+                            <label for="currentPassword">Password attuale</label>
+                            <input type="password" id="currentPassword"
+                                   autocomplete="current-password"
+                                   placeholder="Inserisci la password attuale">
+                        </div>
+
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label for="newPassword">Nuova password</label>
+                            <input type="password" id="newPassword"
+                                   autocomplete="new-password"
+                                   placeholder="Minimo 4 caratteri">
+                        </div>
+
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label for="confirmPassword">Conferma nuova password</label>
+                            <input type="password" id="confirmPassword"
+                                   autocomplete="new-password"
+                                   placeholder="Ripeti la nuova password">
+                        </div>
+
+                        <div style="margin-top: 25px;">
+                            <button type="button" class="change-pwd-btn" id="changePwdBtn"
+                                    aria-label="Aggiorna password">
+                                Aggiorna Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- PAGINA CALENDARIO -->
@@ -1449,6 +1533,7 @@
             setupScrollEffect();
             setupNavigation();
             setupCalendar();
+            setupPasswordChange();
 
             const results = await Promise.allSettled([
                 loadCantieri(),
@@ -2389,6 +2474,106 @@
                 setTimeout(() => {
                     Utils.redirectToLogin();
                 }, 1500);
+            }
+        }
+
+        /**
+         * Registra il listener click sul pulsante "Aggiorna Password".
+         *
+         * DESCRIZIONE ESTESA: Seleziona il pulsante #changePwdBtn e vi collega
+         * un click handler che invoca cambiaPassword(). Separata da initializeApp
+         * per mantenere la struttura modulare del codice.
+         *
+         * CHIAMATA DA:  initializeApp
+         * CHIAMA:       cambiaPassword
+         *
+         * @returns {void}
+         */
+        function setupPasswordChange() {
+            const btn = document.getElementById('changePwdBtn');
+            if (!btn) return;
+            btn.addEventListener('click', function() {
+                cambiaPassword();
+            });
+        }
+
+        /**
+         * Gestisce il cambio password dell'utente corrente.
+         *
+         * DESCRIZIONE ESTESA:
+         *   1. Legge i tre campi: currentPassword, newPassword, confirmPassword.
+         *   2. Valida lato client: campi obbligatori, lunghezza minima 4 caratteri,
+         *      corrispondenza tra nuova password e conferma.
+         *   3. Disabilita il pulsante e mostra stato "Aggiornamento..." durante la chiamata.
+         *   4. Chiama Utils.callAPI con action 'cambiaPasswordUtente'.
+         *   5. Se result.success svuota i tre campi e mostra notifica successo.
+         *   6. Se errore mostra notifica error con result.message.
+         *
+         * CHIAMATA DA:  setupPasswordChange (click su #changePwdBtn)
+         * CHIAMA:       Utils.callAPI, showNotification
+         * LEGGE:        sessionToken, #currentPassword, #newPassword, #confirmPassword
+         *
+         * @returns {Promise<void>}
+         */
+        async function cambiaPassword() {
+            const currentPasswordEl = document.getElementById('currentPassword');
+            const newPasswordEl     = document.getElementById('newPassword');
+            const confirmPasswordEl = document.getElementById('confirmPassword');
+            const btn               = document.getElementById('changePwdBtn');
+
+            const currentPassword = currentPasswordEl ? currentPasswordEl.value.trim() : '';
+            const newPassword     = newPasswordEl     ? newPasswordEl.value             : '';
+            const confirmPassword = confirmPasswordEl ? confirmPasswordEl.value         : '';
+
+            // Validazioni client-side
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showNotification('Compila tutti i campi password', 'error');
+                return;
+            }
+
+            if (newPassword.length < 4) {
+                showNotification('La nuova password deve essere di almeno 4 caratteri', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showNotification('Le password non coincidono', 'error');
+                return;
+            }
+
+            // Stato loading
+            if (btn) {
+                btn.disabled    = true;
+                btn.textContent = 'Aggiornamento...';
+            }
+
+            try {
+                const result = await Utils.callAPI({
+                    action:          'cambiaPasswordUtente',
+                    sessionToken:    sessionToken,
+                    vecchiaPassword: currentPassword,
+                    nuovaPassword:   newPassword
+                });
+
+                if (result && result.success) {
+                    showNotification('Password aggiornata!', 'success');
+                    // Svuota i campi dopo il successo
+                    if (currentPasswordEl) currentPasswordEl.value = '';
+                    if (newPasswordEl)     newPasswordEl.value     = '';
+                    if (confirmPasswordEl) confirmPasswordEl.value = '';
+                } else {
+                    const msg = (result && result.message) ? result.message : 'Errore durante il cambio password';
+                    showNotification(msg, 'error');
+                }
+            } catch (err) {
+                console.error('Errore GAS cambiaPassword:', err);
+                showNotification('Errore di rete. Riprova.', 'error');
+            } finally {
+                // Ripristina pulsante
+                if (btn) {
+                    btn.disabled    = false;
+                    btn.textContent = 'Aggiorna Password';
+                }
             }
         }
 

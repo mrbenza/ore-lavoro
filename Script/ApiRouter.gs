@@ -267,6 +267,14 @@ function doGet(e) {
         e.parameter.nuovaPassword
       );
     }
+    else if (action === 'cambiaPasswordUtente') {
+      // → GestionePassword.gs (self-service, nessun privilegio admin richiesto)
+      result = cambiaPasswordUtente(
+        e.parameter.sessionToken,
+        e.parameter.vecchiaPassword,
+        e.parameter.nuovaPassword
+      );
+    }
     else if (action === 'creaUtente') {
       // → GestioneUtenti.gs
       result = creaUtenteAPI(e.parameter.sessionToken, e.parameter.datiJSON);
@@ -308,7 +316,7 @@ function doGet(e) {
           'getOtherUserInfo', 'getOtherUserMonthlyData', 'getAllCantieriForAdmin',
           'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
           'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
-          'cambiaPassword', 'creaUtente', 'aggiornaStatoUtente',
+          'cambiaPassword', 'cambiaPasswordUtente', 'creaUtente', 'aggiornaStatoUtente',
           'getStatistiche', 'forzaAggregazione'
         ]
       };
@@ -520,6 +528,14 @@ function doPost(e) {
         params.nuovaPassword
       );
     }
+    else if (params.action === 'cambiaPasswordUtente') {
+      // → GestionePassword.gs (self-service, nessun privilegio admin richiesto)
+      result = cambiaPasswordUtente(
+        params.sessionToken,
+        params.vecchiaPassword,
+        params.nuovaPassword
+      );
+    }
     else if (params.action === 'creaUtente') {
       // → GestioneUtenti.gs
       result = creaUtenteAPI(params.sessionToken, params.datiJSON);
@@ -561,7 +577,7 @@ function doPost(e) {
           'getOtherUserInfo', 'getOtherUserMonthlyData', 'getAllCantieriForAdmin',
           'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
           'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
-          'cambiaPassword', 'creaUtente', 'aggiornaStatoUtente',
+          'cambiaPassword', 'cambiaPasswordUtente', 'creaUtente', 'aggiornaStatoUtente',
           'getStatistiche', 'forzaAggregazione'
         ]
       };
