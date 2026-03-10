@@ -234,22 +234,31 @@ H2 =SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),1,1),A:A,"<"&DATE(YEAR(TODAY())+1,1,1
 
 Non è necessario alcun passo di inizializzazione manuale: il menu si attiva automaticamente all'apertura del foglio, e `setupAmministrazioneSheet()` (in `Statistiche.gs`) può essere eseguita una tantum per creare il foglio Amministrazione e installare i trigger.
 
-### 3. Proxy Vercel
+### 3. Variabile d'ambiente — OBBLIGATORIA
 
-Apri `api/proxy.js` e aggiorna la costante con l'URL copiato al passo precedente:
+> ⚠️ **Senza questo passaggio il proxy restituisce HTTP 500 e il login non funziona.**
 
-```js
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/TUO_ID/exec';
-```
+Il proxy legge l'URL di Google Apps Script da una variabile d'ambiente. Va configurata sulla piattaforma di hosting prima del deploy:
 
-> Alternativa: usa una variabile d'ambiente Vercel (`process.env.APPS_SCRIPT_URL`) per non esporre l'URL nel codice.
+| Piattaforma | Dove configurare |
+|-------------|-----------------|
+| **Vercel** | Dashboard → Progetto → Settings → Environment Variables |
+| **Netlify** | Site Settings → Environment Variables |
+| **Railway / Render / Fly.io** | Variables nella dashboard del progetto |
+| **VPS** | File `.env` nella root del progetto |
+| **Docker** | `ENV` nel Dockerfile o `docker-compose.yml` |
+| **Locale** | File `.env.local` nella root (già in `.gitignore`) |
+
+**Nome variabile:** `GOOGLE_APPS_SCRIPT_URL`
+**Valore:** l'URL copiato al passo precedente (`https://script.google.com/macros/s/.../exec`)
 
 ### 4. Deploy su Vercel
 
 1. Crea repository GitHub e carica il progetto
 2. Importa il repository su [vercel.com](https://vercel.com)
-3. Nessun build command — il progetto è statico (già configurato in `vercel.json`)
-4. Il sito sarà disponibile su `https://nome-progetto.vercel.app`
+3. Aggiungi la variabile d'ambiente `GOOGLE_APPS_SCRIPT_URL` (vedi passo 3)
+4. Nessun build command — il progetto è statico (già configurato in `vercel.json`)
+5. Il sito sarà disponibile su `https://nome-progetto.vercel.app`
 
 `config.js` è già configurato con URL relativo `/api/proxy`: non serve modificarlo.
 
