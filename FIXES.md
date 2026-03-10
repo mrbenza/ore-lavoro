@@ -45,6 +45,12 @@ Aggiunto `SHEET_NAMES` in `Config.gs`. Sostituite tutte le 10 occorrenze hardcod
 
 ---
 
+### ~~ANOMALIA-02 — `logAdminAction()` mai chiamata~~ ❌ FALSO POSITIVO
+**Chiuso il 2026-03-10.**
+Il tracciamento admin è già gestito inline: `updateWorkEntry()` scrive `"** Modificato da amministrazione (admin - data)"` nella colonna Note del foglio utente. `logAdminAction()` è dead code — rimossa.
+
+---
+
 ### ~~ANOMALIA-03 — `updateUserPassword()` salva la password in chiaro nel foglio~~ ❌ FALSO POSITIVO
 **Chiuso il 2026-03-10.**
 Comportamento intenzionale: l'amministrazione deve poter conoscere la password reale degli utenti. Non ci sono dati sensibili nel sistema. Nessun intervento necessario.

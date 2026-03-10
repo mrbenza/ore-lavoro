@@ -30,31 +30,45 @@ export default async function handler(req, res) {
 
     console.log('Proxy request ricevuta:', requestData);
 
-    // 🔧 FIX: Costruisci URL con parametri per GET (come si aspetta Apps Script)
-    const url = new URL(APPS_SCRIPT_URL);
-    
-    // Aggiungi tutti i parametri come query string
-    Object.keys(requestData).forEach(key => {
-      const value = requestData[key];
-      
-      if (typeof value === 'object' && value !== null) {
-        // Serializza oggetti come JSON string
-        url.searchParams.append(key, JSON.stringify(value));
-      } else {
-        // Parametri semplici
-        url.searchParams.append(key, String(value));
-      }
-    });
+    // Operazioni di scrittura: inoltrate come POST a GAS (dati nel body, non in URL)
+    // Operazioni di lettura: inoltrate come GET a GAS (query string, più affidabile)
+    const WRITE_ACTIONS = new Set([
+      'saveWorkEntry', 'updateWorkEntry', 'deleteWorkEntry',
+      'cambiaPassword', 'cambiaPasswordUtente', 'creaUtente',
+      'aggiornaStatoUtente', 'updateCantiereStato',
+      'ricalcolaCantieri', 'invalidateCache', 'forzaAggregazione'
+    ]);
 
-    console.log('URL finale chiamata:', url.toString());
+    const isWrite = WRITE_ACTIONS.has(requestData.action);
 
-    // Chiama Google Apps Script con GET (più affidabile)
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'Vercel-Proxy/1.0',
-      }
-    });
+    let response;
+
+    if (isWrite) {
+      // POST a GAS: body in formato application/x-www-form-urlencoded con chiave 'data'
+      // (formato atteso da doPost in ApiRouter.gs righe 386-389)
+      const body = 'data=' + encodeURIComponent(JSON.stringify(requestData));
+      console.log('Inoltro come POST (azione di scrittura):', requestData.action);
+      response = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Vercel-Proxy/1.0',
+        },
+        body: body
+      });
+    } else {
+      // GET a GAS: parametri in query string
+      const url = new URL(APPS_SCRIPT_URL);
+      Object.keys(requestData).forEach(key => {
+        const value = requestData[key];
+        url.searchParams.append(key, typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value));
+      });
+      console.log('Inoltro come GET (azione di lettura):', requestData.action);
+      response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: { 'User-Agent': 'Vercel-Proxy/1.0' }
+      });
+    }
 
     if (!response.ok) {
       throw new Error(`Google Apps Script error: ${response.status} ${response.statusText}`);
