@@ -26,8 +26,9 @@
  *   1. Recupera il foglio Cantieri con getSheetSafely()
  *   2. Legge tutte le righe in un'unica getRange().getValues()
  *   3. Cerca il cantiere per ID (confronto stringa)
- *   4. Aggiorna ORE_TOTALI, ULTIMO_UPDATE, ULTIMO_DIPENDENTE, NUM_INSERIMENTI
- *      con chiamate separate getRange().setValue() (non batchate — 4 celle per cantiere)
+ *   4. Aggiorna i 4 campi in memoria nell'array già letto, poi riscrive l'intera
+ *      riga con un unico setValues() (batch) — riduce le chiamate API da 4 a 1.
+ *      Applica il number format di ULTIMO_UPDATE con una singola chiamata separata.
  *   5. Restituisce oggetto con ore prima e dopo l'aggiornamento
  *
  * CHIAMATA DA: UserAPI.gs → saveWorkEntry()
@@ -94,19 +95,18 @@ function updateCantiereHours(cantiereId, oreAggiunte, dipendente) {
         var inserimentiAttuali = parseInt(row[COLUMNS_CANTIERI.NUM_INSERIMENTI]) || 0;
         var nuovoContatore = inserimentiAttuali + 1;
 
-        // Aggiorna celle
-        cantieriSheet.getRange(rowIndex1, COLUMNS_CANTIERI.ORE_TOTALI + 1).setValue(nuovoTotale);
+        // Aggiorna i campi nell'array in memoria, poi riscrivi l'intera riga
+        // con un unico setValues() — 1 chiamata API invece di 4.
+        row[COLUMNS_CANTIERI.ORE_TOTALI]        = nuovoTotale;
+        row[COLUMNS_CANTIERI.ULTIMO_UPDATE]     = dataAggiornamento;
+        row[COLUMNS_CANTIERI.ULTIMO_DIPENDENTE] = dipendente !== null ? dipendente : row[COLUMNS_CANTIERI.ULTIMO_DIPENDENTE];
+        row[COLUMNS_CANTIERI.NUM_INSERIMENTI]   = nuovoContatore;
+
+        cantieriSheet.getRange(rowIndex1, 1, 1, row.length).setValues([row]);
+
+        // Applica il number format alla sola cella ULTIMO_UPDATE (richiede chiamata separata)
         cantieriSheet.getRange(rowIndex1, COLUMNS_CANTIERI.ULTIMO_UPDATE + 1)
-          .setValue(dataAggiornamento)
           .setNumberFormat('dd/mm/yyyy hh:mm');
-
-        if (dipendente) {
-          cantieriSheet.getRange(rowIndex1, COLUMNS_CANTIERI.ULTIMO_DIPENDENTE + 1)
-            .setValue(dipendente);
-        }
-
-        cantieriSheet.getRange(rowIndex1, COLUMNS_CANTIERI.NUM_INSERIMENTI + 1)
-          .setValue(nuovoContatore);
 
         Logger.save('Cantiere aggiornato: ' + cantiereId);
 

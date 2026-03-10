@@ -233,8 +233,11 @@ function saveWorkEntry(sessionToken, workData) {
       String(note)
     ]]);
 
-    userWorkSheet.getRange(newRow, 1).setNumberFormat('dd/mm/yyyy');
-    userWorkSheet.getRange(newRow, 4).setNumberFormat('#,##0.0');
+    // Applica i number format alle 5 colonne con una sola chiamata setNumberFormats()
+    // invece di 2 chiamate getRange().setNumberFormat() separate.
+    userWorkSheet.getRange(newRow, 1, 1, 5).setNumberFormats(
+      [['dd/mm/yyyy', '@', '@', '#,##0.0', '@']]
+    );
 
     // Aggiorna cantiere (non bloccante)
     var cantiereUpdateResult = updateCantiereHours(

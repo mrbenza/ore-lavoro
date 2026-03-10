@@ -275,7 +275,7 @@ function verifyUserPassword(userRow, password, columnMap) {
  *
  * FLUSSO INTERNO:
  *   1. Cerca il foglio con nome userName tramite getSheetSafely()
- *   2. Legge celle F2, G2, H2 (SUMIFS)
+ *   2. Legge celle F2, G2, H2 (SUMIFS) in un'unica chiamata getValues() batch
  *   3. Se tutti 0 → scansiona righe dati (riga 5+) e calcola manualmente
  *   4. Restituisce { oreMeseCorrente, oreMesePrecedente, oreAnnoCorrente }
  *
@@ -297,13 +297,12 @@ function getUserHoursFromSheet(userName) {
       return { oreMeseCorrente: 0, oreMesePrecedente: 0, oreAnnoCorrente: 0 };
     }
 
-    // Prima prova: leggi dalle celle SUMIFS (F2, G2, H2)
-    var oreMeseCorrente = parseFloat(userSheet.getRange(USER_SHEET_CELLS.ORE_MESE_CORRENTE).getValue()) || 0;
-    var oreMesePrecedente = parseFloat(userSheet.getRange(USER_SHEET_CELLS.ORE_MESE_PRECEDENTE).getValue()) || 0;
-    var oreAnnoCorrente = 0;
-    try {
-      oreAnnoCorrente = parseFloat(userSheet.getRange(USER_SHEET_CELLS.ANNO_CORRENTE).getValue()) || 0;
-    } catch (e) { /* cella assente */ }
+    // Prima prova: leggi dalle celle SUMIFS (F2, G2, H2).
+    // F2, G2, H2 sono contigue — una sola chiamata getValues() invece di 3 getValue().
+    var oreRange = userSheet.getRange('F2:H2').getValues()[0];
+    var oreMeseCorrente   = parseFloat(oreRange[0]) || 0;
+    var oreMesePrecedente = parseFloat(oreRange[1]) || 0;
+    var oreAnnoCorrente   = parseFloat(oreRange[2]) || 0;
 
     // Fallback: se le celle SUMIFS sono tutte 0, calcola direttamente dai dati
     if (oreMeseCorrente === 0 && oreMesePrecedente === 0 && oreAnnoCorrente === 0) {
