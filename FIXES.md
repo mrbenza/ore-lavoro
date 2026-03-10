@@ -14,7 +14,13 @@
 
 ---
 
-### ANOMALIA-01 — `proxy.js` converte sempre tutto in GET verso GAS
+### ~~ANOMALIA-01 — `proxy.js` converte sempre tutto in GET verso GAS~~ ❌ NON RISOLVIBILE LATO PROXY
+**Chiuso il 2026-03-10.**
+GAS converte i POST in GET durante il redirect OAuth, perdendo il body. Testato: `doPost` riceve `e.postData` vuoto → `action = undefined`. Il GET è l'unico metodo affidabile con GAS deployato come web app. Comportamento accettato.
+
+---
+
+### ANOMALIA-01b — Dati sensibili (password) in query string URL
 **File:** `api/proxy.js` riga 52
 **Problema:** Il proxy inoltra **sempre** le richieste a GAS come GET (anche le POST del frontend). Conseguenza: i dati di `saveWorkEntry` (ore, cantiere, sessionToken, data) finiscono in query string URL invece che nel body.
 **Intervento (2 file):**

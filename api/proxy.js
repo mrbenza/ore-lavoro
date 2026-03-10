@@ -30,45 +30,19 @@ export default async function handler(req, res) {
 
     console.log('Proxy request ricevuta:', requestData);
 
-    // Operazioni di scrittura: inoltrate come POST a GAS (dati nel body, non in URL)
-    // Operazioni di lettura: inoltrate come GET a GAS (query string, più affidabile)
-    const WRITE_ACTIONS = new Set([
-      'saveWorkEntry', 'updateWorkEntry', 'deleteWorkEntry',
-      'cambiaPassword', 'cambiaPasswordUtente', 'creaUtente',
-      'aggiornaStatoUtente', 'updateCantiereStato',
-      'ricalcolaCantieri', 'invalidateCache', 'forzaAggregazione'
-    ]);
+    // GAS non gestisce correttamente POST con redirect (body perso) — sempre GET
+    const url = new URL(APPS_SCRIPT_URL);
+    Object.keys(requestData).forEach(key => {
+      const value = requestData[key];
+      url.searchParams.append(key, typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value));
+    });
 
-    const isWrite = WRITE_ACTIONS.has(requestData.action);
+    console.log('URL finale chiamata:', url.toString());
 
-    let response;
-
-    if (isWrite) {
-      // POST a GAS: body in formato application/x-www-form-urlencoded con chiave 'data'
-      // (formato atteso da doPost in ApiRouter.gs righe 386-389)
-      const body = 'data=' + encodeURIComponent(JSON.stringify(requestData));
-      console.log('Inoltro come POST (azione di scrittura):', requestData.action);
-      response = await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Vercel-Proxy/1.0',
-        },
-        body: body
-      });
-    } else {
-      // GET a GAS: parametri in query string
-      const url = new URL(APPS_SCRIPT_URL);
-      Object.keys(requestData).forEach(key => {
-        const value = requestData[key];
-        url.searchParams.append(key, typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value));
-      });
-      console.log('Inoltro come GET (azione di lettura):', requestData.action);
-      response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: { 'User-Agent': 'Vercel-Proxy/1.0' }
-      });
-    }
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: { 'User-Agent': 'Vercel-Proxy/1.0' }
+    });
 
     if (!response.ok) {
       throw new Error(`Google Apps Script error: ${response.status} ${response.statusText}`);
