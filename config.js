@@ -147,7 +147,7 @@ const ProductionLogger = {
      * @returns {void}
      */
     api: function(...args) {
-        if (CONFIG.LOGGING.API_CALLS && !CONFIG.PRODUCTION_MODE) {
+        if (CONFIG.LOGGING.API_LOGS && !CONFIG.PRODUCTION_MODE) {
             console.log('[API]', ...args);
         }
     },

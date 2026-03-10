@@ -499,31 +499,6 @@ function validateConfiguration() {
 }
 
 /**
- * Esegue un test di configurazione e stampa i risultati nel log GAS.
- *
- * Funzione di debug da eseguire manualmente dall'editor GAS per verificare
- * lo stato del sistema. Non viene chiamata in produzione.
- *
- * CHIAMATA DA: manuale (editor GAS)
- * CHIAMA:      validateConfiguration()
- */
-function testConfig() {
-  console.log('=== TEST CONFIGURAZIONE UNIFICATA ===');
-  console.log('Spreadsheet ID:', CONFIG.SPREADSHEET_ID);
-  console.log('Versione:', SYSTEM_INFO.version);
-  console.log('Build:', SYSTEM_INFO.build);
-
-  const validation = validateConfiguration();
-  console.log('Configurazione valida:', validation.valid);
-
-  if (!validation.valid) {
-    console.log('Errori:', validation.errors);
-  }
-
-  console.log('=== TEST COMPLETATO ===');
-}
-
-/**
  * Dialog step-by-step per configurare i dati azienda salvati in PropertiesService.
  *
  * Presenta in sequenza un prompt per ciascun campo (mostrando il valore attuale

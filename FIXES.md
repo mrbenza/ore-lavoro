@@ -14,6 +14,15 @@
 
 ---
 
+### ANOMALIA-01 — `proxy.js` converte sempre tutto in GET verso GAS
+**File:** `api/proxy.js` riga 52
+**Problema:** Il proxy inoltra **sempre** le richieste a GAS come GET (anche le POST del frontend). Conseguenza: i dati di `saveWorkEntry` (ore, cantiere, sessionToken, data) finiscono in query string URL invece che nel body.
+**Intervento (2 file):**
+1. `api/proxy.js` — quando `req.method === 'POST'`, inoltrare POST a GAS con body `data=JSON.stringify(requestData)` in `application/x-www-form-urlencoded` (formato già supportato da `doPost` in `ApiRouter.gs` righe 386-389)
+2. `ApiRouter.gs` — rimuovere il case `saveWorkEntry` da `doGet()` (riga 154-163), che diventa inutile e potenzialmente pericoloso
+
+---
+
 ### FIX-01 — URL Google Apps Script hardcoded in `api/proxy.js`
 **File:** `api/proxy.js` riga 17
 **Problema:** L'URL dell'endpoint GAS è nel codice sorgente, dovrebbe stare in una variabile d'ambiente.
@@ -33,6 +42,12 @@ const APPS_SCRIPT_URL = process.env.GOOGLE_APPS_SCRIPT_URL;
 ### ~~FIX-02 — Nomi fogli hardcoded in 10+ file invece delle costanti Config.gs~~ ✅ RISOLTO
 **Risolto il 2026-03-02.**
 Aggiunto `SHEET_NAMES` in `Config.gs`. Sostituite tutte le 10 occorrenze hardcoded in `AdminAPI.gs`, `ApiRouter.gs`, `Authentication.gs`, `CalcoloCantieri.gs`, `GestionePassword.gs`, `UserAPI.gs`.
+
+---
+
+### ~~ANOMALIA-03 — `updateUserPassword()` salva la password in chiaro nel foglio~~ ❌ FALSO POSITIVO
+**Chiuso il 2026-03-10.**
+Comportamento intenzionale: l'amministrazione deve poter conoscere la password reale degli utenti. Non ci sono dati sensibili nel sistema. Nessun intervento necessario.
 
 ---
 

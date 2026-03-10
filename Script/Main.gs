@@ -1066,20 +1066,6 @@ function generateYearlyReport() {
   }
 }
 
-/**
- * Menu bridge: genera un report di test per un singolo dipendente (mese corrente).
- * CHIAMATA DA: onOpen() → menu "📊 Report Commercialista" → "🧪 Test report"
- * CHIAMA:      executeTestSingleReport() (ReportCommercialista.gs), handleGlobalError()
- * @returns {void}
- */
-function testSingleReport() {
-  try {
-    executeTestSingleReport();
-  } catch (error) {
-    handleGlobalError('testSingleReport', error);
-  }
-}
-
 // --- Gestione Cantieri ---
 
 /**
