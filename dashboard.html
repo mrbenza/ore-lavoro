@@ -1461,8 +1461,10 @@
 
                         <form id="changePwdForm" autocomplete="on" onsubmit="return false;">
                             <!-- Campo username nascosto: permette al browser/password manager
-                                 di associare la nuova password all'account corretto -->
-                            <input type="hidden" id="changePasswordUsername" autocomplete="username">
+                                 di associare la nuova password all'account corretto.
+                                 Deve essere type="text" (non hidden) per essere riconosciuto da Chrome -->
+                            <input type="text" id="changePasswordUsername" autocomplete="username"
+                                   style="display:none;" aria-hidden="true" tabindex="-1">
 
                             <div class="form-group">
                                 <label for="currentPassword">Password attuale</label>
