@@ -1900,6 +1900,14 @@
                 elements.calendarTitle.textContent = `${monthNames[month - 1]} ${year}`;
             }
 
+            // Usa cache se disponibile per evitare chiamata API
+            const cacheKey = `${year}-${String(month).padStart(2, '0')}`;
+            if (monthlyCache[cacheKey]) {
+                calendarData = monthlyCache[cacheKey];
+                renderCalendar(year, month);
+                return;
+            }
+
             showCalendarLoading(true);
 
             try {
@@ -1916,6 +1924,7 @@
 
                 if (result.success) {
                     calendarData = result.data.workDays || {};
+                    monthlyCache[cacheKey] = calendarData; // popola cache
                     renderCalendar(year, month);
                 } else {
                     throw new Error(result.message || 'Errore caricamento calendario');
