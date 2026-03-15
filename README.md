@@ -2,7 +2,7 @@
 
 Sistema per la gestione delle ore di lavoro dei dipendenti con autenticazione, dashboard admin e integrazione Google Sheets.
 
-**Versione:** v2.1
+**Versione:** v2.2
 **Status:** Operativo
 
 ---
@@ -40,10 +40,11 @@ Lo script `backend/code.gs` è **container-bound**: va incollato nell'editor Scr
 
 ```
 ore-lavoro/
-├── index.html              # Login
-├── dashboard.html          # Dashboard dipendente
+├── index.html              # Login (footer versione dinamico da config.js)
+├── dashboard.html          # Dashboard dipendente (include modal novità)
 ├── admin.html              # Dashboard admin
-├── config.js               # Config + Utils + PageGuard (frontend)
+├── config.js               # Config + Utils + PageGuard + versioning (unica fonte di verità)
+├── news.json               # Dati modal novità: { version, title, items[] }
 ├── vercel.json             # Configurazione deploy Vercel
 ├── package.json            # Metadati progetto
 ├── GUIDA-LOGO.md           # Guida sostituzione logo aziendale (login)
@@ -147,6 +148,7 @@ Diagnostica e health check. `checkSystemHealth()` esegue controlli rapidi (< 2 s
 - Inserimento ore per data e cantiere
 - **Warning ore duplicate**: prima di salvare, mostra un modal di conferma se il giorno ha già ore inserite (anche per mesi passati)
 - **Cambio password self-service** dalla tab "Profilo" (verifica password attuale + aggiornamento con hash)
+- **Modal novità al primo accesso di una nuova versione**: `checkAndShowNews()` legge `news.json` via fetch, confronta `CONFIG.VERSION.frontend` con la chiave `newsLastSeenVersion` in localStorage e mostra un modal bloccante con le novità della versione. Il modal si chiude solo cliccando "Ho capito!".
 - Statistiche mese corrente, mese precedente, anno corrente
 - Navigazione con **sidebar a sinistra su desktop** (≥ 900px) e **tab bar in basso su mobile** (stile admin.html)
 - Cache mensile frontend (`monthlyCache`) per evitare chiamate ripetute a `getMonthlyWorkData`
@@ -166,6 +168,35 @@ Diagnostica e health check. `checkSystemHealth()` esegue controlli rapidi (< 2 s
 - **Report Commercialista:** genera PDF ed Excel mensili/annuali su Google Drive; voce "Configura dati azienda" per impostare ragione sociale, P.IVA ecc. senza toccare il codice
 - **Gestione Cantieri:** ricalcolo totali ore con report correzioni
 - **Diagnostica:** health check del sistema con menu dinamico a 3 stati
+
+### Versioning e Modal Novità
+
+La versione dell'applicazione è gestita centralmente in `config.js`:
+
+```js
+CONFIG.VERSION.frontend = '2.2.0'  // unica fonte di verità
+```
+
+**Flusso modal novità (`checkAndShowNews()` in `dashboard.html`):**
+
+1. Al caricamento della dashboard viene eseguita `fetch('news.json')`
+2. Il valore `CONFIG.VERSION.frontend` viene confrontato con `localStorage.getItem('newsLastSeenVersion')`
+3. Se la versione è cambiata (o il dato è assente), viene mostrato un **modal bloccante** con titolo e lista novità da `news.json`
+4. Al click su "Ho capito!", `localStorage` viene aggiornato con la versione corrente e il modal si chiude
+
+**Struttura di `news.json`:**
+
+```json
+{
+  "version": "2.2",
+  "title": "Novità versione 2.2",
+  "items": ["...", "..."]
+}
+```
+
+Il campo `version` in `news.json` serve solo come etichetta per il titolo del modal. Il confronto logico usa esclusivamente `CONFIG.VERSION.frontend`. `news.json` è un file statico servito da Vercel senza configurazione aggiuntiva in `vercel.json`.
+
+**Footer `index.html`:** la stringa di versione nel footer (formato `2026 - Sistema Gestione Ore 2.2.0`) viene iniettata dinamicamente via JS da `CONFIG.VERSION.frontend`. Non è più hardcoded.
 
 ### Sicurezza
 - Password hash SHA-256 con salt fisso (`OreLavoro2025_Salt_`)
@@ -360,6 +391,23 @@ Per configurare i dati aziendali che appaiono nel report:
 ---
 
 ## Changelog
+
+### 2026-03-15 — UI Agent — Feature
+
+**File modificati:** `dashboard.html`, `index.html`, `config.js`, `news.json` (nuovo)
+
+**Summary:** Aggiunto modal novità versione, unificato il versioning in `config.js` e rimossa la versione hardcoded dal footer di `index.html`.
+
+**Details:**
+- `dashboard.html`: aggiunta `checkAndShowNews()` che, al caricamento, esegue `fetch('news.json')`, confronta `CONFIG.VERSION.frontend` con `localStorage('newsLastSeenVersion')` e mostra un modal bloccante centrato con le novità della versione. Il modal si chiude solo al click su "Ho capito!", che salva la versione corrente in localStorage. L'HTML del modal è stato inserito prima di `</body>`.
+- `news.json` (nuovo file in root): struttura `{ "version", "title", "items[] }`. Il campo `version` è solo un'etichetta per il titolo del modal; il confronto logico è sempre su `CONFIG.VERSION.frontend`.
+- `config.js`: `CONFIG.VERSION.frontend` (`'2.2.0'`) è la **unica fonte di verità** per la versione dell'app. Nessun altro file deve ridefinire la versione.
+- `index.html`: rimossa la versione hardcoded dal footer. Il testo ora viene costruito dinamicamente via JS da `CONFIG.VERSION.frontend` (formato: `2026 - Sistema Gestione Ore 2.2.0`).
+- `vercel.json`: nessuna modifica necessaria; Vercel serve `news.json` come file statico dalla root automaticamente.
+
+**Status:** Completato
+
+---
 
 ### 2026-03-09 — UI Agent + Code Agent — Feature/Refactor
 

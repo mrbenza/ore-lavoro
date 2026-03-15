@@ -1297,6 +1297,24 @@
                 padding-bottom: 80px;
             }
         }
+
+        /* ── NEWS MODAL ── */
+        #newsModal {
+            display: none;
+        }
+        #newsModal.visible {
+            display: flex !important;
+        }
+        #newsModalBox {
+            animation: newsSlideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes newsSlideIn {
+            from { opacity: 0; transform: scale(0.85) translateY(30px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        #newsModalBtn:hover {
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -1645,6 +1663,42 @@
         }
 
         /**
+         * Controlla se ci sono novità da mostrare e visualizza il modal bloccante.
+         * Legge news.json, confronta la versione con localStorage 'newsLastSeenVersion'.
+         * Il modal è bloccante: non si chiude finché l'utente non clicca il pulsante.
+         */
+        async function checkAndShowNews() {
+            try {
+                const res = await fetch('news.json?v=' + Date.now());
+                if (!res.ok) return;
+                const news = await res.json();
+                const currentVersion = CONFIG.VERSION.frontend;
+                const lastSeen = localStorage.getItem('newsLastSeenVersion');
+                if (lastSeen === currentVersion) return;
+
+                const modal = document.getElementById('newsModal');
+                document.getElementById('newsModalTitle').textContent = news.title;
+                const list = document.getElementById('newsModalList');
+                list.innerHTML = '';
+                news.items.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    list.appendChild(li);
+                });
+
+                modal.classList.add('visible');
+
+                document.getElementById('newsModalBtn').addEventListener('click', function() {
+                    localStorage.setItem('newsLastSeenVersion', currentVersion);
+                    modal.classList.remove('visible');
+                }, { once: true });
+
+            } catch (e) {
+                console.warn('News non disponibili:', e);
+            }
+        }
+
+        /**
          * Handler DOMContentLoaded — Entry point principale della dashboard.
          *
          * DESCRIZIONE ESTESA: Esegue in sequenza: verifica dipendenze, cache DOM,
@@ -1739,6 +1793,7 @@
             ]);
 
             showNotification('Dashboard caricata!', 'success', 2000);
+            checkAndShowNews();
         }
 
         /**
@@ -2829,6 +2884,16 @@
                 <button class="save-confirm-cancel" id="saveConfirmCancel">Annulla</button>
                 <button class="save-confirm-ok" id="saveConfirmOk">Conferma e Salva</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL NOVITÀ -->
+    <div id="newsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">
+        <div id="newsModalBox" style="background:#fff; border-radius:20px; padding:40px; max-width:480px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.2); text-align:center;">
+            <div id="newsModalIcon" style="font-size:48px; margin-bottom:16px;">🎉</div>
+            <h2 id="newsModalTitle" style="font-size:22px; font-weight:700; color:#333; margin-bottom:24px;"></h2>
+            <ul id="newsModalList" style="text-align:left; margin-bottom:32px; padding-left:20px; color:#555; line-height:1.9; font-size:15px;"></ul>
+            <button id="newsModalBtn" style="background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; padding:16px 48px; border-radius:25px; font-size:16px; font-weight:700; cursor:pointer; width:100%;">Ho capito!</button>
         </div>
     </div>
 </body>

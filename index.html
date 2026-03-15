@@ -634,7 +634,7 @@
                 <img src="logo.png" alt="Borelli Costruzioni" />
             </div>
             <h1>Sistema Gestione Ore</h1>
-            <p class="subtitle">Gestione Ore lavorate V2.2</p>
+            <p class="subtitle">Gestione Ore lavorate</p>
         </div>
 
         <div class="message-container">
@@ -673,7 +673,7 @@
         </form>
 
         <div class="footer">
-            <p>&copy; 2025 <span class="company-name">Sistema Gestione Ore V2.2</span></p>
+            <p>2026 - <span class="company-name" id="footerVersion">Sistema Gestione Ore</span></p>
         </div>
     </div>
 
@@ -1048,6 +1048,8 @@
          */
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('⚡ Sistema Login V2.2 avviato');
+            const footerEl = document.getElementById('footerVersion');
+            if (footerEl) footerEl.textContent = 'Sistema Gestione Ore ' + CONFIG.VERSION.frontend;
 
             // Se già loggato, redirect immediato
             if (PageGuard.redirectIfLoggedIn()) {

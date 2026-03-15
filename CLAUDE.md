@@ -1,5 +1,5 @@
 # CLAUDE.md — Sistema Multi-Agente
-## Progetto: Sistema Gestione Ore Lavoro v2.0
+## Progetto: Sistema Gestione Ore Lavoro v2.2
 **Stack:** Vercel (frontend) + Google Apps Script (backend) + Google Sheets (database)
 
 ---
@@ -33,7 +33,8 @@ ore-lavoro/
 ├── index.html                     ← pagina login (UI AGENT)
 ├── dashboard.html                 ← dashboard dipendente (UI AGENT)
 ├── admin.html                     ← dashboard amministratore (UI AGENT)
-├── config.js                      ← logica frontend: auth, PageGuard, utility
+├── config.js                      ← logica frontend: auth, PageGuard, utility, versioning
+├── news.json                      ← dati modal novità: version, title, items (UI AGENT)
 ├── vercel.json                    ← configurazione deploy Vercel
 ├── CLAUDE.md                      ← questo file (DOCS AGENT)
 └── SHEET_SCHEMA.md                ← schema Google Sheets (DOCS AGENT + SHEET AGENT)
@@ -217,3 +218,10 @@ Queste anomalie sono state identificate durante la code review del 2026-03-04 e 
 ## Note tecniche — Cache e ottimizzazioni frontend (2026-03-09)
 
 - `dashboard.html` usa `monthlyCache` (oggetto JS in memoria, chiave `'YYYY-MM'`) per evitare chiamate ripetute a `getMonthlyWorkData`. La cache viene invalidata dopo ogni `saveWorkEntry` riuscito, garantendo dati freschi al salvataggio successivo.
+
+## Note tecniche — Modal novità e versioning (2026-03-15)
+
+- `CONFIG.VERSION.frontend` in `config.js` e' la **unica fonte di verita'** per la versione dell'app (attualmente `'2.2.0'`). Usata sia dal footer di `index.html` (dinamicamente via JS) sia da `checkAndShowNews()` in `dashboard.html`.
+- `checkAndShowNews()` (in `dashboard.html`): al caricamento della dashboard, esegue `fetch('news.json')`, confronta `CONFIG.VERSION.frontend` con il valore in `localStorage` alla chiave `newsLastSeenVersion`. Se diversi (o assenti), mostra un modal bloccante centrato con le novità. Il modal si chiude solo al click su "Ho capito!", che aggiorna `localStorage`.
+- `news.json` (root del progetto): file JSON statico con struttura `{ "version": "...", "title": "...", "items": [...] }`. Il campo `version` in questo file e' usato solo per il titolo del modal, non per il confronto logico. Non richiede configurazione aggiuntiva in `vercel.json`: Vercel serve i file statici dalla root automaticamente.
+- Il footer di `index.html` non contiene piu' la versione hardcoded: il valore viene iniettato via JS da `CONFIG.VERSION.frontend`.
