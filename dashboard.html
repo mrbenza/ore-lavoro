@@ -4,11 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Gestione Ore Lavoro V2.2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════════
+           DESIGN SYSTEM — Token di colore e radius
+           del tema dark hostmetrics.
+           ═══════════════════════════════════════════ */
+        :root {
+            --bg: #0f1117;
+            --card: #1e2130;
+            --border: #2a2f45;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --text: #e2e8f0;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --radius: 12px;
+        }
+
+        /* ═══════════════════════════════════════════
            RESET E BODY — Reset globale box-model.
-           Sfondo gradiente viola fisso per tutta l'altezza,
-           padding inferiore per evitare overlap con il footer nav.
+           Sfondo dark fisso per tutta l'altezza.
            ═══════════════════════════════════════════ */
         * {
             margin: 0;
@@ -17,9 +38,10 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
             min-height: 100vh;
+            color: var(--text);
             padding: 20px;
             padding-bottom: 120px;
         }
@@ -51,19 +73,15 @@
         }
 
         /* ═══════════════════════════════════════════
-           HEADER FISSO — Barra superiore con sfondo
-           bianco semitrasparente e glassmorphism.
-           Posizionato fixed in alto, si restringe e
-           cambia stile allo scroll (.scrolled).
-           Su mobile diventa full-width con gradiente viola.
+           HEADER FISSO — Barra superiore dark card.
+           Posizionato fixed in alto, piatto senza
+           glassmorphism. .scrolled mantiene stesso stile.
            ═══════════════════════════════════════════ */
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            border-radius: var(--radius);
             padding: 20px 30px;
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
             position: fixed;
             top: 20px;
             left: 50%;
@@ -75,20 +93,18 @@
         }
 
         .header.scrolled {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            box-shadow: 0 2px 30px rgba(0, 0, 0, 0.15);
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
             padding: 15px 25px;
-            border-radius: 15px;
+            border-radius: var(--radius);
         }
 
         @media (max-width: 768px) {
             .header {
                 border-radius: 0;
                 padding: 15px 20px;
-                background: linear-gradient(135deg, rgba(102, 126, 234, 0.95), rgba(118, 75, 162, 0.95));
-                backdrop-filter: blur(15px);
-                color: white;
+                background: var(--card);
+                border-bottom: 1px solid var(--border);
                 padding-top: max(15px, env(safe-area-inset-top));
                 top: 0;
                 left: 0;
@@ -98,8 +114,8 @@
             }
 
             .header.scrolled {
-                background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
-                backdrop-filter: blur(25px);
+                background: var(--card);
+                border-bottom: 1px solid var(--border);
                 padding: 12px 20px;
                 padding-top: max(12px, env(safe-area-inset-top));
                 border-radius: 0;
@@ -133,11 +149,10 @@
 
         /* ═══════════════════════════════════════════
            USER INFO E STATISTICHE HEADER — Nome utente
-           e contatori ore mese/mese precedente visualizzati
-           nell'header. Su mobile diventano bianchi.
+           e contatori ore mese/mese precedente.
            ═══════════════════════════════════════════ */
         .user-info h1 {
-            color: #333;
+            color: var(--text);
             font-size: 24px;
             margin-bottom: 0;
             transition: all 0.3s ease;
@@ -149,7 +164,7 @@
 
         @media (max-width: 768px) {
             .user-info h1 {
-                color: white;
+                color: var(--text);
                 font-size: 18px;
             }
 
@@ -180,13 +195,13 @@
         .stat-number {
             font-size: 28px;
             font-weight: bold;
-            color: #667eea;
+            color: var(--accent);
             display: block;
         }
 
         .stat-label {
             font-size: 11px;
-            color: #888;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-top: 5px;
@@ -196,35 +211,33 @@
         @media (max-width: 768px) {
             .stat-number {
                 font-size: 16px;
-                color: white;
+                color: var(--accent);
             }
 
             .stat-label {
                 font-size: 10px;
-                color: rgba(255, 255, 255, 0.9);
+                color: var(--text-muted);
                 letter-spacing: 0.5px;
             }
         }
 
         /* ═══════════════════════════════════════════
-           LOGOUT BUTTON — Pulsante rosso nell'header.
-           Su mobile posizionato in assoluto in alto a destra.
+           LOGOUT BUTTON — Pulsante danger flat nell'header.
            ═══════════════════════════════════════════ */
         .logout-btn {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            background: var(--danger);
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 20px;
+            border-radius: var(--radius);
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: background 0.2s ease;
             font-size: 14px;
         }
 
         .logout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(238, 90, 82, 0.3);
+            background: #dc2626;
         }
 
         @media (max-width: 768px) {
@@ -238,16 +251,13 @@
         }
 
         /* ═══════════════════════════════════════════
-           MAIN CONTENT — Area principale bianca sotto
-           l'header. Su mobile full-width senza border-radius.
+           MAIN CONTENT — Area principale card dark.
            ═══════════════════════════════════════════ */
         .main-content {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            background: var(--card);
+            border: 1px solid var(--border);
             border-radius: 20px;
             padding: 40px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
             margin-top: 20px;
         }
 
@@ -256,16 +266,15 @@
                 border-radius: 0;
                 padding: 20px;
                 border: none;
-                box-shadow: none;
-                background: rgba(255, 255, 255, 0.95);
+                border-top: 1px solid var(--border);
+                background: var(--card);
                 margin-top: 0;
             }
         }
 
         /* ═══════════════════════════════════════════
            PAGINE — Sistema di tab/pagine mostrate una
-           alla volta. La classe .active le rende visibili.
-           Navigazione gestita da navigateToPage().
+           alla volta.
            ═══════════════════════════════════════════ */
         .page {
             display: none;
@@ -295,28 +304,26 @@
         }
 
         /* ═══════════════════════════════════════════
-           FORM SECTION — Card sezione del form con
-           sfondo leggermente viola. Su mobile diventa
-           bianca con ombra leggera.
+           FORM SECTION — Card sezione del form dark.
            ═══════════════════════════════════════════ */
         .form-section {
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius);
             padding: 25px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
+            border: 1px solid var(--border);
         }
 
         @media (max-width: 768px) {
             .form-section {
                 padding: 20px;
-                background: white;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-                border: none;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
             }
         }
 
         .section-title {
-            color: #667eea;
+            color: var(--text-soft);
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 20px;
@@ -346,7 +353,7 @@
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: #555;
+            color: var(--text-soft);
             font-weight: 500;
             font-size: 14px;
         }
@@ -356,28 +363,26 @@
         .form-group textarea {
             width: 100%;
             padding: 15px 20px;
-            border: 2px solid #e1e5e9;
-            border-radius: 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             font-size: 16px;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
+            font-family: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: var(--bg);
+            color: var(--text);
         }
 
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
-        @media (max-width: 768px) {
-            .form-group input:focus,
-            .form-group select:focus,
-            .form-group textarea:focus {
-                transform: none;
-            }
+        .form-group select option {
+            background: var(--card);
+            color: var(--text);
         }
 
         .form-group textarea {
@@ -393,91 +398,81 @@
 
         /* ═══════════════════════════════════════════
            HOURS INPUT E SECTION — Campo ore con testo
-           grande e centrato. La sezione ore occupa 2
-           colonne su desktop (span 2) e ha sfondo
-           leggermente diverso.
+           grande e centrato.
            ═══════════════════════════════════════════ */
         .hours-input {
             text-align: center;
             font-size: 24px !important;
             font-weight: 600;
-            color: #667eea;
+            color: var(--accent);
         }
 
         .hours-section {
             grid-column: span 2;
             text-align: center;
-            background: rgba(102, 126, 234, 0.08) !important;
-            border: 2px solid rgba(102, 126, 234, 0.2) !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 2px solid var(--border) !important;
         }
 
         @media (max-width: 768px) {
             .hours-section {
                 grid-column: span 1;
-                background: white !important;
-                border: none !important;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                background: rgba(255, 255, 255, 0.03) !important;
+                border: 2px solid var(--border) !important;
             }
         }
 
         /* ═══════════════════════════════════════════
            SAVE SECTION E BUTTON — Area pulsante salva.
-           Pulsante gradiente viola con uppercase. Su mobile
-           full-width senza hover translateY.
            ═══════════════════════════════════════════ */
         .save-section {
             text-align: center;
             padding: 30px;
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: 15px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
+            background: transparent;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
         }
 
         @media (max-width: 768px) {
             .save-section {
                 padding: 20px;
-                background: white;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-                border: none;
+                background: transparent;
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
                 margin-top: 10px;
             }
         }
 
         .save-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--accent);
             color: white;
             border: none;
             padding: 18px 50px;
-            border-radius: 25px;
+            border-radius: var(--radius);
             font-size: 18px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background 0.2s ease;
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-family: inherit;
         }
 
         .save-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            background: var(--accent-hover);
         }
 
         .save-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
-            transform: none;
         }
 
         @media (max-width: 768px) {
             .save-btn {
                 width: 100%;
                 padding: 18px;
-                border-radius: 15px;
+                border-radius: var(--radius);
                 font-size: 16px;
-            }
-
-            .save-btn:hover {
-                transform: none;
             }
 
             .save-btn:active {
@@ -486,25 +481,24 @@
         }
 
         /* ═══════════════════════════════════════════
-           CAMBIA PASSWORD — Pulsante nella profilePage con
-           stile flat (bordo viola, sfondo bianco) per
-           distinguerlo dal save-btn principale.
+           CAMBIA PASSWORD — Pulsante nella profilePage.
            ═══════════════════════════════════════════ */
         .change-pwd-btn {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-            border-radius: 25px;
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: var(--radius);
             padding: 12px 30px;
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
-            transition: all 0.2s;
+            transition: background 0.2s ease, color 0.2s ease;
+            font-family: inherit;
         }
 
         .change-pwd-btn:hover {
-            background: #667eea;
+            background: var(--accent);
             color: white;
         }
 
@@ -516,8 +510,8 @@
         /* ═══════════════════════════════════════════
            CALENDARIO — Griglia 7 colonne per il
            calendario mensile. Header giorni settimana
-           con gradiente viola. Giorni normali bianchi,
-           .today con bordo viola, .has-work con sfondo verde.
+           dark. Giorni card dark, .today con bordo accent,
+           .has-work con sfondo verde semitrasparente.
            ═══════════════════════════════════════════ */
         .calendar-container {
             max-width: 100%;
@@ -530,38 +524,35 @@
             align-items: center;
             margin-bottom: 30px;
             padding: 20px;
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: 15px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
+            background: transparent;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
         }
 
         .calendar-nav-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--accent);
             color: white;
             border: none;
             padding: 12px 16px;
-            border-radius: 12px;
+            border-radius: var(--radius);
             cursor: pointer;
             font-size: 18px;
-            transition: all 0.3s ease;
+            transition: background 0.2s ease;
         }
 
         .calendar-nav-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            background: var(--accent-hover);
         }
 
         .calendar-nav-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
 
         .calendar-title {
             font-size: 24px;
             font-weight: 600;
-            color: #333;
+            color: var(--text);
             text-align: center;
         }
 
@@ -569,15 +560,14 @@
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 1px;
-            background: #e1e5e9;
+            background: var(--border);
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
         }
 
         .calendar-day-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+            background: var(--card);
+            color: var(--text-soft);
             padding: 15px 5px;
             text-align: center;
             font-weight: 600;
@@ -585,39 +575,40 @@
         }
 
         .calendar-day {
-            background: white;
+            background: var(--card);
             min-height: 80px;
             padding: 8px;
             position: relative;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background 0.2s ease;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+            color: var(--text);
         }
 
         .calendar-day:hover {
-            background: rgba(102, 126, 234, 0.05);
+            background: #252a3d;
         }
 
         .calendar-day.other-month {
-            background: #f8f9fa;
-            color: #ccc;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-muted);
         }
 
         .calendar-day.today {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-            border: 2px solid #667eea;
+            border: 2px solid var(--accent);
         }
 
         .calendar-day.has-work {
-            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1));
+            background: rgba(34, 197, 94, 0.1);
         }
 
         .calendar-day-number {
             font-weight: 600;
             font-size: 16px;
             margin-bottom: 5px;
+            color: var(--text-soft);
         }
 
         /* ═══════════════════════════════════════════
@@ -627,43 +618,41 @@
         .work-indicator {
             width: 8px;
             height: 8px;
-            background: linear-gradient(135deg, #28a745, #20c997);
+            background: var(--success);
             border-radius: 50%;
             margin-bottom: 2px;
         }
 
         .work-hours {
             font-size: 11px;
-            color: #28a745;
+            color: var(--success);
             font-weight: 600;
         }
 
         /* ═══════════════════════════════════════════
            CALENDAR LOADING — Stato di caricamento del
            calendario: spinner centrato con testo.
-           Occupa tutte e 7 le colonne (span 7).
            ═══════════════════════════════════════════ */
         .calendar-loading {
             grid-column: span 7;
             text-align: center;
             padding: 60px 20px;
-            color: #667eea;
-            background: white;
+            color: var(--accent);
+            background: var(--card);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             border-radius: 15px;
             margin: 10px;
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.1);
         }
 
         .calendar-loading .loading-spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid rgba(102, 126, 234, 0.1);
+            border: 3px solid rgba(59, 130, 246, 0.15);
             border-radius: 50%;
-            border-top-color: #667eea;
+            border-top-color: var(--accent);
             animation: spin 1s ease-in-out infinite;
             margin-bottom: 15px;
         }
@@ -671,13 +660,13 @@
         .calendar-loading .loading-text {
             font-size: 16px;
             font-weight: 500;
-            color: #667eea;
+            color: var(--accent);
             margin-bottom: 5px;
         }
 
         .calendar-loading .loading-subtext {
             font-size: 12px;
-            color: #888;
+            color: var(--text-muted);
             opacity: 0.8;
         }
 
@@ -699,9 +688,7 @@
         }
 
         /* ═══════════════════════════════════════════
-           POPUP DETTAGLI GIORNO — Overlay modale per
-           visualizzare le registrazioni di un giorno.
-           Default display:none, diventa flex con .show.
+           POPUP DETTAGLI GIORNO — Overlay modale dark.
            ═══════════════════════════════════════════ */
         .day-details-popup {
             display: none;
@@ -710,7 +697,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 10000;
             justify-content: center;
             align-items: center;
@@ -722,7 +709,8 @@
         }
 
         .popup-content {
-            background: white;
+            background: var(--card);
+            border: 1px solid var(--border);
             border-radius: 20px;
             padding: 30px;
             max-width: 500px;
@@ -730,7 +718,6 @@
             max-height: 80vh;
             overflow-y: auto;
             position: relative;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
         .popup-header {
@@ -739,25 +726,25 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #e1e5e9;
+            border-bottom: 2px solid var(--border);
             text-align: center;
         }
 
         .popup-title {
             font-size: 20px;
             font-weight: 600;
-            color: #333;
+            color: var(--text);
             margin-bottom: 8px;
         }
 
         .popup-total-hours {
             font-size: 24px;
             font-weight: 700;
-            color: #667eea;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            color: var(--accent);
+            background: rgba(59, 130, 246, 0.1);
             padding: 8px 20px;
             border-radius: 20px;
-            border: 2px solid rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.25);
             margin-top: 5px;
         }
 
@@ -767,30 +754,28 @@
         }
 
         .popup-ok-button {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--accent);
             color: white;
             border: none;
             padding: 15px 40px;
-            border-radius: 25px;
+            border-radius: var(--radius);
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background 0.2s ease;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-top: 20px;
             width: 100%;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            font-family: inherit;
         }
 
         .popup-ok-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            background: var(--accent-hover);
         }
 
         .popup-ok-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+            background: var(--accent-hover);
         }
 
         @media (max-width: 768px) {
@@ -816,18 +801,16 @@
            nel popup dettagli giorno.
            ═══════════════════════════════════════════ */
         .work-entry {
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: 12px;
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: var(--radius);
             padding: 15px;
             margin-bottom: 15px;
-            border-left: 4px solid #667eea;
-            transition: all 0.3s ease;
+            border-left: 4px solid var(--accent);
+            transition: background 0.2s ease;
         }
 
         .work-entry:hover {
-            background: rgba(102, 126, 234, 0.1);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: rgba(59, 130, 246, 0.1);
         }
 
         .work-entry:last-child {
@@ -843,38 +826,35 @@
 
         .work-cantiere {
             font-weight: 600;
-            color: #333;
+            color: var(--text);
         }
 
         .work-hours-large {
             font-size: 18px;
             font-weight: 600;
-            color: #667eea;
+            color: var(--accent);
         }
 
         .work-note {
-            color: #666;
+            color: var(--text-soft);
             font-style: italic;
             margin-top: 8px;
         }
 
         /* ═══════════════════════════════════════════
            BOTTOM FOOTER NAV — Barra di navigazione
-           fissa in basso con tab "Inserisci" e "Calendario".
-           Su desktop centrata con max-width 860px.
+           fissa in basso. Dark card, bordo superiore.
            ═══════════════════════════════════════════ */
         .bottom-footer {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+            background: var(--card);
+            border-top: 1px solid var(--border);
             display: flex;
             padding: 15px 0;
             z-index: 9999;
-            border-top: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         @media (min-width: 769px) {
@@ -893,19 +873,19 @@
             text-align: center;
             padding: 10px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            border-radius: 12px;
+            transition: background 0.2s ease, color 0.2s ease;
+            border-radius: var(--radius);
             margin: 0 8px;
-            color: #666;
+            color: var(--text-muted);
         }
 
         .footer-item:hover {
-            background: rgba(102, 126, 234, 0.1);
+            background: rgba(59, 130, 246, 0.08);
         }
 
         .footer-item.active {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+            background: transparent;
+            color: var(--accent);
         }
 
         .footer-icon {
@@ -920,15 +900,15 @@
         }
 
         /* ═══════════════════════════════════════════
-           NOTIFICATION — Toast di notifica uguale a
-           index.html, slide da destra. Su mobile dall'alto.
+           NOTIFICATION — Toast di notifica.
+           Colori semantici flat (no gradienti).
            ═══════════════════════════════════════════ */
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
             padding: 15px 25px;
-            border-radius: 10px;
+            border-radius: var(--radius);
             color: white;
             font-weight: 600;
             z-index: 10000;
@@ -942,16 +922,21 @@
         }
 
         .notification.success {
-            background: linear-gradient(135deg, #28a745, #20c997);
+            background: var(--success);
         }
 
         .notification.error {
-            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            background: var(--danger);
         }
 
         .notification.warning {
-            background: linear-gradient(135deg, #ffc107, #fd7e14);
-            color: #212529;
+            background: var(--warning);
+            color: #1a1a1a;
+        }
+
+        .notification.info,
+        .notification.security {
+            background: var(--accent);
         }
 
         @media (max-width: 768px) {
@@ -991,31 +976,28 @@
 
         /* ═══════════════════════════════════════════
            FORM VALIDATION — Bordo rosso + shadow per
-           campi non validi. Classe aggiunta da
-           validateField e validateHoursField.
+           campi non validi.
            ═══════════════════════════════════════════ */
         .form-validation {
-            border-color: #dc3545 !important;
-            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
         }
 
         .validation-message {
-            color: #dc3545;
+            color: var(--danger);
             font-size: 12px;
             margin-top: 5px;
             display: none;
         }
 
         /* ═══════════════════════════════════════════
-           SAVE CONFIRM MODAL — Modal di conferma quando
-           si tenta di salvare ore in un giorno già
-           con registrazioni esistenti.
+           SAVE CONFIRM MODAL — Modal di conferma dark.
            ═══════════════════════════════════════════ */
         .save-confirm-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.55);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 10001;
             justify-content: center;
             align-items: flex-end;
@@ -1025,13 +1007,13 @@
             display: flex;
         }
         .save-confirm-modal {
-            background: white;
+            background: var(--card);
+            border: 1px solid var(--border);
             border-radius: 20px 20px 0 0;
             padding: 24px 24px 32px;
             width: 100%;
             max-width: 520px;
             margin: 0 auto;
-            box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
             animation: slideUp 0.25s ease;
         }
         @keyframes slideUp {
@@ -1041,41 +1023,43 @@
         .save-confirm-title {
             font-size: 17px;
             font-weight: 700;
-            color: #333;
+            color: var(--text);
             margin-bottom: 4px;
         }
         .save-confirm-subtitle {
             font-size: 13px;
-            color: #888;
+            color: var(--text-muted);
             margin-bottom: 16px;
         }
         .save-confirm-entries {
             list-style: none;
             margin: 0 0 12px;
             padding: 0;
-            background: #f8f9ff;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             overflow: hidden;
         }
         .save-confirm-entries li {
             padding: 10px 14px;
             font-size: 14px;
-            border-bottom: 1px solid #eee;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         .save-confirm-entries li:last-child { border-bottom: none; }
-        .save-confirm-entries li span { color: #667eea; font-weight: 700; }
+        .save-confirm-entries li span { color: var(--accent); font-weight: 700; }
         .save-confirm-total {
             font-size: 14px;
             font-weight: 700;
-            color: #444;
+            color: var(--text-soft);
             margin-bottom: 20px;
             padding: 8px 14px;
-            background: linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.08));
+            background: rgba(59, 130, 246, 0.06);
             border-radius: 8px;
-            border-left: 3px solid #667eea;
+            border-left: 3px solid var(--accent);
         }
         .save-confirm-btns {
             display: flex;
@@ -1085,20 +1069,25 @@
             flex: 1;
             padding: 14px;
             border: none;
-            border-radius: 12px;
+            border-radius: var(--radius);
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: opacity 0.2s;
+            font-family: inherit;
         }
         .save-confirm-btns button:active { opacity: 0.75; }
         .save-confirm-cancel {
-            background: #f0f0f0;
-            color: #555;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-soft);
+            border: 1px solid var(--border) !important;
         }
         .save-confirm-ok {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--accent);
             color: white;
+        }
+        .save-confirm-ok:hover {
+            background: var(--accent-hover);
         }
         @media (min-width: 520px) {
             .save-confirm-overlay {
@@ -1112,13 +1101,32 @@
 
         .decimal-hint {
             font-size: 12px;
-            color: #666;
+            color: var(--text-muted);
             margin-top: 5px;
             text-align: center;
         }
 
         .icon {
             font-size: 20px;
+        }
+
+        /* ═══════════════════════════════════════════
+           SCROLLBAR WEBKIT — Dark style coerente con
+           il tema.
+           ═══════════════════════════════════════════ */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3a4060;
         }
 
         /* ═══════════════════════════════════════════
@@ -1142,9 +1150,8 @@
         .dash-sidebar {
             width: 220px;
             min-height: 100vh;
-            background: rgba(255,255,255,0.12);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255,255,255,0.2);
+            background: var(--card);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             position: sticky;
@@ -1159,12 +1166,12 @@
             align-items: center;
             gap: 10px;
             padding: 18px 14px;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
+            border-bottom: 1px solid var(--border);
             min-height: 60px;
         }
 
         .dash-sidebar-logo {
-            color: white;
+            color: var(--text);
             font-size: 15px;
             font-weight: 700;
             white-space: nowrap;
@@ -1183,9 +1190,9 @@
             align-items: center;
             gap: 12px;
             padding: 12px 14px;
-            color: rgba(255,255,255,0.85);
+            color: var(--text-muted);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background 0.2s ease, color 0.2s ease;
             border-left: 3px solid transparent;
             border-radius: 0;
             margin: 0;
@@ -1194,14 +1201,14 @@
         }
 
         .dash-sidebar-nav .footer-item:hover {
-            background: rgba(255,255,255,0.1);
-            color: white;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
         }
 
         .dash-sidebar-nav .footer-item.active {
-            background: rgba(255,255,255,0.18);
-            color: white;
-            border-left-color: white;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            border-left-color: var(--accent);
             font-weight: 600;
         }
 
@@ -1408,7 +1415,7 @@
                     <button type="submit" class="save-btn" id="saveBtn" form="workEntryForm">
                         Salva Ore
                     </button>
-                    <div style="margin-top: 15px; font-size: 14px; color: #666;">
+                    <div style="margin-top: 15px; font-size: 14px; color: var(--text-muted);">
                         I totali si aggiornano automaticamente
                     </div>
                 </div>

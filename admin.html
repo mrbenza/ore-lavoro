@@ -3,6 +3,9 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Sistema Gestione Ore</title>
 
@@ -11,11 +14,30 @@
 
     <style>
         /* ═══════════════════════════════════════════
-           RESET E BODY — Reset globale, sfondo gradiente
-           viola, font system-ui, testo scuro.
+           DESIGN TOKENS — Variabili CSS globali per il
+           design system dark.
+           ═══════════════════════════════════════════ */
+        :root {
+            --bg: #0f1117;
+            --card: #1e2130;
+            --border: #2a2f45;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --text: #e2e8f0;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --radius: 12px;
+        }
+
+        /* ═══════════════════════════════════════════
+           RESET E BODY — Reset globale, sfondo scuro,
+           font Inter, testo chiaro.
            ═══════════════════════════════════════════ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333; font-size: 14px; line-height: 1.5; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); font-size: 14px; line-height: 1.5; }
 
         /* ═══════════════════════════════════════════
            HEADER ADMIN — Barra superiore sticky con
@@ -23,51 +45,51 @@
            Contiene titolo admin, nome utente badge e
            pulsante logout.
            ═══════════════════════════════════════════ */
-        .admin-header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 20px; box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 100; }
+        .admin-header { background: var(--card); border-bottom: 1px solid var(--border); padding: 15px 20px; position: sticky; top: 0; z-index: 100; }
         .header-content { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
-        .admin-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: #4f46e5; }
+        .admin-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: var(--text); }
         .admin-info { display: flex; align-items: center; gap: 15px; font-size: 13px; }
-        .user-badge { background: #4f46e5; color: white; padding: 5px 12px; border-radius: 20px; font-weight: 600; }
-        .logout-btn { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
-        .logout-btn:hover { background: #dc2626; transform: translateY(-1px); }
+        .user-badge { background: var(--accent); color: white; padding: 5px 12px; border-radius: 20px; font-weight: 600; }
+        .logout-btn { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+        .logout-btn:hover { background: #dc2626; }
 
         /* ═══════════════════════════════════════════
            CONTAINER ADMIN — Griglia a singola colonna
            con gap 25px, max-width 1200px centrata.
            ═══════════════════════════════════════════ */
         .admin-container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; gap: 25px; }
-        .admin-section { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 16px; padding: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .admin-section { background: var(--card); border-radius: 16px; padding: 25px; border: 1px solid var(--border); }
 
         /* ═══════════════════════════════════════════
            SECTION HEADER — Intestazione di ogni sezione
            con titolo e controlli (toggle, refresh).
            ═══════════════════════════════════════════ */
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .section-title { font-size: 20px; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 10px; }
-        .section-title i { color: #4f46e5; }
+        .section-title { font-size: 20px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 10px; }
+        .section-title i { color: var(--accent); }
 
         /* ═══════════════════════════════════════════
            CANTIERI — Toggle totali/mese, griglia card
            cantieri, struttura di ogni card con nome,
            ore, meta (stato badge + data ultimo ins.).
            ═══════════════════════════════════════════ */
-        .toggle-container { display: flex; background: #f3f4f6; border-radius: 12px; padding: 4px; }
-        .toggle-option { padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 12px; font-weight: 600; color: #6b7280; white-space: nowrap; }
-        .toggle-option.active { background: #4f46e5; color: white; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3); }
+        .toggle-container { display: flex; background: var(--bg); border-radius: 12px; padding: 4px; border: 1px solid var(--border); }
+        .toggle-option { padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 12px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+        .toggle-option.active { background: var(--accent); color: white; }
         .cantieri-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 15px; }
-        .cantiere-card { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; transition: all 0.3s; cursor: pointer; position: relative; overflow: hidden; }
-        .cantiere-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border-color: #4f46e5; }
-        .cantiere-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #4f46e5, #7c3aed); }
-        .cantiere-nome { font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 6px; line-height: 1.3; }
-        .cantiere-ore { font-size: 20px; font-weight: 800; color: #059669; margin: 8px 0; }
-        .cantiere-ore .label { font-size: 10px; font-weight: 500; color: #6b7280; display: block; }
-        .cantiere-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #6b7280; gap: 6px; }
+        .cantiere-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px; transition: all 0.3s; cursor: pointer; position: relative; overflow: hidden; }
+        .cantiere-card:hover { border-color: var(--accent); }
+        .cantiere-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
+        .cantiere-nome { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; line-height: 1.3; }
+        .cantiere-ore { font-size: 20px; font-weight: 800; color: var(--success); margin: 8px 0; }
+        .cantiere-ore .label { font-size: 10px; font-weight: 500; color: var(--text-muted); display: block; }
+        .cantiere-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 10px; color: var(--text-muted); gap: 6px; }
         .stato-badge { padding: 3px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; text-transform: uppercase; }
-        .badge-success { background: #d1fae5; color: #065f46; }
-        .badge-danger { background: #fee2e2; color: #991b1b; }
-        .badge-warning { background: #fef3c7; color: #92400e; }
-        .badge-secondary { background: #f3f4f6; color: #374151; }
-        .badge-info { background: #dbeafe; color: #1e40af; }
+        .badge-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+        .badge-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+        .badge-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+        .badge-secondary { background: rgba(148, 163, 184, 0.12); color: var(--text-soft); }
+        .badge-info { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
 
         /* ═══════════════════════════════════════════
            DIPENDENTI — Header con select e refresh,
@@ -75,10 +97,10 @@
            con rotazione 180° su hover.
            ═══════════════════════════════════════════ */
         .dipendenti-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-        .select-dipendente { flex: 1; min-width: 200px; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 14px; background: white; transition: all 0.3s; cursor: pointer; }
-        .select-dipendente:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
-        .refresh-btn { background: #f3f4f6; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all 0.2s; color: #6b7280; }
-        .refresh-btn:hover { background: #e5e7eb; transform: rotate(180deg); }
+        .select-dipendente { flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 14px; background: var(--bg); color: var(--text); transition: all 0.3s; cursor: pointer; }
+        .select-dipendente:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        .refresh-btn { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all 0.2s; color: var(--text-soft); }
+        .refresh-btn:hover { background: var(--border); transform: rotate(180deg); }
 
         /* ═══════════════════════════════════════════
            COLLAPSIBLE — Sezione cantieri collassabile.
@@ -88,7 +110,7 @@
         .collapsible .section-header { cursor: pointer; }
         .collapse-toggle { cursor: pointer; user-select: none; width: 100%; }
         .collapse-toggle:hover { opacity: 0.8; }
-        .collapse-icon { margin-left: auto; transition: transform 0.3s ease; font-size: 14px; color: #6b7280; }
+        .collapse-icon { margin-left: auto; transition: transform 0.3s ease; font-size: 14px; color: var(--text-muted); }
         .collapsible.open .collapse-icon { transform: rotate(180deg); }
         .collapsible-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
         .collapsible.open .collapsible-body { max-height: 2000px; }
@@ -106,13 +128,13 @@
             align-items: center;
             margin-bottom: 20px;
             padding: 20px;
-            background: rgba(102, 126, 234, 0.05);
+            background: var(--bg);
             border-radius: 15px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
+            border: 1px solid var(--border);
         }
         .calendar-nav { display: flex; align-items: center; gap: 15px; }
         .nav-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--accent);
             color: white;
             border: none;
             padding: 12px 16px;
@@ -121,9 +143,9 @@
             font-size: 16px;
             transition: all 0.3s ease;
         }
-        .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3); }
-        .nav-btn:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; box-shadow: none; opacity: 0.6; }
-        .current-month { font-size: 16px; font-weight: 700; color: #1f2937; min-width: 150px; text-align: center; }
+        .nav-btn:hover { background: var(--accent-hover); }
+        .nav-btn:disabled { background: var(--border); cursor: not-allowed; opacity: 0.6; }
+        .current-month { font-size: 16px; font-weight: 700; color: var(--text); min-width: 150px; text-align: center; }
         .today-btn { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
         .today-btn:hover { background: #059669; }
 
@@ -131,14 +153,13 @@
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 1px;
-            background: #e1e5e9;
+            background: var(--border);
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
         }
         .calendar-day-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+            background: var(--card);
+            color: var(--text-soft);
             padding: 15px 5px;
             text-align: center;
             font-weight: 600;
@@ -146,7 +167,7 @@
             border-radius: 0;
         }
         .calendar-day {
-            background: white;
+            background: var(--bg);
             min-height: 70px;
             padding: 8px;
             border: none;
@@ -158,39 +179,39 @@
             align-items: flex-start;
             justify-content: flex-start;
         }
-        .calendar-day:hover { background: rgba(102, 126, 234, 0.05); transform: none; box-shadow: none; }
-        .calendar-day.other-month { background: #f8f9fa; opacity: 1; }
-        .calendar-day.today { background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border: 2px solid #667eea; border-radius: 0; }
-        .calendar-day.has-work { background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1)); border: none; }
+        .calendar-day:hover { background: rgba(59, 130, 246, 0.06); }
+        .calendar-day.other-month { background: var(--card); opacity: 0.6; }
+        .calendar-day.today { background: rgba(59, 130, 246, 0.1); border: 2px solid var(--accent); border-radius: 0; }
+        .calendar-day.has-work { background: rgba(34, 197, 94, 0.08); border: none; }
         /* Mantieni compatibilità con classe day-number usata in renderCalendar */
         .calendar-day-number, .day-number { font-weight: 600; font-size: 16px; margin-bottom: 5px; }
         .day-number { font-size: 14px; }
-        .work-hours-admin { font-size: 11px; color: #28a745; font-weight: 600; }
-        .work-indicator { width: 8px; height: 8px; background: linear-gradient(135deg, #28a745, #20c997); border-radius: 50%; margin-bottom: 2px; }
+        .work-hours-admin { font-size: 11px; color: var(--success); font-weight: 600; }
+        .work-indicator { width: 8px; height: 8px; background: var(--success); border-radius: 50%; margin-bottom: 2px; }
         /* Vecchie classi mantenute per retrocompatibilità con versioni precedenti renderCalendar */
-        .day-hours { font-size: 11px; font-weight: 700; color: #3b82f6; }
+        .day-hours { font-size: 11px; font-weight: 700; color: var(--accent); }
 
         /* ═══════════════════════════════════════════
            TOTALI ORE — Griglia statistiche sotto il
            calendario: ore mese corrente, mese precedente,
            anno corrente.
            ═══════════════════════════════════════════ */
-        .stats-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb; }
-        .stat-card { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center; }
-        .stat-value { font-size: 28px; font-weight: 800; color: #1f2937; display: block; }
-        .stat-label { font-size: 12px; color: #6b7280; font-weight: 600; margin-top: 5px; text-transform: uppercase; }
+        .stats-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--border); }
+        .stat-card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); display: block; }
+        .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 5px; text-transform: uppercase; }
 
         /* ═══════════════════════════════════════════
            LOADING E STATI VUOTI — Spinner animato,
            stato "nessun dato", spinner-container con testo.
            ═══════════════════════════════════════════ */
-        .loading-spinner { border: 3px solid #f3f4f6; border-top: 3px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+        .loading-spinner { border: 3px solid var(--border); border-top: 3px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .refresh-btn.spinning i { animation: spin 0.8s linear infinite; }
-        .no-data-state { text-align: center; padding: 40px 20px; color: #6b7280; }
+        .no-data-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
         .no-data-icon { font-size: 48px; margin-bottom: 15px; opacity: 0.5; }
         .spinner-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; gap: 15px; }
-        .spinner-text { color: #6b7280; font-weight: 500; font-size: 14px; }
+        .spinner-text { color: var(--text-muted); font-weight: 500; font-size: 14px; }
 
         /* ═══════════════════════════════════════════
            ANIMAZIONI — fadeIn per le sezioni al load,
@@ -218,30 +239,30 @@
         .utenti-form-label {
             font-size: 13px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-soft);
         }
         .utenti-form-input {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid #e1e5e9;
+            border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 13px;
-            color: #1f2937;
-            background: white;
+            color: var(--text);
+            background: var(--bg);
             transition: border-color 0.2s, box-shadow 0.2s;
             line-height: 1.5;
         }
         .utenti-form-input:focus {
             outline: none;
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
         select.utenti-form-input { cursor: pointer; }
         .utenti-submit-btn {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--accent);
             color: white;
             border: none;
             padding: 11px 22px;
@@ -252,8 +273,7 @@
             transition: all 0.2s;
         }
         .utenti-submit-btn:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+            background: var(--accent-hover);
         }
         .utenti-submit-btn:disabled {
             opacity: 0.65;
@@ -268,14 +288,14 @@
             font-weight: 500;
         }
         .utenti-result.success-message {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #15803d;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.25);
+            color: #4ade80;
         }
         .utenti-result.error-message {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #b91c1c;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #f87171;
         }
         @media (max-width: 768px) {
             .utenti-form-grid { grid-template-columns: 1fr; }
@@ -289,41 +309,41 @@
            ═══════════════════════════════════════════ */
         .day-details-popup { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; justify-content: center; align-items: center; padding: 20px; }
         .day-details-popup.show { display: flex; }
-        .popup-content { background: white; border-radius: 20px; padding: 30px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
-        .popup-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e1e5e9; text-align: center; }
-        .popup-title { font-size: 20px; font-weight: 600; color: #333; margin-bottom: 8px; }
-        .popup-total-hours { font-size: 24px; font-weight: 700; color: #4f46e5; background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(124, 58, 237, 0.1)); padding: 8px 20px; border-radius: 20px; border: 2px solid rgba(79, 70, 229, 0.2); margin-top: 5px; }
+        .popup-content { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 30px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5); }
+        .popup-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border); text-align: center; }
+        .popup-title { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+        .popup-total-hours { font-size: 24px; font-weight: 700; color: var(--accent); background: rgba(59, 130, 246, 0.1); padding: 8px 20px; border-radius: 20px; border: 2px solid rgba(59, 130, 246, 0.25); margin-top: 5px; }
         /* popup-close nascosto — la chiusura avviene via pulsante OK */
         .popup-close { display: none; }
-        .popup-ok-button { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; padding: 15px 40px; border-radius: 25px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; width: 100%; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); }
-        .popup-ok-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4); }
-        .popup-ok-button:active { transform: translateY(0); box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3); }
-        .work-entry { background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(124, 58, 237, 0.05)); border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #4f46e5; transition: all 0.3s ease; }
-        .work-entry:hover { background: rgba(79, 70, 229, 0.1); transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        .popup-ok-button { background: var(--accent); color: white; border: none; padding: 15px 40px; border-radius: 25px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; width: 100%; }
+        .popup-ok-button:hover { background: var(--accent-hover); }
+        .popup-ok-button:active { background: var(--accent-hover); }
+        .work-entry { background: rgba(59, 130, 246, 0.05); border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 4px solid var(--accent); transition: all 0.3s ease; }
+        .work-entry:hover { background: rgba(59, 130, 246, 0.1); }
         .work-entry:last-child { margin-bottom: 0; }
         .work-entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .work-cantiere { font-weight: 600; color: #1f2937; font-size: 16px; }
-        .work-hours-large { font-size: 20px; font-weight: 700; color: #4f46e5; }
-        .work-note { font-size: 14px; color: #6b7280; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-style: italic; }
+        .work-cantiere { font-weight: 600; color: var(--text); font-size: 16px; }
+        .work-hours-large { font-size: 20px; font-weight: 700; color: var(--accent); }
+        .work-note { font-size: 14px; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-style: italic; }
 
         /* ═══════════════════════════════════════════
            POPUP MODIFICA STATO CANTIERE
            ═══════════════════════════════════════════ */
         .cantiere-stato-popup { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10001; justify-content: center; align-items: center; padding: 20px; }
         .cantiere-stato-popup.show { display: flex; }
-        .cantiere-stato-content { background: white; border-radius: 20px; padding: 30px; max-width: 420px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-        .cantiere-stato-header { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e1e5e9; }
-        .cantiere-stato-titolo { font-size: 18px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
-        .cantiere-stato-id { font-size: 13px; color: #9ca3af; }
-        .cantiere-stato-label { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; display: block; }
-        .cantiere-stato-select { width: 100%; padding: 12px 16px; border: 2px solid #e1e5e9; border-radius: 12px; font-size: 15px; color: #1f2937; background: #f9fafb; cursor: pointer; outline: none; transition: border-color 0.2s; }
-        .cantiere-stato-select:focus { border-color: #4f46e5; background: white; }
+        .cantiere-stato-content { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 30px; max-width: 420px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .cantiere-stato-header { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border); }
+        .cantiere-stato-titolo { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .cantiere-stato-id { font-size: 13px; color: var(--text-muted); }
+        .cantiere-stato-label { font-size: 14px; font-weight: 600; color: var(--text-soft); margin-bottom: 8px; display: block; }
+        .cantiere-stato-select { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 15px; color: var(--text); background: var(--bg); cursor: pointer; outline: none; transition: border-color 0.2s; }
+        .cantiere-stato-select:focus { border-color: var(--accent); background: var(--bg); }
         .cantiere-stato-actions { display: flex; gap: 12px; margin-top: 24px; }
-        .cantiere-stato-save { flex: 1; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-        .cantiere-stato-save:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(79,70,229,0.4); }
-        .cantiere-stato-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        .cantiere-stato-cancel { flex: 1; background: #f3f4f6; color: #374151; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-        .cantiere-stato-cancel:hover { background: #e5e7eb; }
+        .cantiere-stato-save { flex: 1; background: var(--accent); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .cantiere-stato-save:hover { background: var(--accent-hover); }
+        .cantiere-stato-save:disabled { opacity: 0.6; cursor: not-allowed; }
+        .cantiere-stato-cancel { flex: 1; background: var(--bg); color: var(--text-soft); border: 1px solid var(--border); padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .cantiere-stato-cancel:hover { background: var(--border); }
         @media (max-width: 480px) {
             .cantiere-stato-content { padding: 20px; border-radius: 16px; }
             .cantiere-stato-actions { flex-direction: column; }
@@ -365,9 +385,8 @@
         .admin-sidebar {
             width: 220px;
             min-height: 100vh;
-            background: rgba(255,255,255,0.12);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255,255,255,0.2);
+            background: var(--card);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             position: sticky;
@@ -384,13 +403,13 @@
             align-items: center;
             gap: 10px;
             padding: 18px 14px;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
+            border-bottom: 1px solid var(--border);
             min-height: 60px;
         }
         .sidebar-toggle {
             background: none;
             border: none;
-            color: white;
+            color: var(--text-soft);
             font-size: 20px;
             cursor: pointer;
             padding: 4px;
@@ -400,9 +419,9 @@
             width: 30px;
             text-align: center;
         }
-        .sidebar-toggle:hover { background: rgba(255,255,255,0.15); }
+        .sidebar-toggle:hover { background: rgba(255,255,255,0.08); }
         .sidebar-logo {
-            color: white;
+            color: var(--text);
             font-size: 15px;
             font-weight: 700;
             white-space: nowrap;
@@ -422,18 +441,18 @@
             align-items: center;
             gap: 12px;
             padding: 12px 14px;
-            color: rgba(255,255,255,0.8);
+            color: var(--text-soft);
             cursor: pointer;
             transition: all 0.2s;
             border-left: 3px solid transparent;
             white-space: nowrap;
             overflow: hidden;
         }
-        .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-item:hover { background: rgba(59, 130, 246, 0.08); color: var(--text); }
         .nav-item.active {
-            background: rgba(255,255,255,0.18);
-            color: white;
-            border-left-color: white;
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--text);
+            border-left-color: var(--accent);
             font-weight: 600;
         }
         .nav-item i { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
@@ -474,11 +493,9 @@
                 bottom: 0;
                 left: 0;
                 right: 0;
-                background: rgba(255,255,255,0.97);
-                backdrop-filter: blur(10px);
-                border-top: 1px solid #e1e5e9;
+                background: var(--card);
+                border-top: 1px solid var(--border);
                 z-index: 200;
-                box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
             }
             .tab-item {
                 flex: 1;
@@ -490,15 +507,15 @@
                 padding: 8px 4px;
                 background: none;
                 border: none;
-                color: #9ca3af;
+                color: var(--text-muted);
                 cursor: pointer;
                 transition: color 0.2s;
                 font-size: 10px;
                 font-weight: 500;
             }
             .tab-item i { font-size: 18px; }
-            .tab-item.active { color: #4f46e5; }
-            .tab-item.active i { color: #4f46e5; }
+            .tab-item.active { color: var(--accent); }
+            .tab-item.active i { color: var(--accent); }
         }
 
         /* ═══════════════════════════════════════════
@@ -509,7 +526,7 @@
 
         /* Separatore visivo tra statistiche e sezione precedente */
         .stats-section-divider {
-            border-top: 2px solid #e5e7eb;
+            border-top: 2px solid var(--border);
             margin-top: 10px;
             padding-top: 25px;
         }
@@ -526,7 +543,7 @@
         .stats-section-title {
             font-size: 22px;
             font-weight: 700;
-            color: #1f2937;
+            color: var(--text);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -541,18 +558,18 @@
         /* Select anno statistiche */
         .stats-anno-select {
             padding: 10px 16px;
-            border: 2px solid #e5e7eb;
+            border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
-            color: #1f2937;
-            background: white;
+            color: var(--text);
+            background: var(--bg);
             cursor: pointer;
             transition: border-color 0.2s;
         }
         .stats-anno-select:focus {
             outline: none;
-            border-color: #4f46e5;
+            border-color: var(--accent);
         }
 
         /* Pulsanti header statistiche */
@@ -569,19 +586,19 @@
             transition: all 0.2s;
         }
         .stats-btn-refresh {
-            background: #f3f4f6;
-            color: #374151;
+            background: var(--bg);
+            color: var(--text-soft);
+            border: 1px solid var(--border);
         }
         .stats-btn-refresh:hover:not(:disabled) {
-            background: #e5e7eb;
+            background: var(--border);
         }
         .stats-btn-force {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background: var(--warning);
             color: white;
         }
         .stats-btn-force:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+            background: #d97706;
         }
         .stats-btn:disabled {
             opacity: 0.6;
@@ -597,7 +614,7 @@
         .stats-empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #6b7280;
+            color: var(--text-muted);
         }
         .stats-empty-icon {
             font-size: 48px;
@@ -607,12 +624,12 @@
         .stats-empty-title {
             font-size: 18px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-soft);
             margin-bottom: 10px;
         }
         .stats-empty-desc {
             font-size: 14px;
-            color: #9ca3af;
+            color: var(--text-muted);
             max-width: 380px;
             margin: 0 auto 24px auto;
             line-height: 1.6;
@@ -622,7 +639,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background: var(--warning);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -631,11 +648,9 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
         }
         .stats-empty-action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(245, 158, 11, 0.45);
+            background: #d97706;
         }
 
         /* Messaggio ricalcolo in corso */
@@ -644,11 +659,11 @@
             align-items: center;
             gap: 10px;
             padding: 12px 16px;
-            background: #fffbeb;
-            border: 1px solid #fde68a;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
             border-radius: 10px;
             font-size: 13px;
-            color: #92400e;
+            color: #fbbf24;
             font-weight: 500;
             margin-bottom: 16px;
         }
@@ -672,8 +687,8 @@
 
         /* Card singolo grafico */
         .stats-chart-card {
-            background: #1e293b;
-            border: 1px solid #334155;
+            background: var(--bg);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 20px;
         }
@@ -700,17 +715,18 @@
         /* Tabella riepilogo statistiche */
         .stats-table-section {
             margin-top: 20px;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid var(--border);
             padding-top: 20px;
         }
         .stats-table-tabs {
             display: flex;
             gap: 4px;
             margin-bottom: 16px;
-            background: #f3f4f6;
+            background: var(--bg);
             padding: 4px;
             border-radius: 10px;
             width: fit-content;
+            border: 1px solid var(--border);
         }
         .stats-table-tab {
             padding: 7px 18px;
@@ -719,19 +735,18 @@
             background: none;
             font-size: 13px;
             font-weight: 600;
-            color: #6b7280;
+            color: var(--text-muted);
             cursor: pointer;
             transition: all 0.2s;
         }
         .stats-table-tab.active {
-            background: white;
-            color: #4f46e5;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            background: var(--card);
+            color: var(--accent);
         }
         .stats-table-wrap {
             overflow-x: auto;
             border-radius: 10px;
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--border);
         }
         .stats-table {
             width: 100%;
@@ -739,8 +754,8 @@
             font-size: 14px;
         }
         .stats-table th {
-            background: #1f2937;
-            color: #f9fafb;
+            background: var(--card);
+            color: var(--text-soft);
             padding: 10px 12px;
             text-align: center;
             font-weight: 700;
@@ -755,15 +770,17 @@
         .stats-table td {
             padding: 10px 10px;
             text-align: center;
-            border-bottom: 1px solid #f3f4f6;
+            border-bottom: 1px solid var(--border);
             vertical-align: middle;
             font-size: 14px;
             min-height: 40px;
+            color: var(--text);
+            background: var(--bg);
         }
         .stats-table td:first-child {
             text-align: left;
             font-weight: 600;
-            color: #1f2937;
+            color: var(--text);
             white-space: nowrap;
             min-width: 48px;
         }
@@ -771,17 +788,17 @@
             border-bottom: none;
         }
         .stats-table tbody tr:hover td {
-            background: rgba(79, 70, 229, 0.03);
+            background: rgba(59, 130, 246, 0.04);
         }
         /* Cella valore zero */
         .stats-cell-zero {
-            color: #4b5563;
+            color: var(--text-muted);
             font-size: 11px;
         }
         /* Cella con ore */
         .stats-cell-hours {
-            background: rgba(16, 185, 129, 0.18);
-            color: #065f46;
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
             font-weight: 700;
             border-radius: 4px;
             padding: 3px 8px;
@@ -789,16 +806,16 @@
         }
         /* Riga totale */
         .stats-table .stats-row-total td {
-            background: #1f2937;
+            background: var(--card);
             font-weight: 700;
-            color: #f9fafb;
-            border-top: 2px solid #e5e7eb;
+            color: var(--text);
+            border-top: 2px solid var(--border);
         }
 
         /* Colori ore dipendenti mese corrente */
-        .stats-hours-green { background: rgba(16, 185, 129, 0.12); color: #065f46; }
-        .stats-hours-yellow { background: rgba(245, 158, 11, 0.12); color: #92400e; }
-        .stats-hours-red { background: rgba(239, 68, 68, 0.12); color: #991b1b; }
+        .stats-hours-green { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+        .stats-hours-yellow { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+        .stats-hours-red { background: rgba(239, 68, 68, 0.15); color: #f87171; }
 
         /* Responsive statistiche — tablet (768-1023px) */
         @media (max-width: 1023px) {
@@ -894,7 +911,7 @@
                         <!-- Header: titolo + controlli anno + pulsanti -->
                         <div class="stats-section-header">
                             <h2 class="stats-section-title" id="statsSectionTitle">
-                                <i class="fas fa-chart-bar" style="color:#4f46e5;"></i>
+                                <i class="fas fa-chart-bar" style="color:var(--accent);"></i>
                                 Statistiche
                             </h2>
                             <div class="stats-controls">
@@ -954,16 +971,16 @@
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
 
                         <!-- Card: Gestione Cantieri -->
-                        <div style="background: #f8f9ff; border-radius: 12px; padding: 24px; border: 1px solid #e0e7ff;">
-                            <div style="font-size: 16px; font-weight: 700; color: #1f2937; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-building" style="color: #4f46e5;"></i> Gestione Cantieri
+                        <div style="background: var(--bg); border-radius: 12px; padding: 24px; border: 1px solid var(--border);">
+                            <div style="font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-building" style="color: var(--accent);"></i> Gestione Cantieri
                             </div>
-                            <p style="font-size: 13px; color: #6b7280; margin-bottom: 20px;">Verifica l'allineamento tra i fogli dipendente e il foglio Cantieri, oppure ricalcola i totali ore.</p>
+                            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Verifica l'allineamento tra i fogli dipendente e il foglio Cantieri, oppure ricalcola i totali ore.</p>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <button onclick="eseguiVerificaAllineamento()" style="flex: 1; min-width: 120px; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                                <button onclick="eseguiVerificaAllineamento()" style="flex: 1; min-width: 120px; background: rgba(34,197,94,0.1); color: #4ade80; border: 1px solid rgba(34,197,94,0.25); padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
                                     <i class="fas fa-search-plus"></i> Verifica
                                 </button>
-                                <button onclick="eseguiRicalcoloCantieri()" style="flex: 1; min-width: 120px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                                <button onclick="eseguiRicalcoloCantieri()" style="flex: 1; min-width: 120px; background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
                                     <i class="fas fa-sync-alt"></i> Ricalcola Totali
                                 </button>
                             </div>
@@ -1007,7 +1024,7 @@
                                        autocomplete="new-password" aria-required="true">
                             </div>
                             <div class="utenti-form-group">
-                                <label class="utenti-form-label" for="nuovaEmail">Email <span style="color:#9ca3af;font-weight:400;">(opzionale)</span></label>
+                                <label class="utenti-form-label" for="nuovaEmail">Email <span style="color:var(--text-muted);font-weight:400;">(opzionale)</span></label>
                                 <input class="utenti-form-input" type="email" id="nuovaEmail" name="email"
                                        placeholder="Es. mario.rossi@azienda.it" autocomplete="email">
                             </div>
@@ -1042,7 +1059,7 @@
                             <i class="fas fa-toggle-on"></i>Stato Account
                         </h2>
                     </div>
-                    <p style="font-size: 13px; color: #6b7280; margin-bottom: 20px;">
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
                         Attiva o disattiva l'account di un dipendente esistente. La modifica viene applicata immediatamente.
                     </p>
                     <div style="display: flex; flex-direction: column; gap: 12px; max-width: 480px;">
@@ -1085,7 +1102,7 @@
                             <i class="fas fa-key"></i>Cambia Password Dipendente
                         </h2>
                     </div>
-                    <p style="font-size: 13px; color: #6b7280; margin-bottom: 20px;">
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
                         Cambia la password di un dipendente esistente. La modifica viene applicata immediatamente.
                     </p>
                     <!-- autocomplete="off": l'admin sta cambiando la password di un altro utente,
@@ -1183,7 +1200,7 @@
                     <div class="section-header">
                         <div class="section-title"><i class="fas fa-file-pdf"></i> Report Commercialista</div>
                     </div>
-                    <p style="color: #6b7280; font-size: 14px;">Funzionalita' in arrivo.</p>
+                    <p style="color: var(--text-muted); font-size: 14px;">Funzionalita' in arrivo.</p>
                 </div>
             </div>
         </div>
@@ -1496,7 +1513,7 @@
                     <div class="cantiere-meta">
                         <span class="stato-badge ${getStatoBadgeClass(c.stato)}">${c.stato}</span>
                         <span style="display: flex; align-items: center; gap: 4px;">
-                            <small style="color: #9ca3af;">Ultimo inserimento:</small>
+                            <small style="color: #64748b;">Ultimo inserimento:</small>
                             <i class="fas fa-clock"></i>
                             ${Utils.formatDataAdmin(c.ultimoAggiornamento)}
                         </span>
@@ -2028,7 +2045,7 @@
                 html += `
                     <div style="background: rgba(79, 70, 229, 0.05); border-left: 4px solid #4f46e5;
                                 padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                        <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1f2937; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #e2e8f0; margin-bottom: 8px;">
                             ✏️ ${dayData.entries.length} registrazione/i esistente/i
                         </div>
                 `;
@@ -2041,26 +2058,26 @@
                     const entryLabel = `#${index + 1} - ${cantiereTrunc}`;
 
                     html += `
-                        <div style="background: white; border-radius: 10px; padding: 14px; margin-top: 10px;
-                                    border: 2px solid ${index === 0 ? '#4f46e5' : '#e5e7eb'}; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
+                        <div style="background: #1e2130; border-radius: 10px; padding: 14px; margin-top: 10px;
+                                    border: 2px solid ${index === 0 ? '#4f46e5' : '#2a2f45'}; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                <div style="font-size: 12px; color: #6b7280; font-weight: 700; text-transform: uppercase;">${entryLabel}</div>
+                                <div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">${entryLabel}</div>
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin-bottom: 12px;">
                                 <div>
-                                    <div style="font-size: 11px; color: #9ca3af; font-weight: 600; margin-bottom: 3px;">CANTIERE</div>
-                                    <div style="font-size: 14px; color: #1f2937; font-weight: 600;">${entry.cantiereName || entry.cantiereId}</div>
+                                    <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 3px;">CANTIERE</div>
+                                    <div style="font-size: 14px; color: #e2e8f0; font-weight: 600;">${entry.cantiereName || entry.cantiereId}</div>
                                 </div>
-                                <div style="background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; padding: 8px 16px;
+                                <div style="background: rgba(59,130,246,0.15); color: #3b82f6; padding: 8px 16px;
                                             border-radius: 10px; font-size: 18px; font-weight: 800; text-align: center; min-width: 60px;">${entry.ore}h</div>
                             </div>
                             ${entry.note && !entry.note.includes('** Modificato') ? `
-                                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
-                                    <div style="font-size: 10px; color: #9ca3af; font-weight: 600; margin-bottom: 4px;">NOTE</div>
-                                    <div style="font-size: 13px; color: #4b5563; font-style: italic;">${entry.note}</div>
+                                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2f45;">
+                                    <div style="font-size: 10px; color: #64748b; font-weight: 600; margin-bottom: 4px;">NOTE</div>
+                                    <div style="font-size: 13px; color: #94a3b8; font-style: italic;">${entry.note}</div>
                                 </div>
                             ` : ''}
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #2a2f45;">
                                 <button onclick="selectEntryToEdit(${index})" style="background: linear-gradient(135deg, #4f46e5, #4338ca); color: white;
                                         border: none; padding: 12px; border-radius: 10px; font-size: 13px; cursor: pointer; font-weight: 700;
                                         display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px;">
@@ -2081,7 +2098,7 @@
                     <div id="editArea" style="display: none;">
                         <div style="background: rgba(16, 185, 129, 0.05); border-left: 4px solid #10b981;
                                     padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                            <div style="font-weight: 600; color: #065f46;">✏️ Modifica registrazione <span id="editingIndex"></span></div>
+                            <div style="font-weight: 600; color: #22c55e;">✏️ Modifica registrazione <span id="editingIndex"></span></div>
                         </div>
                         ${generateEditForm('')}
                     </div>
@@ -2098,7 +2115,7 @@
                 html += `
                     <div style="background: rgba(245, 158, 11, 0.05); border-left: 4px solid #f59e0b;
                                 padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                        <div style="font-weight: 600; color: #1f2937;">➕ Nuova registrazione</div>
+                        <div style="font-weight: 600; color: #e2e8f0;">➕ Nuova registrazione</div>
                     </div>
                     ${generateEditForm('')}
                 `;
@@ -2166,7 +2183,7 @@
                     animation: fadeIn 0.2s ease-out;
                 ">
                     <div style="
-                        background: white;
+                        background: #1e2130;
                         border-radius: 20px;
                         padding: 30px;
                         max-width: 450px;
@@ -2187,10 +2204,10 @@
                                 margin: 0 auto 15px;
                                 font-size: 36px;
                             ">🗑️</div>
-                            <h3 style="font-size: 22px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">
+                            <h3 style="font-size: 22px; font-weight: 700; color: #e2e8f0; margin-bottom: 8px;">
                                 Elimina Registrazione
                             </h3>
-                            <p style="font-size: 14px; color: #6b7280;">
+                            <p style="font-size: 14px; color: #64748b;">
                                 Questa azione non può essere annullata
                             </p>
                         </div>
@@ -2205,19 +2222,19 @@
                         ">
                             <div style="display: grid; gap: 12px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="font-size: 13px; color: #6b7280; font-weight: 600;">Data:</span>
-                                    <span style="font-size: 14px; color: #1f2937; font-weight: 600;">
+                                    <span style="font-size: 13px; color: #64748b; font-weight: 600;">Data:</span>
+                                    <span style="font-size: 14px; color: #e2e8f0; font-weight: 600;">
                                         ${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}
                                     </span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="font-size: 13px; color: #6b7280; font-weight: 600;">Cantiere:</span>
-                                    <span style="font-size: 14px; color: #1f2937; font-weight: 600;">
+                                    <span style="font-size: 13px; color: #64748b; font-weight: 600;">Cantiere:</span>
+                                    <span style="font-size: 14px; color: #e2e8f0; font-weight: 600;">
                                         ${entry.cantiereName || entry.cantiereId}
                                     </span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="font-size: 13px; color: #6b7280; font-weight: 600;">Ore lavorate:</span>
+                                    <span style="font-size: 13px; color: #64748b; font-weight: 600;">Ore lavorate:</span>
                                     <span style="
                                         font-size: 20px;
                                         font-weight: 800;
@@ -2233,10 +2250,10 @@
                                         border-top: 1px solid rgba(239, 68, 68, 0.2);
                                         margin-top: 8px;
                                     ">
-                                        <span style="font-size: 12px; color: #6b7280; font-weight: 600; display: block; margin-bottom: 4px;">
+                                        <span style="font-size: 12px; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">
                                             Note:
                                         </span>
-                                        <span style="font-size: 13px; color: #4b5563; font-style: italic;">
+                                        <span style="font-size: 13px; color: #94a3b8; font-style: italic;">
                                             ${entry.note}
                                         </span>
                                     </div>
@@ -2269,9 +2286,9 @@
 
                             <button onclick="closeDeleteModal()" style="
                                 width: 100%;
-                                background: #f3f4f6;
-                                color: #4b5563;
-                                border: 2px solid #e5e7eb;
+                                background: #0f1117;
+                                color: #94a3b8;
+                                border: 2px solid #2a2f45;
                                 padding: 14px;
                                 border-radius: 12px;
                                 font-size: 15px;
@@ -2279,8 +2296,8 @@
                                 cursor: pointer;
                                 transition: all 0.2s;
                                 min-height: 48px;
-                            " onmouseover="this.style.background='#e5e7eb';"
-                               onmouseout="this.style.background='#f3f4f6';">
+                            " onmouseover="this.style.background='#2a2f45';"
+                               onmouseout="this.style.background='#0f1117';">
                                 Annulla
                             </button>
                         </div>
@@ -2483,30 +2500,30 @@
                 <div class="work-entry">
                     <div style="display: grid; grid-template-columns: 1fr 120px; gap: 12px; margin-bottom: 15px;">
                         <div>
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 6px;">
                                 Cantiere
                             </label>
                             <select id="editCantiereId"
-                                    style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;
-                                           font-size: 14px; background: white; cursor: pointer;">
+                                    style="width: 100%; padding: 10px; border: 2px solid #2a2f45; border-radius: 8px;
+                                           font-size: 14px; background: #1e2130; cursor: pointer;">
                                 <option value="">Caricamento...</option>
                             </select>
                         </div>
                         <div>
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 6px;">
                                 Ore
                             </label>
                             <input type="number" id="editOre" value="" min="0" max="24" step="0.5" placeholder="0.0"
-                                   style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                   style="width: 100%; padding: 10px; border: 2px solid #2a2f45; border-radius: 8px;
                                           font-size: 14px; text-align: center; font-weight: 600;">
                         </div>
                     </div>
                     <div>
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 6px;">
                             Note aggiuntive
                         </label>
                         <textarea id="editNote" rows="3" placeholder="Aggiungi note..."
-                                  style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;
+                                  style="width: 100%; padding: 10px; border: 2px solid #2a2f45; border-radius: 8px;
                                          font-size: 14px; resize: vertical;"></textarea>
                     </div>
                     <button onclick="saveWorkEdit()" id="saveBtn"
@@ -2969,7 +2986,7 @@
 
         async function eseguiVerificaAllineamento() {
             const resultDiv = document.getElementById('strumenti-cantieri-result');
-            resultDiv.innerHTML = '<div style="color:#6b7280;font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Verifica in corso...</div>';
+            resultDiv.innerHTML = '<div style="color:#64748b;font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Verifica in corso...</div>';
             try {
                 const session = Utils.getSession();
                 const result = await Utils.callAPI({ action: 'verificaAllineamento', sessionToken: session.token });
@@ -2979,18 +2996,18 @@
                     if (totalProblemi === 0) {
                         resultDiv.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;font-size:13px;color:#16a34a;"><i class="fas fa-check-circle"></i> <strong>Tutto allineato!</strong> ${d.constructionSitesAnalyzed} cantieri, ${d.employeesAnalyzed} dipendenti analizzati.</div>`;
                     } else {
-                        let html = `<div style="background:#fef9f0;border:1px solid #fcd34d;border-radius:8px;padding:12px;font-size:13px;">`;
-                        html += `<div style="font-weight:700;color:#92400e;margin-bottom:8px;"><i class="fas fa-exclamation-triangle"></i> ${totalProblemi} problema/i rilevati</div>`;
+                        let html = `<div style="background:#1e2130;border:1px solid #fcd34d;border-radius:8px;padding:12px;font-size:13px;">`;
+                        html += `<div style="font-weight:700;color:#fbbf24;margin-bottom:8px;"><i class="fas fa-exclamation-triangle"></i> ${totalProblemi} problema/i rilevati</div>`;
                         if (d.inconsistencies.length > 0) {
-                            html += `<div style="margin-bottom:6px;color:#374151;"><strong>Totali errati (${d.inconsistencies.length}):</strong></div>`;
+                            html += `<div style="margin-bottom:6px;color:#e2e8f0;"><strong>Totali errati (${d.inconsistencies.length}):</strong></div>`;
                             d.inconsistencies.slice(0,5).forEach(inc => {
-                                html += `<div style="color:#6b7280;padding-left:12px;">&#8226; ${inc.name}: ${inc.declared}h dichiarate &#8594; ${inc.actual}h reali</div>`;
+                                html += `<div style="color:#64748b;padding-left:12px;">&#8226; ${inc.name}: ${inc.declared}h dichiarate &#8594; ${inc.actual}h reali</div>`;
                             });
-                            if (d.inconsistencies.length > 5) html += `<div style="color:#9ca3af;padding-left:12px;">... e altri ${d.inconsistencies.length - 5}</div>`;
+                            if (d.inconsistencies.length > 5) html += `<div style="color:#64748b;padding-left:12px;">... e altri ${d.inconsistencies.length - 5}</div>`;
                         }
-                        if (d.missingConstructionSites.length > 0) html += `<div style="margin-top:6px;color:#374151;"><strong>Cantieri mancanti: ${d.missingConstructionSites.length}</strong></div>`;
-                        if (d.orphanedHours.length > 0) html += `<div style="margin-top:6px;color:#374151;"><strong>Ore orfane: ${d.orphanedHours.length}</strong></div>`;
-                        html += `<div style="margin-top:10px;color:#6b7280;font-size:12px;">Usa "Ricalcola Totali" per correggere le inconsistenze.</div>`;
+                        if (d.missingConstructionSites.length > 0) html += `<div style="margin-top:6px;color:#e2e8f0;"><strong>Cantieri mancanti: ${d.missingConstructionSites.length}</strong></div>`;
+                        if (d.orphanedHours.length > 0) html += `<div style="margin-top:6px;color:#e2e8f0;"><strong>Ore orfane: ${d.orphanedHours.length}</strong></div>`;
+                        html += `<div style="margin-top:10px;color:#64748b;font-size:12px;">Usa "Ricalcola Totali" per correggere le inconsistenze.</div>`;
                         html += `</div>`;
                         resultDiv.innerHTML = html;
                     }
@@ -3004,7 +3021,7 @@
 
         async function eseguiRicalcoloCantieri() {
             const resultDiv = document.getElementById('strumenti-cantieri-result');
-            resultDiv.innerHTML = '<div style="color:#6b7280;font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Ricalcolo in corso (puo\' richiedere qualche secondo)...</div>';
+            resultDiv.innerHTML = '<div style="color:#64748b;font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Ricalcolo in corso (puo\' richiedere qualche secondo)...</div>';
             try {
                 const session = Utils.getSession();
                 const result = await Utils.callAPI({ action: 'ricalcolaCantieri', sessionToken: session.token });
@@ -3013,13 +3030,13 @@
                     if (d.corrections.length === 0) {
                         resultDiv.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;font-size:13px;color:#16a34a;"><i class="fas fa-check-circle"></i> <strong>Tutto corretto!</strong> ${d.constructionSitesUpdated} cantieri controllati, ${d.employeesProcessed} dipendenti. Nessuna correzione necessaria.</div>`;
                     } else {
-                        let html = `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-size:13px;">`;
-                        html += `<div style="font-weight:700;color:#1d4ed8;margin-bottom:8px;"><i class="fas fa-check"></i> ${d.corrections.length} correzioni effettuate in ${d.executionTime}s</div>`;
+                        let html = `<div style="background:#1e2130;border:1px solid #2a2f45;border-radius:8px;padding:12px;font-size:13px;">`;
+                        html += `<div style="font-weight:700;color:#3b82f6;margin-bottom:8px;"><i class="fas fa-check"></i> ${d.corrections.length} correzioni effettuate in ${d.executionTime}s</div>`;
                         d.corrections.slice(0,8).forEach(c => {
                             const sign = c.difference >= 0 ? '+' : '';
-                            html += `<div style="color:#374151;padding-left:12px;">&#8226; ${c.name}: ${c.oldTotal}h &#8594; ${c.newTotal}h (${sign}${c.difference.toFixed(1)}h)</div>`;
+                            html += `<div style="color:#e2e8f0;padding-left:12px;">&#8226; ${c.name}: ${c.oldTotal}h &#8594; ${c.newTotal}h (${sign}${c.difference.toFixed(1)}h)</div>`;
                         });
-                        if (d.corrections.length > 8) html += `<div style="color:#9ca3af;padding-left:12px;">... e altri ${d.corrections.length - 8}</div>`;
+                        if (d.corrections.length > 8) html += `<div style="color:#64748b;padding-left:12px;">... e altri ${d.corrections.length - 8}</div>`;
                         html += `</div>`;
                         resultDiv.innerHTML = html;
                         // Invalida cache cantieri
@@ -3043,7 +3060,7 @@
             if (nuovaPassword.length < 4) { resultDiv.style.display = 'block'; resultDiv.innerHTML = `<div style="color:#ef4444;font-size:13px;">Password troppo corta (min. 4 caratteri).</div>`; return; }
 
             resultDiv.style.display = 'block';
-            resultDiv.innerHTML = '<div style="color:#6b7280;font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Aggiornamento...</div>';
+            resultDiv.innerHTML = '<div style="color:#64748b;font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Aggiornamento...</div>';
             try {
                 const session = Utils.getSession();
                 const result = await Utils.callAPI({ action: 'cambiaPassword', sessionToken: session.token, targetUserId: userId, nuovaPassword: nuovaPassword });
@@ -3930,7 +3947,7 @@
          */
         function buildTabellaHTML(lista, entityLabel) {
             if (!lista || lista.length === 0) {
-                return '<p style="color:#9ca3af;font-size:13px;padding:16px 0;">Nessun dato disponibile.</p>';
+                return '<p style="color:#64748b;font-size:13px;padding:16px 0;">Nessun dato disponibile.</p>';
             }
 
             const mesi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];

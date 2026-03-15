@@ -4,11 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sistema Gestione Ore V2.2 TEST</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════════
+           DESIGN TOKENS — Sistema colori dark (hostmetrics)
+           ═══════════════════════════════════════════ */
+        :root {
+            --bg: #0f1117;
+            --card: #1e2130;
+            --border: #2a2f45;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --text: #e2e8f0;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --radius: 12px;
+        }
+
+        /* ═══════════════════════════════════════════
            RESET E BODY — Reset box-model globale,
-           sfondo gradiente viola animato, centra
-           il form verticalmente e orizzontalmente.
+           sfondo dark, centra il form verticalmente
+           e orizzontalmente.
            ═══════════════════════════════════════════ */
         * {
             margin: 0;
@@ -17,108 +38,54 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            position: relative;
             overflow-x: hidden;
         }
 
         /* ═══════════════════════════════════════════
-           BG DECORATION — Cerchi animati in background
-           per effetto decorativo. Tre elementi con
-           animation-delay differente e dimensioni diverse.
+           SCROLLBAR DARK STYLE
            ═══════════════════════════════════════════ */
-        .bg-decoration {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            animation: float 6s ease-in-out infinite;
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
 
-        .bg-decoration:nth-child(1) {
-            width: 200px;
-            height: 200px;
-            top: 10%;
-            left: 10%;
-            animation-delay: 0s;
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
         }
 
-        .bg-decoration:nth-child(2) {
-            width: 150px;
-            height: 150px;
-            top: 70%;
-            right: 20%;
-            animation-delay: 2s;
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
         }
 
-        .bg-decoration:nth-child(3) {
-            width: 100px;
-            height: 100px;
-            bottom: 20%;
-            left: 20%;
-            animation-delay: 4s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
         }
 
         /* ═══════════════════════════════════════════
-           LOGIN CONTAINER — Card bianca semitrasparente
-           con glassmorphism, ombra e bordo raffinato.
-           Hover solleva la card di 5px.
-           ═══════════════════════════════════════════ */
-        .login-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 25px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-            padding: 50px 40px;
-            width: 100%;
-            max-width: 450px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            position: relative;
-            z-index: 10;
-            transition: all 0.3s ease;
-        }
-
-        .login-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.2);
-        }
-
-        @media (max-width: 768px) {
-            .login-container {
-                margin: 0;
-                padding: 40px 30px;
-                border-radius: 20px;
-                max-width: 100%;
-                width: calc(100% - 20px);
-            }
-        }
-
-        /* ═══════════════════════════════════════════
-           VERSION BADGE — Badge versione in alto a destra
-           con gradiente viola. In produzione viene
-           nascosto da removeDebugElements() in config.js.
+           VERSION BADGE — Badge versione in alto a destra.
+           In produzione viene nascosto da removeDebugElements()
+           in config.js.
            ═══════════════════════════════════════════ */
         .version-badge {
-            position: absolute;
+            position: fixed;
             top: 20px;
             right: 20px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 8px 16px;
+            background: var(--card);
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            padding: 6px 14px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
             z-index: 1000;
         }
 
@@ -126,15 +93,65 @@
             .version-badge {
                 top: 10px;
                 right: 10px;
-                padding: 6px 12px;
+                padding: 5px 10px;
                 font-size: 10px;
             }
         }
 
         /* ═══════════════════════════════════════════
+           FAST INDICATOR — Badge "Fast Mode" in alto
+           a sinistra.
+           ═══════════════════════════════════════════ */
+        .fast-indicator {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--card);
+            color: var(--text-soft);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .fast-indicator {
+                top: 10px;
+                left: 10px;
+                padding: 4px 8px;
+                font-size: 9px;
+            }
+        }
+
+        /* ═══════════════════════════════════════════
+           LOGIN CONTAINER — Card dark con bordo sottile.
+           ═══════════════════════════════════════════ */
+        .login-container {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 10;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 40px 30px;
+                border-radius: var(--radius);
+                max-width: 100%;
+                width: calc(100% - 20px);
+            }
+        }
+
+        /* ═══════════════════════════════════════════
            LOGO SECTION — Sezione logo e titolo nella
-           parte superiore del form. Logo circolare con
-           bordo ombra, hover scala e ruota.
+           parte superiore del form.
            ═══════════════════════════════════════════ */
         .logo-section {
             text-align: center;
@@ -142,27 +159,22 @@
         }
 
         .logo {
-            width: 120px;            /* aumenta o riduci la dimensione */
+            width: 120px;
             height: 120px;
-            border-radius: 50%;      /* mantiene forma tonda */
+            border-radius: 50%;
             overflow: hidden;
-            margin: 0 auto 20px;     /* centra sopra al titolo */
+            margin: 0 auto 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: white;       /* opzionale, per stacco sullo sfondo */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* effetto elegante */
+            background: var(--bg);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
         .logo img {
             width: 100%;
             height: 100%;
-            object-fit: cover;       /* adatta il logo senza deformarlo */
-        }
-
-        .logo:hover {
-            transform: scale(1.1) rotate(10deg);
-            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+            object-fit: cover;
         }
 
         @media (max-width: 768px) {
@@ -174,14 +186,10 @@
         }
 
         h1 {
-            color: #333;
+            color: var(--text);
             font-size: 32px;
             font-weight: 700;
             margin-bottom: 10px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
         @media (max-width: 768px) {
@@ -191,7 +199,7 @@
         }
 
         .subtitle {
-            color: #666;
+            color: var(--text-muted);
             font-size: 16px;
             margin-bottom: 40px;
             font-weight: 500;
@@ -205,22 +213,14 @@
         }
 
         /* ═══════════════════════════════════════════
-           FORM SECTION — Container per i campi del form,
-           sfondo leggermente viola, bordo sottile.
-           Hover solleva di 2px.
+           FORM SECTION — Container per i campi del form
+           con bordo semplice.
            ═══════════════════════════════════════════ */
         .form-section {
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: 20px;
+            border-radius: var(--radius);
             padding: 30px;
             margin-bottom: 30px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .form-section:hover {
-            background: rgba(102, 126, 234, 0.08);
-            transform: translateY(-2px);
+            border: 1px solid var(--border);
         }
 
         @media (max-width: 768px) {
@@ -231,11 +231,11 @@
         }
 
         /* ═══════════════════════════════════════════
-           SECTION TITLE E ICON — Intestazioni delle
-           sezioni form con icona emoji e testo viola.
+           SECTION TITLE — Intestazioni delle sezioni
+           form con icona emoji.
            ═══════════════════════════════════════════ */
         .section-title {
-            color: #667eea;
+            color: var(--text-soft);
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 25px;
@@ -257,9 +257,8 @@
         }
 
         /* ═══════════════════════════════════════════
-           FORM GROUP E INPUT — Campi di input con
-           bordo grigio, arrotondato 15px. Focus aggiunge
-           bordo viola e shadow, solleva 2px.
+           FORM GROUP E INPUT — Campi di input dark.
+           Focus aggiunge bordo accent e shadow.
            ═══════════════════════════════════════════ */
         .form-group {
             margin-bottom: 25px;
@@ -273,7 +272,7 @@
         label {
             display: block;
             margin-bottom: 10px;
-            color: #555;
+            color: var(--text-soft);
             font-weight: 600;
             font-size: 14px;
             text-transform: uppercase;
@@ -283,24 +282,24 @@
         input {
             width: 100%;
             padding: 18px 24px;
-            border: 2px solid #e1e5e9;
-            border-radius: 15px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             font-size: 16px;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: var(--bg);
+            color: var(--text);
             font-weight: 500;
         }
 
         input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-            transform: translateY(-2px);
-            background: rgba(255, 255, 255, 1);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
         input::placeholder {
-            color: #aaa;
+            color: var(--text-muted);
             font-weight: 400;
         }
 
@@ -312,84 +311,61 @@
         }
 
         /* ═══════════════════════════════════════════
-           LOGIN SECTION E BUTTON — Container del pulsante
-           di accesso, sfondo leggermente viola. Pulsante
-           full-width con gradiente viola, effetto shimmer
-           su hover, disabilitato quando in caricamento.
+           LOGIN SECTION — Container del pulsante di
+           accesso.
            ═══════════════════════════════════════════ */
         .login-section {
             text-align: center;
-            padding: 35px 30px;
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: 20px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
             margin-bottom: 30px;
         }
 
         @media (max-width: 768px) {
             .login-section {
-                padding: 30px 25px;
                 margin-bottom: 25px;
             }
         }
 
+        /* ═══════════════════════════════════════════
+           LOGIN BUTTON — Pulsante full-width accent,
+           flat, hover scurisce il colore.
+           ═══════════════════════════════════════════ */
         .login-btn {
             width: 100%;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 16px 20px;
+            background: var(--accent);
             color: white;
             border: none;
-            border-radius: 15px;
-            font-size: 18px;
+            border-radius: var(--radius);
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background-color 0.2s ease;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .login-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
         }
 
         .login-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
-        }
-
-        .login-btn:hover::before {
-            left: 100%;
+            background: var(--accent-hover);
         }
 
         .login-btn:active {
-            transform: translateY(-1px);
+            background: var(--accent-hover);
         }
 
         .login-btn:disabled {
-            opacity: 0.7;
+            opacity: 0.6;
             cursor: not-allowed;
-            transform: none;
         }
 
         .login-btn:disabled:hover {
-            transform: none;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            background: var(--accent);
         }
 
         @media (max-width: 768px) {
             .login-btn {
-                padding: 18px;
-                font-size: 16px;
+                padding: 15px 18px;
+                font-size: 15px;
                 letter-spacing: 1px;
             }
         }
@@ -405,31 +381,32 @@
         }
 
         .error-message, .success-message, .security-message {
-            padding: 16px 20px;
-            border-radius: 12px;
+            padding: 14px 18px;
+            border-radius: var(--radius);
             margin-bottom: 15px;
             border-left: 4px solid;
             display: none;
             animation: slideIn 0.3s ease-out;
             font-weight: 500;
+            font-size: 14px;
         }
 
         .error-message {
-            background: rgba(220, 53, 69, 0.1);
-            color: #dc3545;
-            border-left-color: #dc3545;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border-left-color: var(--danger);
         }
 
         .success-message {
-            background: rgba(40, 167, 69, 0.1);
-            color: #28a745;
-            border-left-color: #28a745;
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            border-left-color: var(--success);
         }
 
         .security-message {
-            background: rgba(102, 126, 234, 0.1);
-            color: #667eea;
-            border-left-color: #667eea;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            border-left-color: var(--accent);
         }
 
         @keyframes slideIn {
@@ -449,13 +426,14 @@
            ═══════════════════════════════════════════ */
         .loading {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             border-top-color: white;
             animation: spin 1s ease-in-out infinite;
             margin-right: 10px;
+            vertical-align: middle;
         }
 
         @keyframes spin {
@@ -465,27 +443,23 @@
         }
 
         /* ═══════════════════════════════════════════
-           FOOTER — Piè di pagina con nome sistema
-           in gradiente viola.
+           FOOTER — Piè di pagina con bordo superiore.
            ═══════════════════════════════════════════ */
         .footer {
             text-align: center;
             margin-top: 30px;
             padding-top: 25px;
-            border-top: 1px solid rgba(102, 126, 234, 0.1);
+            border-top: 1px solid var(--border);
         }
 
         .footer p {
-            color: #888;
+            color: var(--text-muted);
             font-size: 14px;
             font-weight: 500;
         }
 
         .footer .company-name {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--accent);
             font-weight: 600;
         }
 
@@ -501,24 +475,24 @@
         }
 
         /* ═══════════════════════════════════════════
-           NOTIFICATION — Toast di notifica uguale a
-           dashboard.html, inserito in alto a destra
-           e animato con translateX. Su mobile cambia
-           in translateY dall'alto.
+           NOTIFICATION — Toast di notifica in alto a
+           destra, animato con translateX. Su mobile
+           cambia in translateY dall'alto.
            ═══════════════════════════════════════════ */
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 15px 25px;
-            border-radius: 12px;
+            padding: 14px 22px;
+            border-radius: var(--radius);
             color: white;
             font-weight: 600;
+            font-size: 14px;
             z-index: 10000;
             transform: translateX(400px);
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease;
             max-width: 350px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         }
 
         .notification.show {
@@ -526,20 +500,23 @@
         }
 
         .notification.success {
-            background: linear-gradient(135deg, #28a745, #20c997);
+            background: var(--success);
+            color: #fff;
         }
 
         .notification.error {
-            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            background: var(--danger);
+            color: #fff;
         }
 
         .notification.warning {
-            background: linear-gradient(135deg, #ffc107, #fd7e14);
-            color: #212529;
+            background: var(--warning);
+            color: white;
         }
 
         .notification.security {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--accent);
+            color: #fff;
         }
 
         @media (max-width: 768px) {
@@ -549,45 +526,12 @@
                 right: 10px;
                 max-width: none;
                 transform: translateY(-100px);
-                border-radius: 10px;
-                padding: 12px 20px;
+                border-radius: var(--radius);
+                padding: 12px 18px;
             }
 
             .notification.show {
                 transform: translateY(0);
-            }
-        }
-
-        /* ═══════════════════════════════════════════
-           FAST INDICATOR — Badge "Fast Mode" in alto
-           a sinistra, visibile in produzione per indicare
-           la modalità veloce V2.2. Animazione pulse.
-           ═══════════════════════════════════════════ */
-        .fast-indicator {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-            z-index: 1000;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-        }
-
-        @media (max-width: 768px) {
-            .fast-indicator {
-                padding: 4px 8px;
-                font-size: 9px;
             }
         }
 
@@ -597,12 +541,12 @@
            dinamicamente da validateField().
            ═══════════════════════════════════════════ */
         .form-validation {
-            border-color: #dc3545 !important;
-            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1) !important;
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
         }
 
         .validation-message {
-            color: #dc3545;
+            color: var(--danger);
             font-size: 12px;
             margin-top: 8px;
             display: none;
@@ -615,16 +559,12 @@
         }
 
         /* Smooth transitions for all interactive elements */
-        button, input, .form-section {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        button, input {
+            transition: all 0.2s ease;
         }
     </style>
 </head>
 <body>
-    <div class="bg-decoration"></div>
-    <div class="bg-decoration"></div>
-    <div class="bg-decoration"></div>
-
     <div class="version-badge" id="versionBadge">v2.2 Fast ⚡</div>
     <div class="fast-indicator">⚡ Fast Mode</div>
 
