@@ -415,6 +415,7 @@ function generateMonthlyReportComplete(month, year, selectedEmployee = '__ALL__'
           totalHours: employeeData.totalHours,
           daysWorked: employeeData.rows.length,
           fileUrl: reportFile.getUrl(),
+          fileId: reportFile.getId(),
           constructionSites: employeeData.constructionSitesSummary
         });
 
@@ -422,8 +423,10 @@ function generateMonthlyReportComplete(month, year, selectedEmployee = '__ALL__'
       }
     });
 
+    var summaryFileId = null;
     if (selectedEmployee === '__ALL__' && employeeResults.length > 1) {
-      createSummaryReport(employeeResults, reportFolder, monthName, year);
+      var summaryFile = createSummaryReport(employeeResults, reportFolder, monthName, year);
+      summaryFileId = summaryFile.getId();
     }
 
     debugLog('Report mensile completato', {
@@ -438,7 +441,8 @@ function generateMonthlyReportComplete(month, year, selectedEmployee = '__ALL__'
       monthName: monthName,
       year: year,
       folderName: CONFIG.FOLDERS.REPORTS,
-      employees: employeeResults
+      employees: employeeResults,
+      summaryFileId: summaryFileId
     };
 
   } catch (error) {
@@ -945,6 +949,8 @@ function generateAnnualReport(year) {
     return {
       success: true,
       fileName: reportFile.getName(),
+      fileId: reportFile.getId(),
+      fileUrl: reportFile.getUrl(),
       totalEmployees: annualData.length,
       totalHours: annualData.reduce((sum, emp) => sum + emp.totalHours, 0)
     };

@@ -4197,8 +4197,21 @@
                     html += `Ore totali: ${result.totalHours}<br>`;
                     html += `Dipendenti processati: ${result.employeesCount}<br>`;
                     if (result.employees && result.employees.length > 0) {
-                        html += `<br><strong>Dettaglio:</strong><br>`;
-                        result.employees.forEach(e => { html += `• ${e.name}: ${e.totalHours} ore<br>`; });
+                        html += `<br><strong>Dettaglio e download:</strong><br>`;
+                        result.employees.forEach(emp => {
+                            html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.07);">`;
+                            html += `<span>• ${emp.name}: <strong>${emp.totalHours} ore</strong></span>`;
+                            if (emp.fileId) {
+                                html += `<button data-pdf-id="${emp.fileId}" onclick="scaricaPdf('${emp.fileId}','Report_${emp.name}_${result.monthName}_${result.year}.pdf')" style="background:#dc2626;color:white;border:none;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;margin-left:10px;"><i class="fas fa-file-pdf"></i> PDF</button>`;
+                            }
+                            html += `</div>`;
+                        });
+                    }
+                    if (result.summaryFileId) {
+                        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;margin-top:4px;">`;
+                        html += `<span><strong>Riepilogo generale</strong></span>`;
+                        html += `<button data-pdf-id="${result.summaryFileId}" onclick="scaricaPdf('${result.summaryFileId}','Riepilogo_${result.monthName}_${result.year}.pdf')" style="background:#dc2626;color:white;border:none;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;margin-left:10px;"><i class="fas fa-file-pdf"></i> PDF</button>`;
+                        html += `</div>`;
                     }
                     html += `<br>File salvati in: <em>${result.folderName}</em>`;
                     resultDiv.style.background = '#d1fae5';
@@ -4221,6 +4234,57 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-file-excel"></i> Genera Report Mensile';
+            }
+        }
+
+        /**
+         * Scarica il PDF di un report già generato tramite l'endpoint downloadFilePdf.
+         * Riceve il fileId del file su Drive e il nome suggerito per il download,
+         * chiama Utils.callAPI con action 'downloadFilePdf', decodifica il base64
+         * e forza il download nel browser tramite un link temporaneo.
+         *
+         * CHIAMATA DA:  onclick dei pulsanti PDF generati dinamicamente
+         * CHIAMA:       Utils.getSession, Utils.callAPI
+         *
+         * @param {string} fileId   - ID del file su Google Drive
+         * @param {string} fileName - Nome suggerito per il file scaricato
+         * @returns {Promise<void>}
+         */
+        async function scaricaPdf(fileId, fileName) {
+            const session = Utils.getSession();
+            if (!session) return;
+            const btn = document.querySelector(`[data-pdf-id="${fileId}"]`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            }
+            try {
+                const result = await Utils.callAPI({
+                    action: 'downloadFilePdf',
+                    sessionToken: session.token,
+                    fileId
+                });
+                if (result.success && result.pdf) {
+                    const bytes = Uint8Array.from(atob(result.pdf), c => c.charCodeAt(0));
+                    const blob = new Blob([bytes], { type: 'application/pdf' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName || 'report.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } else {
+                    alert('Errore download PDF: ' + (result.message || 'Errore sconosciuto'));
+                }
+            } catch (err) {
+                alert('Errore: ' + err.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-file-pdf"></i> PDF';
+                }
             }
         }
 
@@ -4255,10 +4319,15 @@
                 });
 
                 if (result.success) {
-                    let html = `<strong>Report annuale generato!</strong><br>`;
+                    let html = `<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">`;
+                    html += `<div><strong>Report annuale generato!</strong><br>`;
                     html += `File: <em>${result.fileName}</em><br>`;
                     html += `Dipendenti attivi: ${result.totalEmployees}<br>`;
-                    html += `Ore totali anno: ${result.totalHours}`;
+                    html += `Ore totali anno: ${result.totalHours}</div>`;
+                    if (result.fileId) {
+                        html += `<button data-pdf-id="${result.fileId}" onclick="scaricaPdf('${result.fileId}','Report_Annuale_${result.year || ''}.pdf')" style="background:#dc2626;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><i class="fas fa-file-pdf"></i> Scarica PDF</button>`;
+                    }
+                    html += `</div>`;
                     resultDiv.style.background = '#d1fae5';
                     resultDiv.style.color = '#065f46';
                     resultDiv.style.border = '1px solid #6ee7b7';

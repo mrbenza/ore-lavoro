@@ -303,6 +303,13 @@ function doGet(e) {
         e.parameter.year
       );
     }
+    else if (action === 'downloadFilePdf') {
+      // → AdminAPI.gs
+      result = downloadFilePdfAPI(
+        e.parameter.sessionToken,
+        e.parameter.fileId
+      );
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // STATISTICHE ENDPOINTS (richiedono sessionToken di un utente con ruolo admin)
@@ -333,7 +340,7 @@ function doGet(e) {
           'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
           'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
           'cambiaPassword', 'cambiaPasswordUtente', 'creaUtente', 'aggiornaStatoUtente',
-          'generaReportMensile', 'generaReportAnnuale',
+          'generaReportMensile', 'generaReportAnnuale', 'downloadFilePdf',
           'getStatistiche', 'forzaAggregazione'
         ]
       };
@@ -581,6 +588,13 @@ function doPost(e) {
         params.year
       );
     }
+    else if (params.action === 'downloadFilePdf') {
+      // → AdminAPI.gs
+      result = downloadFilePdfAPI(
+        params.sessionToken,
+        params.fileId
+      );
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // STATISTICHE ENDPOINTS (richiedono sessionToken di un utente con ruolo admin)
@@ -611,7 +625,7 @@ function doPost(e) {
           'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
           'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
           'cambiaPassword', 'cambiaPasswordUtente', 'creaUtente', 'aggiornaStatoUtente',
-          'generaReportMensile', 'generaReportAnnuale',
+          'generaReportMensile', 'generaReportAnnuale', 'downloadFilePdf',
           'getStatistiche', 'forzaAggregazione'
         ]
       };

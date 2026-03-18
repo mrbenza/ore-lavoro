@@ -1671,3 +1671,35 @@ function generaReportAnnualeAPI(sessionToken, year) {
   }
   return generateAnnualReport(y);
 }
+
+/**
+ * downloadFilePdfAPI — Esporta un file Google Sheets da Drive come PDF in base64.
+ *
+ * Verifica ruolo admin, recupera il file Drive tramite fileId, lo esporta
+ * come PDF con getAs(MimeType.PDF) e restituisce il contenuto in base64.
+ *
+ * @param {string} sessionToken - Token di sessione admin.
+ * @param {string} fileId       - ID del file Google Sheets su Drive.
+ * @returns {{ success: boolean, pdf?: string, fileName?: string, message?: string }}
+ */
+function downloadFilePdfAPI(sessionToken, fileId) {
+  var adminCheck = validateAdmin(sessionToken);
+  if (!adminCheck.success) {
+    return { success: false, message: adminCheck.message || 'Accesso non autorizzato' };
+  }
+  if (!fileId) {
+    return { success: false, message: 'fileId mancante' };
+  }
+  try {
+    var file = DriveApp.getFileById(fileId);
+    var pdfBlob = file.getAs(MimeType.PDF);
+    var base64 = Utilities.base64Encode(pdfBlob.getBytes());
+    return {
+      success: true,
+      pdf: base64,
+      fileName: file.getName() + '.pdf'
+    };
+  } catch (error) {
+    return { success: false, message: 'Errore esportazione PDF: ' + error.message };
+  }
+}
