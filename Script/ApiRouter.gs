@@ -287,6 +287,22 @@ function doGet(e) {
         e.parameter.nuovoStato
       );
     }
+    else if (action === 'generaReportMensile') {
+      // → AdminAPI.gs (wrapper ReportCommercialista.gs)
+      result = generaReportMensileAPI(
+        e.parameter.sessionToken,
+        e.parameter.month,
+        e.parameter.year,
+        e.parameter.employee
+      );
+    }
+    else if (action === 'generaReportAnnuale') {
+      // → AdminAPI.gs (wrapper ReportCommercialista.gs)
+      result = generaReportAnnualeAPI(
+        e.parameter.sessionToken,
+        e.parameter.year
+      );
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // STATISTICHE ENDPOINTS (richiedono sessionToken di un utente con ruolo admin)
@@ -317,6 +333,7 @@ function doGet(e) {
           'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
           'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
           'cambiaPassword', 'cambiaPasswordUtente', 'creaUtente', 'aggiornaStatoUtente',
+          'generaReportMensile', 'generaReportAnnuale',
           'getStatistiche', 'forzaAggregazione'
         ]
       };
@@ -548,6 +565,22 @@ function doPost(e) {
         params.nuovoStato
       );
     }
+    else if (params.action === 'generaReportMensile') {
+      // → AdminAPI.gs (wrapper ReportCommercialista.gs)
+      result = generaReportMensileAPI(
+        params.sessionToken,
+        params.month,
+        params.year,
+        params.employee
+      );
+    }
+    else if (params.action === 'generaReportAnnuale') {
+      // → AdminAPI.gs (wrapper ReportCommercialista.gs)
+      result = generaReportAnnualeAPI(
+        params.sessionToken,
+        params.year
+      );
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // STATISTICHE ENDPOINTS (richiedono sessionToken di un utente con ruolo admin)
@@ -578,6 +611,7 @@ function doPost(e) {
           'updateWorkEntry', 'deleteWorkEntry', 'invalidateCache',
           'updateCantiereStato', 'ricalcolaCantieri', 'verificaAllineamento',
           'cambiaPassword', 'cambiaPasswordUtente', 'creaUtente', 'aggiornaStatoUtente',
+          'generaReportMensile', 'generaReportAnnuale',
           'getStatistiche', 'forzaAggregazione'
         ]
       };

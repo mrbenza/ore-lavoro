@@ -1618,3 +1618,56 @@ function cambiaPasswordDipendente(sessionToken, targetUserId, nuovaPassword) {
     return { success: false, message: 'Errore: ' + error.toString() };
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REPORT COMMERCIALISTA — wrapper API per ReportCommercialista.gs
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * generaReportMensileAPI — Wrapper API per la generazione del report mensile commercialista.
+ *
+ * Verifica ruolo admin, poi delega a generateMonthlyReportComplete() in ReportCommercialista.gs.
+ *
+ * @param {string} sessionToken - Token di sessione admin.
+ * @param {number|string} month - Mese 1-12.
+ * @param {number|string} year  - Anno.
+ * @param {string} [employee]   - Nome dipendente o '__ALL__' per tutti.
+ * @returns {{ success: boolean, totalHours?: number, employeesCount?: number, monthName?: string, year?: number, folderName?: string, employees?: Array, message?: string }}
+ */
+function generaReportMensileAPI(sessionToken, month, year, employee) {
+  var adminCheck = validateAdmin(sessionToken);
+  if (!adminCheck.success) {
+    return { success: false, message: adminCheck.message || 'Accesso non autorizzato' };
+  }
+  var m = parseInt(month, 10);
+  var y = parseInt(year, 10);
+  var emp = employee || '__ALL__';
+  if (isNaN(m) || m < 1 || m > 12) {
+    return { success: false, message: 'Mese non valido' };
+  }
+  if (isNaN(y) || y < 2020 || y > 2030) {
+    return { success: false, message: 'Anno non valido' };
+  }
+  return generateMonthlyReportComplete(m, y, emp);
+}
+
+/**
+ * generaReportAnnualeAPI — Wrapper API per la generazione del report annuale commercialista.
+ *
+ * Verifica ruolo admin, poi delega a generateAnnualReport() in ReportCommercialista.gs.
+ *
+ * @param {string} sessionToken - Token di sessione admin.
+ * @param {number|string} year  - Anno.
+ * @returns {{ success: boolean, fileName?: string, totalEmployees?: number, totalHours?: number, error?: string }}
+ */
+function generaReportAnnualeAPI(sessionToken, year) {
+  var adminCheck = validateAdmin(sessionToken);
+  if (!adminCheck.success) {
+    return { success: false, message: adminCheck.message || 'Accesso non autorizzato' };
+  }
+  var y = parseInt(year, 10);
+  if (isNaN(y) || y < 2020 || y > 2030) {
+    return { success: false, message: 'Anno non valido' };
+  }
+  return generateAnnualReport(y);
+}

@@ -1,20 +1,20 @@
 // Vercel Serverless Function - Proxy per Google Apps Script
 // File: api/proxy.js
 //
-// ╔══════════════════════════════════════════════════════════════════╗
+// ╔═════════════════════════════════════════════════════════════════╗
 // ║  VARIABILE D'AMBIENTE OBBLIGATORIA — QUALUNQUE SISTEMA HOST     ║
-// ║                                                                  ║
+// ║                                                                 ║
 // ║  GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/...  ║
-// ║                                                                  ║
+// ║                                                                 ║
 // ║  Vercel  → Settings → Environment Variables                     ║
 // ║  Netlify → Site Settings → Environment Variables                ║
 // ║  Railway / Render / Fly.io → Variables nella dashboard          ║
 // ║  VPS     → file .env nella root del progetto                    ║
 // ║  Docker  → ENV nel Dockerfile o docker-compose.yml              ║
 // ║  Locale  → file .env.local (già in .gitignore)                  ║
-// ║                                                                  ║
+// ║                                                                 ║
 // ║  Senza questa variabile il proxy restituisce HTTP 500.          ║
-// ╚══════════════════════════════════════════════════════════════════╝
+// ╚═════════════════════════════════════════════════════════════════╝
 
 export default async function handler(req, res) {
   // Abilita CORS per tutti i domini

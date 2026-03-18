@@ -29,19 +29,9 @@ GAS converte i POST in GET durante il redirect OAuth, perdendo il body. Testato:
 
 ---
 
-### FIX-01 — URL Google Apps Script hardcoded in `api/proxy.js`
-**File:** `api/proxy.js` riga 17
-**Problema:** L'URL dell'endpoint GAS è nel codice sorgente, dovrebbe stare in una variabile d'ambiente.
-**Intervento:**
-1. Aggiungere la variabile `GOOGLE_APPS_SCRIPT_URL` al file `.env` di Vercel
-2. Modificare `api/proxy.js` riga 17:
-```js
-// Prima
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx.../exec';
-
-// Dopo
-const APPS_SCRIPT_URL = process.env.GOOGLE_APPS_SCRIPT_URL;
-```
+### ~~FIX-01 — URL Google Apps Script hardcoded in `api/proxy.js`~~ ❌ FALSO POSITIVO
+**Chiuso il 2026-03-19.**
+`proxy.js` usa già `process.env.GOOGLE_APPS_SCRIPT_URL` (riga 31) con check esplicito e HTTP 500 se mancante. Banner documentativo in cima al file. Nessun intervento necessario.
 
 ---
 

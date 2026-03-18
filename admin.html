@@ -1176,15 +1176,71 @@
             </div>
         </div>
 
-        <!-- PAGE: Report (placeholder) -->
+        <!-- PAGE: Report Commercialista -->
         <div class="admin-page" id="page-report">
             <div class="admin-container">
+
+                <!-- Card Report Mensile -->
                 <div class="admin-section fade-in">
                     <div class="section-header">
-                        <div class="section-title"><i class="fas fa-file-pdf"></i> Report Commercialista</div>
+                        <div class="section-title"><i class="fas fa-file-excel"></i> Report Mensile Commercialista</div>
                     </div>
-                    <p style="color: #6b7280; font-size: 14px;">Funzionalita' in arrivo.</p>
+                    <p style="color: #6b7280; font-size: 13px; margin-bottom: 20px;">
+                        Genera un report Excel per ogni dipendente. I file verranno salvati su Google Drive.
+                    </p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div>
+                            <label style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">Dipendente</label>
+                            <select id="reportDipendente" style="width:100%; padding:10px 14px; border:2px solid #e5e7eb; border-radius:10px; font-size:14px; background:white;">
+                                <option value="__ALL__">Tutti i dipendenti</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">Mese</label>
+                            <select id="reportMese" style="width:100%; padding:10px 14px; border:2px solid #e5e7eb; border-radius:10px; font-size:14px; background:white;">
+                                <option value="1">Gennaio</option>
+                                <option value="2">Febbraio</option>
+                                <option value="3">Marzo</option>
+                                <option value="4">Aprile</option>
+                                <option value="5">Maggio</option>
+                                <option value="6">Giugno</option>
+                                <option value="7">Luglio</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Settembre</option>
+                                <option value="10">Ottobre</option>
+                                <option value="11">Novembre</option>
+                                <option value="12">Dicembre</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">Anno</label>
+                            <input type="number" id="reportAnnoMensile" min="2020" max="2030" style="width:100%; padding:10px 14px; border:2px solid #e5e7eb; border-radius:10px; font-size:14px;">
+                        </div>
+                    </div>
+                    <button id="btnReportMensile" onclick="generaReportMensile()" style="background:#4f46e5; color:white; border:none; padding:12px 24px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s;">
+                        <i class="fas fa-file-excel"></i> Genera Report Mensile
+                    </button>
+                    <div id="reportMensileResult" style="margin-top:16px; padding:14px; border-radius:10px; display:none; font-size:13px; line-height:1.7;"></div>
                 </div>
+
+                <!-- Card Report Annuale -->
+                <div class="admin-section fade-in">
+                    <div class="section-header">
+                        <div class="section-title"><i class="fas fa-chart-bar"></i> Report Annuale Commercialista</div>
+                    </div>
+                    <p style="color: #6b7280; font-size: 13px; margin-bottom: 20px;">
+                        Genera un report annuale riepilogativo con statistiche per tutti i dipendenti.
+                    </p>
+                    <div style="max-width: 200px; margin-bottom: 20px;">
+                        <label style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">Anno</label>
+                        <input type="number" id="reportAnnoAnnuale" min="2020" max="2030" style="width:100%; padding:10px 14px; border:2px solid #e5e7eb; border-radius:10px; font-size:14px;">
+                    </div>
+                    <button id="btnReportAnnuale" onclick="generaReportAnnuale()" style="background:#4f46e5; color:white; border:none; padding:12px 24px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s;">
+                        <i class="fas fa-chart-bar"></i> Genera Report Annuale
+                    </button>
+                    <div id="reportAnnualeResult" style="margin-top:16px; padding:14px; border-radius:10px; display:none; font-size:13px; line-height:1.7;"></div>
+                </div>
+
             </div>
         </div>
 
@@ -1300,6 +1356,14 @@
             setupCollapsible();
             // Popola il dropdown anno del pannello Statistiche
             initStatsAnnoSelect();
+            // Preseleziona mese e anno correnti nel form report
+            const now = new Date();
+            const meseSelect = document.getElementById('reportMese');
+            if (meseSelect) meseSelect.value = String(now.getMonth() + 1);
+            const annoMensile = document.getElementById('reportAnnoMensile');
+            if (annoMensile) annoMensile.value = String(now.getFullYear());
+            const annoAnnuale = document.getElementById('reportAnnoAnnuale');
+            if (annoAnnuale) annoAnnuale.value = String(now.getFullYear());
         }
 
         /**
@@ -2864,6 +2928,11 @@
             if (pageName === 'utenti' || pageName === 'strumenti') {
                 caricaDipendentiStrumenti();
             }
+
+            // Carica dipendenti nel select report mensile quando si va su report
+            if (pageName === 'report') {
+                caricaDipendentiReport();
+            }
         }
 
         function toggleSidebar() {
@@ -4055,6 +4124,162 @@
                     </p>
                 </div>
             `;
+        }
+
+        // ─── REPORT COMMERCIALISTA ───────────────────────────────────
+
+        /**
+         * Carica la lista dipendenti nel select del report mensile.
+         * Chiama l'azione getDipendentiList via Utils.callAPI e popola
+         * il select #reportDipendente con le opzioni aggiuntive rispetto
+         * all'opzione di default "Tutti i dipendenti".
+         *
+         * CHIAMATA DA:  showPage('report')
+         * CHIAMA:       Utils.getSession, Utils.callAPI
+         *
+         * @returns {Promise<void>}
+         */
+        async function caricaDipendentiReport() {
+            const session = Utils.getSession();
+            if (!session) return;
+            const select = document.getElementById('reportDipendente');
+            if (!select) return;
+            // Evita caricamenti multipli se il select ha già più di una opzione
+            if (select.options.length > 1) return;
+            try {
+                const result = await Utils.callAPI({ action: 'getDipendentiList', sessionToken: session.token, includeInactive: 'false' });
+                if (result.success && result.data) {
+                    result.data.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.name || d.nome;
+                        opt.textContent = d.name || d.nome;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (e) { /* silently ignore — la lista rimane con "Tutti i dipendenti" */ }
+        }
+
+        /**
+         * Genera il report mensile per il commercialista.
+         * Legge dipendente, mese e anno dai rispettivi campi form,
+         * chiama l'azione generaReportMensile via Utils.callAPI e
+         * mostra il riepilogo (ore totali, dettaglio dipendenti, cartella Drive)
+         * nell'area risultato #reportMensileResult.
+         *
+         * CHIAMATA DA:  onclick btnReportMensile
+         * CHIAMA:       Utils.getSession, Utils.callAPI
+         *
+         * @returns {Promise<void>}
+         */
+        async function generaReportMensile() {
+            const session = Utils.getSession();
+            if (!session) return;
+            const month = document.getElementById('reportMese').value;
+            const year = document.getElementById('reportAnnoMensile').value;
+            const employee = document.getElementById('reportDipendente').value;
+            const btn = document.getElementById('btnReportMensile');
+            const resultDiv = document.getElementById('reportMensileResult');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generazione in corso...';
+            resultDiv.style.display = 'none';
+
+            try {
+                const result = await Utils.callAPI({
+                    action: 'generaReportMensile',
+                    sessionToken: session.token,
+                    month, year, employee
+                });
+
+                if (result.success) {
+                    let html = `<strong>Report generato!</strong><br>`;
+                    html += `Periodo: ${result.monthName} ${result.year}<br>`;
+                    html += `Ore totali: ${result.totalHours}<br>`;
+                    html += `Dipendenti processati: ${result.employeesCount}<br>`;
+                    if (result.employees && result.employees.length > 0) {
+                        html += `<br><strong>Dettaglio:</strong><br>`;
+                        result.employees.forEach(e => { html += `• ${e.name}: ${e.totalHours} ore<br>`; });
+                    }
+                    html += `<br>File salvati in: <em>${result.folderName}</em>`;
+                    resultDiv.style.background = '#d1fae5';
+                    resultDiv.style.color = '#065f46';
+                    resultDiv.style.border = '1px solid #6ee7b7';
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.style.background = '#fee2e2';
+                    resultDiv.style.color = '#991b1b';
+                    resultDiv.style.border = '1px solid #fca5a5';
+                    resultDiv.innerHTML = `<strong>Errore:</strong> ${result.message || 'Errore sconosciuto'}`;
+                }
+                resultDiv.style.display = 'block';
+            } catch (err) {
+                resultDiv.style.background = '#fee2e2';
+                resultDiv.style.color = '#991b1b';
+                resultDiv.style.border = '1px solid #fca5a5';
+                resultDiv.innerHTML = `<strong>Errore di rete:</strong> ${err.message}`;
+                resultDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-file-excel"></i> Genera Report Mensile';
+            }
+        }
+
+        /**
+         * Genera il report annuale per il commercialista.
+         * Legge l'anno dal campo #reportAnnoAnnuale, chiama l'azione
+         * generaReportAnnuale via Utils.callAPI e mostra il riepilogo
+         * (nome file, dipendenti attivi, ore totali anno)
+         * nell'area risultato #reportAnnualeResult.
+         *
+         * CHIAMATA DA:  onclick btnReportAnnuale
+         * CHIAMA:       Utils.getSession, Utils.callAPI
+         *
+         * @returns {Promise<void>}
+         */
+        async function generaReportAnnuale() {
+            const session = Utils.getSession();
+            if (!session) return;
+            const year = document.getElementById('reportAnnoAnnuale').value;
+            const btn = document.getElementById('btnReportAnnuale');
+            const resultDiv = document.getElementById('reportAnnualeResult');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generazione in corso...';
+            resultDiv.style.display = 'none';
+
+            try {
+                const result = await Utils.callAPI({
+                    action: 'generaReportAnnuale',
+                    sessionToken: session.token,
+                    year
+                });
+
+                if (result.success) {
+                    let html = `<strong>Report annuale generato!</strong><br>`;
+                    html += `File: <em>${result.fileName}</em><br>`;
+                    html += `Dipendenti attivi: ${result.totalEmployees}<br>`;
+                    html += `Ore totali anno: ${result.totalHours}`;
+                    resultDiv.style.background = '#d1fae5';
+                    resultDiv.style.color = '#065f46';
+                    resultDiv.style.border = '1px solid #6ee7b7';
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.style.background = '#fee2e2';
+                    resultDiv.style.color = '#991b1b';
+                    resultDiv.style.border = '1px solid #fca5a5';
+                    resultDiv.innerHTML = `<strong>Errore:</strong> ${result.error || result.message || 'Errore sconosciuto'}`;
+                }
+                resultDiv.style.display = 'block';
+            } catch (err) {
+                resultDiv.style.background = '#fee2e2';
+                resultDiv.style.color = '#991b1b';
+                resultDiv.style.border = '1px solid #fca5a5';
+                resultDiv.innerHTML = `<strong>Errore di rete:</strong> ${err.message}`;
+                resultDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-chart-bar"></i> Genera Report Annuale';
+            }
         }
     </script>
 
