@@ -20,12 +20,11 @@ GAS converte i POST in GET durante il redirect OAuth, perdendo il body. Testato:
 
 ---
 
-### ANOMALIA-01b — Dati sensibili (password) in query string URL
-**File:** `api/proxy.js` riga 52
-**Problema:** Il proxy inoltra **sempre** le richieste a GAS come GET (anche le POST del frontend). Conseguenza: i dati di `saveWorkEntry` (ore, cantiere, sessionToken, data) finiscono in query string URL invece che nel body.
-**Intervento (2 file):**
-1. `api/proxy.js` — quando `req.method === 'POST'`, inoltrare POST a GAS con body `data=JSON.stringify(requestData)` in `application/x-www-form-urlencoded` (formato già supportato da `doPost` in `ApiRouter.gs` righe 386-389)
-2. `ApiRouter.gs` — rimuovere il case `saveWorkEntry` da `doGet()` (riga 154-163), che diventa inutile e potenzialmente pericoloso
+### ANOMALIA-01b — Dati sensibili (sessionToken) in query string URL
+**File:** `api/proxy.js`
+**Problema:** Il proxy inoltra sempre le richieste a GAS come GET. I dati di `saveWorkEntry` (sessionToken, ore, cantiere, data) finiscono nell'URL e sono visibili nei log di server/rete/browser.
+**Rischio reale:** basso — sistema interno, pochi utenti, nessuna esposizione pubblica. Non è una falla critica.
+**Decisione (2026-03-30):** ❌ Non si interviene. Rischio accettato consapevolmente per il contesto d'uso.
 
 ---
 
@@ -59,25 +58,37 @@ Eliminati da `UtilsMenu.gs`: `generatePasswordHash()`, `formatFileName()`, `getC
 
 ---
 
+## ALTA SEVERITÀ
+
+### ~~BUG-07 — `deleteWorkEntry` poteva cancellare righe header con formule SUMIFS~~ ✅ RISOLTO
+**Risolto il 2026-03-30.**
+Il ciclo in `AdminAPI.gs` partiva da `i=1` (riga 2) invece che `i=4` (riga 5). Le righe 2-4 contengono formule SUMIFS. Corretto a `i=4`.
+
+### ~~BUG-09 — Username con underscore rompeva l'estrazione userId dal token~~ ✅ RISOLTO
+**Risolto il 2026-03-30.**
+`sessionToken.split('_')[0]` troncava username con underscore (es. `mario_rossi` → `mario`). Corretto in 11 occorrenze su 7 file con `parts.slice(0, parts.length - 2).join('_')`.
+
+### ~~BUG-04 — Ruolo "Administrator" rifiutato in 5 funzioni admin~~ ✅ RISOLTO
+**Risolto il 2026-03-30.**
+`toLowerCase() === 'admin'` non includeva `'administrator'`. Sostituito con `ADMIN_VALIDATION.isAdminRole()` in `getOtherUserMonthlyData`, `updateWorkEntry`, `deleteWorkEntry`, `updateCantiereStato`, `cambiaPasswordDipendente` + bonus fix in `SheetsDAO.gs`.
+
+### ~~BUG-05 — `getOtherUserMonthlyData` crashava con TypeError se il foglio non esisteva~~ ✅ RISOLTO
+**Risolto il 2026-03-30.**
+`getSheetByName()` ritorna `null` (non lancia eccezione). Aggiunto null guard esplicito prima di qualsiasi chiamata sul foglio.
+
+### ~~BUG-01 — `validateAdmin` usava indici fissi di colonna~~ ✅ RISOLTO
+**Risolto il 2026-03-30.**
+`validateAdmin` in `Authentication.gs` usava `row[6]`, `row[5]`, `row[9]` hardcoded. Sostituito con `buildColumnMap()` + accesso per nome colonna + `ADMIN_VALIDATION.isAdminRole()`.
+
+---
+
 ## BASSA SEVERITÀ
 
 ---
 
-### FIX-04 — Funzioni test nei file di produzione
-**Problema:** Funzioni di test manuali sono definite nei file di produzione invece di stare in file `test_*.gs` separati (dominio del Test Agent).
-
-| File | Funzione |
-|------|----------|
-| `Authentication.gs` | `testRobustAuthentication()`, `diagnoseSheetStructure()` |
-| `UserAPI.gs` | `testUserAPI()` |
-| `Utils.gs` | `testUtils()` |
-| `AdminAPI.gs` | `testDeleteWorkEntry()` |
-| `ArchivioOre.gs` | `testSingleArchive()` |
-| `ReportCommercialista.gs` | `testReportSystem()` |
-| `Config.gs` | `testConfig()` |
-| `SheetsDAO.gs` | `testSheetsDAO()` |
-
-**Intervento:** Spostare ogni funzione nel file `Script/test_[modulo].gs` corrispondente.
+### ~~FIX-04 — Funzioni test nei file di produzione~~ ✅ RISOLTO
+**Risolto il 2026-03-30.**
+Le funzioni di test erano già state consolidate in `Tests.gs`. Splittate in 9 file `test_*.gs` per modulo (`test_authentication.gs`, `test_userapi.gs`, `test_utils.gs`, `test_adminapi.gs`, `test_archivioore.gs`, `test_reportcommercialista.gs`, `test_config.gs`, `test_sheetsDAO.gs`, `test_apirouter.gs`). `Tests.gs` ridotto a solo header/indice. Nessun file di produzione modificato.
 
 ---
 

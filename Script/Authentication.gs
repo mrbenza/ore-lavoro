@@ -416,8 +416,8 @@ function validateAdmin(sessionToken, userId) {
 
     // 2. Ottieni userId dal token se non fornito
     if (!userId) {
-      const tokenParts = sessionToken.split('_');
-      userId = tokenParts[0];
+      const tokenParts = String(sessionToken).split('_');
+      userId = tokenParts.slice(0, tokenParts.length - 2).join('_');
       Logger.debug('UserId estratto dal token:', userId);
     }
 
@@ -433,13 +433,17 @@ function validateAdmin(sessionToken, userId) {
     const data = userSheet.getDataRange().getValues();
     Logger.debug('Dati utenti letti, righe:', data.length);
 
-    // 4. Cerca l'utente nelle righe
+    // 4. Costruisci mappa colonne dagli header (robusto a variazioni nell'ordine)
+    const headers = data[0];
+    const columnMap = buildColumnMap(headers);
+
+    // Cerca l'utente nelle righe
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      const currentUserId = row[6]; // Colonna G - Username
-      const userRole = row[5];      // Colonna F - Ruolo
-      const isActive = row[9];      // Colonna J - Attivo
-      const userName = row[1];      // Colonna B - Nome
+      const currentUserId = row[columnMap['Username']]; // mapping dinamico
+      const userRole = row[columnMap['Ruolo']];         // mapping dinamico
+      const isActive = row[columnMap['Attivo']];        // mapping dinamico
+      const userName = row[columnMap['Nome Completo']]; // mapping dinamico
 
       Logger.debug('Controllo riga ' + i + ':', {
         currentUserId: currentUserId,
@@ -451,13 +455,13 @@ function validateAdmin(sessionToken, userId) {
       if (currentUserId === userId) {
         Logger.debug('Utente trovato:', userName);
 
-        if (isActive !== 'Si') {
-          Logger.warn('Utente non attivo, valore colonna J:', isActive);
+        if (!(isActive === 'Si' || isActive === 'SI' || isActive === 'si' || isActive === true)) {
+          Logger.warn('Utente non attivo, valore colonna Attivo:', isActive);
           return { success: false, message: 'Utente non attivo' };
         }
 
-        // 5. Controlla se è admin
-        const isAdmin = (userRole === 'Admin' || userRole === 'admin' || userRole === 'Administrator');
+        // 5. Controlla se è admin usando ADMIN_VALIDATION per coerenza col resto del codebase
+        const isAdmin = ADMIN_VALIDATION.isAdminRole(userRole);
 
         Logger.debug('Controllo admin:', {
           userRole: userRole,

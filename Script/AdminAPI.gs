@@ -595,7 +595,8 @@ function getOtherUserMonthlyData(sessionToken, targetUserId, year, month) {
   }
   
   try {
-    var requestingUserId = sessionToken.split('_')[0];
+    var parts = String(sessionToken).split('_');
+    var requestingUserId = parts.slice(0, parts.length - 2).join('_');
     var userSheet = getWorksheet();
     var userData = userSheet.getDataRange().getValues();
     var isAdmin = false;
@@ -620,7 +621,7 @@ function getOtherUserMonthlyData(sessionToken, targetUserId, year, month) {
       
       if (row[COLUMNS.USER_ID] === requestingUserId) {
         var ruolo = row[ruoloColumnIndex];
-        isAdmin = (ruolo && ruolo.toString().toLowerCase() === 'admin');
+        isAdmin = (ruolo && ADMIN_VALIDATION.isAdminRole(ruolo));
         Logger.debug('Verifica admin:', requestingUserId, 'IsAdmin:', isAdmin);
       }
       
@@ -640,13 +641,17 @@ function getOtherUserMonthlyData(sessionToken, targetUserId, year, month) {
     
     var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     var userWorkSheet;
-    
+
     try {
       userWorkSheet = spreadsheet.getSheetByName(targetUserName);
     } catch (e) {
       return { success: false, message: 'Foglio utente non trovato: ' + targetUserName };
     }
-    
+
+    if (!userWorkSheet) {
+      return { success: false, message: 'Foglio non trovato per il dipendente: ' + targetUserName };
+    }
+
     var lastRow = userWorkSheet.getLastRow();
     
     if (lastRow < 5) {
@@ -800,7 +805,8 @@ function updateWorkEntry(sessionToken, targetUserId, dateStr, updateData) {
       return { success: false, message: 'Sessione non valida' };
     }
     
-    var requestingUserId = sessionToken.split('_')[0];
+    var parts = String(sessionToken).split('_');
+    var requestingUserId = parts.slice(0, parts.length - 2).join('_');
     var userSheet = getWorksheet();
     var userData = userSheet.getDataRange().getValues();
     var isAdmin = false;
@@ -823,22 +829,22 @@ function updateWorkEntry(sessionToken, targetUserId, dateStr, updateData) {
       
       if (row[columnMap['Username']] === requestingUserId) {
         var ruolo = row[ruoloColumnIndex];
-        isAdmin = (ruolo && ruolo.toString().toLowerCase() === 'admin');
+        isAdmin = (ruolo && ADMIN_VALIDATION.isAdminRole(ruolo));
         adminName = row[columnMap['Nome Completo']];
       }
       if (row[columnMap['Username']] === targetUserId) {
         targetUserName = row[columnMap['Nome Completo']];
       }
     }
-    
+
     if (!isAdmin) {
       return { success: false, message: 'Accesso non autorizzato' };
     }
-    
+
     if (!targetUserName) {
       return { success: false, message: 'Utente non trovato' };
     }
-    
+
     var newOre = parseFloat(updateData.ore);
     if (isNaN(newOre) || newOre < 0 || newOre > 24) {
       return { success: false, message: 'Ore non valide (0-24)' };
@@ -1071,7 +1077,8 @@ function updateCantiereStato(sessionToken, cantiereId, nuovoStato) {
     }
 
     // Verifica ruolo admin (stesso pattern di updateWorkEntry)
-    var requestingUserId = sessionToken.split('_')[0];
+    var parts = String(sessionToken).split('_');
+    var requestingUserId = parts.slice(0, parts.length - 2).join('_');
     var userSheet = getWorksheet();
     var userData = userSheet.getDataRange().getValues();
     var headerRow = userData[0];
@@ -1083,7 +1090,7 @@ function updateCantiereStato(sessionToken, cantiereId, nuovoStato) {
     var isAdmin = false;
     for (var u = 1; u < userData.length; u++) {
       if (String(userData[u][colMap['Username']]).trim() === requestingUserId) {
-        isAdmin = (ruoloColumnIndex !== -1 && userData[u][ruoloColumnIndex].toString().toLowerCase() === 'admin');
+        isAdmin = (ruoloColumnIndex !== -1 && ADMIN_VALIDATION.isAdminRole(userData[u][ruoloColumnIndex]));
         break;
       }
     }
@@ -1186,7 +1193,8 @@ function deleteWorkEntry(sessionToken, targetUserId, dateStr, entryIndex) {
       return { success: false, message: 'Sessione non valida' };
     }
     
-    var requestingUserId = sessionToken.split('_')[0];
+    var parts = String(sessionToken).split('_');
+    var requestingUserId = parts.slice(0, parts.length - 2).join('_');
     var userSheet = getWorksheet();
     var userData = userSheet.getDataRange().getValues();
     var isAdmin = false;
@@ -1210,10 +1218,10 @@ function deleteWorkEntry(sessionToken, targetUserId, dateStr, entryIndex) {
       
       if (row[columnMap['Username']] === requestingUserId) {
         var ruolo = row[ruoloColumnIndex];
-        isAdmin = (ruolo && ruolo.toString().toLowerCase() === 'admin');
+        isAdmin = (ruolo && ADMIN_VALIDATION.isAdminRole(ruolo));
         adminName = row[columnMap['Nome Completo']];
       }
-      
+
       if (row[columnMap['Username']] === targetUserId) {
         targetUserName = row[columnMap['Nome Completo']];
         console.log('[DEBUG] ✅ TROVATO targetUserName:', targetUserName);
@@ -1274,7 +1282,7 @@ function deleteWorkEntry(sessionToken, targetUserId, dateStr, entryIndex) {
     var allData = targetSheet.getDataRange().getValues();
     var matchingRows = [];
     
-    for (var i = 1; i < allData.length; i++) { // Salta header (riga 0)
+    for (var i = 4; i < allData.length; i++) { // Salta 4 righe header (righe 1-4 del foglio, indici 0-3)
       var rowDate = allData[i][0]; // Colonna A = Data
       var rowDateStr = '';
       
@@ -1567,7 +1575,8 @@ function cambiaPasswordDipendente(sessionToken, targetUserId, nuovaPassword) {
     }
 
     // Verifica ruolo admin
-    var requestingUserId = sessionToken.split('_')[0];
+    var parts = String(sessionToken).split('_');
+    var requestingUserId = parts.slice(0, parts.length - 2).join('_');
     var userSheet = getWorksheet();
     var userData = userSheet.getDataRange().getValues();
     var headerRow = userData[0];
@@ -1579,7 +1588,7 @@ function cambiaPasswordDipendente(sessionToken, targetUserId, nuovaPassword) {
     var isAdmin = false;
     for (var u = 1; u < userData.length; u++) {
       if (String(userData[u][colMap['Username']]).trim() === requestingUserId) {
-        isAdmin = (ruoloColumnIndex !== -1 && userData[u][ruoloColumnIndex].toString().toLowerCase() === 'admin');
+        isAdmin = (ruoloColumnIndex !== -1 && ADMIN_VALIDATION.isAdminRole(userData[u][ruoloColumnIndex]));
         break;
       }
     }

@@ -459,7 +459,8 @@ function cambiaPasswordUtente(sessionToken, vecchiaPassword, nuovaPassword) {
     }
 
     // 2. Estrai userId dal token
-    var userId = sessionToken.split('_')[0];
+    var parts = String(sessionToken).split('_');
+    var userId = parts.slice(0, parts.length - 2).join('_');
     Logger.info('cambiaPasswordUtente: richiesta cambio password per userId=' + userId);
 
     // 3. Accedi al foglio Utenti

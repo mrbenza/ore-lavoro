@@ -328,7 +328,8 @@ function getUserInfo(sessionToken) {
   }
 
   try {
-    var userId = String(sessionToken).split('_')[0];
+    var parts = String(sessionToken).split('_');
+    var userId = parts.slice(0, parts.length - 2).join('_');
     var userSheet = getWorksheet();
     var lastRow = userSheet.getLastRow();
 
@@ -421,7 +422,8 @@ function getOtherUserInfo(sessionToken, targetUserId) {
   }
 
   try {
-    var requestingUserId = sessionToken.split('_')[0];
+    var parts = String(sessionToken).split('_');
+    var requestingUserId = parts.slice(0, parts.length - 2).join('_');
     var userSheet = getWorksheet();
     var userData = userSheet.getDataRange().getValues();
     var isAdmin = false;
@@ -446,7 +448,7 @@ function getOtherUserInfo(sessionToken, targetUserId) {
       var row = userData[i];
       if (row[COLUMNS.USER_ID] === requestingUserId) {
         var ruolo = row[ruoloColumnIndex];
-        isAdmin = (ruolo && ruolo.toString().toLowerCase() === 'admin');
+        isAdmin = (ruolo && ADMIN_VALIDATION.isAdminRole(ruolo));
         Logger.debug('Utente trovato:', requestingUserId, 'Ruolo:', ruolo, 'IsAdmin:', isAdmin);
         break;
       }

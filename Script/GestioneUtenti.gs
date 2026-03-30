@@ -439,7 +439,8 @@ function creaUtenteAPI(sessionToken, datiJSON) {
     }
 
     // Verifica ruolo admin (usa getMainSpreadsheet per compatibilità web app)
-    var requestingUserId = sessionToken.split('_')[0];
+    var parts = String(sessionToken).split('_');
+    var requestingUserId = parts.slice(0, parts.length - 2).join('_');
     var userSheet = getSheetSafe(getMainSpreadsheet(), SHEET_NAMES.UTENTI);
     var userData = userSheet.getDataRange().getValues();
     var headerRow = userData[0];
@@ -552,7 +553,8 @@ function aggiornaStatoUtenteAPI(sessionToken, targetUserId, nuovoStato) {
     var data = usersSheet.getDataRange().getValues();
 
     // 3. Verifica ruolo admin (pattern identico a creaUtenteAPI)
-    var requestingUserId = sessionToken.split('_')[0];
+    var parts = String(sessionToken).split('_');
+    var requestingUserId = parts.slice(0, parts.length - 2).join('_');
     var headerRow = data[0];
     var colMapAdmin = buildColumnMap(headerRow);
     var ruoloColumnIndex = -1;

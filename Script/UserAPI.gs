@@ -138,7 +138,8 @@ function saveWorkEntry(sessionToken, workData) {
     }
 
     // Ricava nome utente dal token
-    var userId = String(sessionToken).split('_')[0];
+    var parts = String(sessionToken).split('_');
+    var userId = parts.slice(0, parts.length - 2).join('_');
     var userSheet = getWorksheet();
     var lastRowUsers = userSheet.getLastRow();
     var userIds = lastRowUsers >= 2 ?
@@ -326,7 +327,8 @@ function getMonthlyWorkData(sessionToken, year, month) {
   }
 
   try {
-    var userId = String(sessionToken).split('_')[0];
+    var parts = String(sessionToken).split('_');
+    var userId = parts.slice(0, parts.length - 2).join('_');
 
     var userSheet = getWorksheet();
     var lastRowUsers = userSheet.getLastRow();

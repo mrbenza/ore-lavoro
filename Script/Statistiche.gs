@@ -890,7 +890,8 @@ function getStatisticheAdmin(sessionToken, anno) {
     }
 
     // Verifica ruolo admin: stesso pattern usato in AdminAPI.gs
-    const requestingUserId = sessionToken.split('_')[0];
+    const parts = String(sessionToken).split('_');
+    const requestingUserId = parts.slice(0, parts.length - 2).join('_');
     const ss = getMainSpreadsheet();
     const sheetUtenti = getSheetSafely(ss, SHEET_NAMES.UTENTI);
     if (sheetUtenti) {

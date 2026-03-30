@@ -471,7 +471,9 @@ function validateSessionToken(sessionToken) {
     return false;
   }
 
-  var timestamp = parseInt(parts[1], 10);
+  // Gli ultimi 2 segmenti sono sempre timestamp (numerico) e randomHex (senza underscore).
+  // Tutto ciò che precede è lo userId, che può contenere underscore.
+  var timestamp = parseInt(parts[parts.length - 2], 10);
   if (isNaN(timestamp)) {
     Logger.warn('Timestamp token non valido');
     return false;
@@ -486,7 +488,7 @@ function validateSessionToken(sessionToken) {
     return false;
   }
 
-  Logger.debug('Token valido per utente:', parts[0]);
+  Logger.debug('Token valido per utente:', parts.slice(0, parts.length - 2).join('_'));
   return true;
 }
 
@@ -507,10 +509,10 @@ function decodeSessionToken(sessionToken) {
   try {
     var parts = sessionToken.split('_');
 
-    if (parts.length >= 2) {
+    if (parts.length >= 3) {
       return {
-        userId: parts[0],
-        timestamp: parseInt(parts[1])
+        userId: parts.slice(0, parts.length - 2).join('_'),
+        timestamp: parseInt(parts[parts.length - 2])
       };
     }
 
