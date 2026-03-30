@@ -390,6 +390,53 @@ Per configurare i dati aziendali che appaiono nel report:
 
 ---
 
+## Rilasciare una nuova versione
+
+Checklist da seguire ogni volta che si pubblica un aggiornamento.
+
+### 1. Aggiorna la versione
+
+In `config.js`, riga `CONFIG.VERSION.frontend`:
+```js
+frontend: '2.3.0',  // incrementa secondo SemVer: major.minor.patch
+```
+
+### 2. Aggiorna news.json
+
+```json
+{
+  "version": "2.3.0",
+  "title": "Novità versione 2.3",
+  "items": [
+    "Descrizione modifica 1",
+    "Descrizione modifica 2"
+  ]
+}
+```
+Il modal novità verrà mostrato automaticamente a ogni utente al primo accesso dopo l'aggiornamento.
+
+### 3. Deploy frontend (Vercel)
+
+Push su GitHub → Vercel rideploya automaticamente. Nessuna azione manuale richiesta.
+
+### 4. Deploy backend (Google Apps Script)
+
+**Solo se hai modificato file in `Script/`:**
+
+| File modificato | Deploy necessario? |
+|---|---|
+| `ApiRouter.gs`, `Authentication.gs`, `UserAPI.gs`, `AdminAPI.gs`, `SheetsDAO.gs` | **Sì** — Estensioni → Apps Script → Deploy → Gestisci distribuzioni → Modifica → Versione: Nuova |
+| `Main.gs`, `GestionePassword.gs`, `CalcoloCantieri.gs`, `ReportCommercialista.gs`, `Statistiche.gs`, `GestioneUtenti.gs`, `ArchivioOre.gs`, `SystemDiagnostic.gs`, `Utils.gs`, `UtilsMenu.gs`, `Config.gs` | **No** — le modifiche sono attive immediatamente |
+
+### 5. Aggiorna il Changelog
+
+Aggiungi una voce in fondo alla sezione Changelog di questo README con:
+- Data
+- File modificati
+- Descrizione sintetica delle modifiche
+
+---
+
 ## Changelog
 
 ### 2026-03-15 — UI Agent — Feature
