@@ -240,8 +240,9 @@ function getCantieri(sessionToken) {
  */
 function getAllCantieriForAdmin(sessionToken) {
   try {
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
     }
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -417,54 +418,30 @@ function getUserInfo(sessionToken) {
 function getOtherUserInfo(sessionToken, targetUserId) {
   Logger.debug('getOtherUserInfo chiamata per targetUserId:', targetUserId);
 
-  if (!validateSessionToken(sessionToken)) {
-    return { success: false, message: 'Token di sessione non valido' };
-  }
-
   try {
-    var parts = String(sessionToken).split('_');
-    var requestingUserId = parts.slice(0, parts.length - 2).join('_');
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
+    }
+
     var userSheet = getWorksheet();
     var userData = userSheet.getDataRange().getValues();
-    var isAdmin = false;
+    var headerRow = userData[0] || [];
+    var colMap = buildColumnMap(headerRow);
+    var usernameCol = colMap['Username'];
+    var nomeCol = colMap['Nome Completo'];
 
-    // Trova colonna Ruolo
-    var headerRow = userData[0];
-    var ruoloColumnIndex = -1;
-    for (var j = 0; j < headerRow.length; j++) {
-      if (headerRow[j] === 'Ruolo') {
-        ruoloColumnIndex = j;
-        break;
-      }
-    }
-
-    if (ruoloColumnIndex === -1) {
-      Logger.error('Colonna Ruolo non trovata nel foglio Utenti');
+    if (usernameCol === undefined || nomeCol === undefined) {
+      Logger.error('Colonne Username/Nome Completo non trovate nel foglio Utenti');
       return { success: false, message: 'Configurazione foglio non valida' };
-    }
-
-    // Verifica admin
-    for (var i = 1; i < userData.length; i++) {
-      var row = userData[i];
-      if (row[COLUMNS.USER_ID] === requestingUserId) {
-        var ruolo = row[ruoloColumnIndex];
-        isAdmin = (ruolo && ADMIN_VALIDATION.isAdminRole(ruolo));
-        Logger.debug('Utente trovato:', requestingUserId, 'Ruolo:', ruolo, 'IsAdmin:', isAdmin);
-        break;
-      }
-    }
-
-    if (!isAdmin) {
-      Logger.warn('Tentativo accesso non autorizzato da:', requestingUserId);
-      return { success: false, message: 'Accesso non autorizzato. Solo gli amministratori possono accedere.' };
     }
 
     // Cerca utente target
     var targetUserName = null;
     for (var i = 1; i < userData.length; i++) {
       var row = userData[i];
-      if (row[COLUMNS.USER_ID] === targetUserId) {
-        targetUserName = row[COLUMNS.NOME];
+      if (String(row[usernameCol]).trim() === String(targetUserId).trim()) {
+        targetUserName = row[nomeCol];
         break;
       }
     }
@@ -556,4 +533,3 @@ function checkIfUserHasSheet(userName) {
     return false;
   }
 }
-

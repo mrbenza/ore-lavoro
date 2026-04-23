@@ -62,8 +62,9 @@ function getCantieriAdminOverview(sessionToken, modalita) {
   try {
     Logger.debug('getCantieriAdminOverview - modalità:', modalita);
     
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
     }
     
     // Cache key specifica
@@ -283,8 +284,9 @@ function getDipendentiListAdmin(sessionToken, includeInactive) {
   const startTime = Date.now();
 
   try {
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
     }
 
     Logger.debug('getDipendentiListAdmin, includeInactive:', includeInactive);
@@ -293,7 +295,6 @@ function getDipendentiListAdmin(sessionToken, includeInactive) {
     const userSheet = getSheetSafe(spreadsheet, SHEET_NAMES.UTENTI);
     const data = userSheet.getDataRange().getValues();
 
-    // Mapping dinamico colonne (robusto a variazioni nell'ordine)
     const headers = data[0];
     const colMap = {};
     headers.forEach(function(h, i) { if (h) colMap[h.toString().trim()] = i; });
@@ -319,11 +320,8 @@ function getDipendentiListAdmin(sessionToken, includeInactive) {
 
       if (!userId || !nome) continue;
 
-      // Escludi sempre gli admin
       const isAdmin = ADMIN_VALIDATION.isAdminRole(ruolo);
       if (isAdmin) continue;
-
-      // Per la lista standard: escludi anche i non attivi
       if (!mostraTutti && attivo !== 'Si') continue;
 
       dipendenti.push({
@@ -347,8 +345,6 @@ function getDipendentiListAdmin(sessionToken, includeInactive) {
     return { success: false, message: error.toString() };
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
 // TIMELINE DIPENDENTE
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -402,8 +398,9 @@ function getDipendenteTimelineAdmin(sessionToken, userId, timeframe) {
   try {
     Logger.debug('getDipendenteTimelineAdmin:', userId, timeframe);
     
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
     }
     
     if (!userId) {
@@ -590,49 +587,33 @@ function getDipendenteTimelineAdmin(sessionToken, userId, timeframe) {
 function getOtherUserMonthlyData(sessionToken, targetUserId, year, month) {
   Logger.debug('getOtherUserMonthlyData:', targetUserId, year, month);
   
-  if (!validateSessionToken(sessionToken)) {
-    return { success: false, message: 'Token di sessione non valido' };
-  }
-  
   try {
-    var parts = String(sessionToken).split('_');
-    var requestingUserId = parts.slice(0, parts.length - 2).join('_');
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
+    }
+
     var userSheet = getWorksheet();
     var userData = userSheet.getDataRange().getValues();
-    var isAdmin = false;
     var targetUserName = null;
-    
-    var headerRow = userData[0];
-    var ruoloColumnIndex = -1;
-    for (var j = 0; j < headerRow.length; j++) {
-      if (headerRow[j] === 'Ruolo') {
-        ruoloColumnIndex = j;
-        break;
-      }
-    }
-    
-    if (ruoloColumnIndex === -1) {
-      Logger.error('Colonna Ruolo non trovata');
+
+    var headerRow = userData[0] || [];
+    var columnMap = buildColumnMap(headerRow);
+    var usernameCol = columnMap['Username'];
+    var nomeCol = columnMap['Nome Completo'];
+
+    if (usernameCol === undefined || nomeCol === undefined) {
+      Logger.error('Colonne Username/Nome Completo non trovate');
       return { success: false, message: 'Configurazione foglio non valida' };
     }
     
     for (var i = 1; i < userData.length; i++) {
       var row = userData[i];
-      
-      if (row[COLUMNS.USER_ID] === requestingUserId) {
-        var ruolo = row[ruoloColumnIndex];
-        isAdmin = (ruolo && ADMIN_VALIDATION.isAdminRole(ruolo));
-        Logger.debug('Verifica admin:', requestingUserId, 'IsAdmin:', isAdmin);
+
+      if (String(row[usernameCol]).trim() === String(targetUserId).trim()) {
+        targetUserName = row[nomeCol];
+        break;
       }
-      
-      if (row[COLUMNS.USER_ID] === targetUserId) {
-        targetUserName = row[COLUMNS.NOME];
-      }
-    }
-    
-    if (!isAdmin) {
-      Logger.warn('Accesso non autorizzato da:', requestingUserId);
-      return { success: false, message: 'Accesso non autorizzato. Solo amministratori.' };
     }
     
     if (!targetUserName) {
@@ -801,44 +782,30 @@ function getOtherUserMonthlyData(sessionToken, targetUserId, year, month) {
  */
 function updateWorkEntry(sessionToken, targetUserId, dateStr, updateData) {
   try {
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
-    }
-    
-    var parts = String(sessionToken).split('_');
-    var requestingUserId = parts.slice(0, parts.length - 2).join('_');
-    var userSheet = getWorksheet();
-    var userData = userSheet.getDataRange().getValues();
-    var isAdmin = false;
-    var targetUserName = null;
-    var adminName = null;
-    
-    var headerRow = userData[0];
-    var ruoloColumnIndex = -1;
-    for (var j = 0; j < headerRow.length; j++) {
-      if (headerRow[j] === 'Ruolo') {
-        ruoloColumnIndex = j;
-        break;
-      }
-    }
-    
-    for (var i = 1; i < userData.length; i++) {
-      var row = userData[i];
-      var headers = userSheet.getRange(1, 1, 1, userSheet.getLastColumn()).getValues()[0];
-      var columnMap = buildColumnMap(headers);
-      
-      if (row[columnMap['Username']] === requestingUserId) {
-        var ruolo = row[ruoloColumnIndex];
-        isAdmin = (ruolo && ADMIN_VALIDATION.isAdminRole(ruolo));
-        adminName = row[columnMap['Nome Completo']];
-      }
-      if (row[columnMap['Username']] === targetUserId) {
-        targetUserName = row[columnMap['Nome Completo']];
-      }
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
     }
 
-    if (!isAdmin) {
-      return { success: false, message: 'Accesso non autorizzato' };
+    var userSheet = getWorksheet();
+    var userData = userSheet.getDataRange().getValues();
+    var targetUserName = null;
+    var adminName = adminCheck.data.userName;
+    var headerRow = userData[0] || [];
+    var columnMap = buildColumnMap(headerRow);
+    var usernameCol = columnMap['Username'];
+    var nomeCol = columnMap['Nome Completo'];
+
+    if (usernameCol === undefined || nomeCol === undefined) {
+      return { success: false, message: 'Configurazione foglio Utenti non valida' };
+    }
+
+    for (var i = 1; i < userData.length; i++) {
+      var row = userData[i];
+      if (String(row[usernameCol]).trim() === String(targetUserId).trim()) {
+        targetUserName = row[nomeCol];
+        break;
+      }
     }
 
     if (!targetUserName) {
@@ -1005,8 +972,9 @@ function invalidateAdminCache(sessionToken, cacheType) {
   try {
     Logger.debug('invalidateAdminCache:', cacheType);
 
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
     }
 
     const cache = CacheService.getScriptCache();
@@ -1072,30 +1040,9 @@ function updateCantiereStato(sessionToken, cantiereId, nuovoStato) {
   try {
     Logger.debug('updateCantiereStato:', cantiereId, '->', nuovoStato);
 
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
-    }
-
-    // Verifica ruolo admin (stesso pattern di updateWorkEntry)
-    var parts = String(sessionToken).split('_');
-    var requestingUserId = parts.slice(0, parts.length - 2).join('_');
-    var userSheet = getWorksheet();
-    var userData = userSheet.getDataRange().getValues();
-    var headerRow = userData[0];
-    var colMap = buildColumnMap(headerRow);
-    var ruoloColumnIndex = -1;
-    for (var j = 0; j < headerRow.length; j++) {
-      if (headerRow[j] === 'Ruolo') { ruoloColumnIndex = j; break; }
-    }
-    var isAdmin = false;
-    for (var u = 1; u < userData.length; u++) {
-      if (String(userData[u][colMap['Username']]).trim() === requestingUserId) {
-        isAdmin = (ruoloColumnIndex !== -1 && ADMIN_VALIDATION.isAdminRole(userData[u][ruoloColumnIndex]));
-        break;
-      }
-    }
-    if (!isAdmin) {
-      return { success: false, message: 'Accesso non autorizzato' };
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
     }
 
     // Valida stato predefinito (allineato ai 3 stati del foglio Cantieri)
@@ -1187,70 +1134,48 @@ function deleteWorkEntry(sessionToken, targetUserId, dateStr, entryIndex) {
   console.log('targetUserId ricevuto:', targetUserId);
   console.log('targetUserId type:', typeof targetUserId);
   console.log('targetUserId length:', targetUserId ? targetUserId.length : 'null');
+
   try {
-    // VALIDAZIONE SESSIONE (identica a updateWorkEntry)
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
     }
-    
-    var parts = String(sessionToken).split('_');
-    var requestingUserId = parts.slice(0, parts.length - 2).join('_');
+
     var userSheet = getWorksheet();
     var userData = userSheet.getDataRange().getValues();
-    var isAdmin = false;
+    var headerRow = userData[0] || [];
+    var columnMap = buildColumnMap(headerRow);
+    var usernameCol = columnMap['Username'];
+    var nomeCol = columnMap['Nome Completo'];
+
+    if (usernameCol === undefined || nomeCol === undefined) {
+      return { success: false, message: 'Configurazione foglio Utenti non valida' };
+    }
+
     var targetUserName = null;
-    var adminName = null;
-    
-    var headerRow = userData[0];
-    var ruoloColumnIndex = -1;
-    for (var j = 0; j < headerRow.length; j++) {
-      if (headerRow[j] === 'Ruolo') {
-        ruoloColumnIndex = j;
+    for (var i = 1; i < userData.length; i++) {
+      var row = userData[i];
+      if (String(row[usernameCol]).trim() === String(targetUserId).trim()) {
+        targetUserName = row[nomeCol];
+        console.log('[DEBUG] TROVATO targetUserName:', targetUserName);
         break;
       }
     }
-    
-    // Trova admin e target user
-    for (var i = 1; i < userData.length; i++) {
-      var row = userData[i];
-      var headers = userSheet.getRange(1, 1, 1, userSheet.getLastColumn()).getValues()[0];
-      var columnMap = buildColumnMap(headers);
-      
-      if (row[columnMap['Username']] === requestingUserId) {
-        var ruolo = row[ruoloColumnIndex];
-        isAdmin = (ruolo && ADMIN_VALIDATION.isAdminRole(ruolo));
-        adminName = row[columnMap['Nome Completo']];
-      }
 
-      if (row[columnMap['Username']] === targetUserId) {
-        targetUserName = row[columnMap['Nome Completo']];
-        console.log('[DEBUG] ✅ TROVATO targetUserName:', targetUserName);
-      }
-    }
-    
-    // Verifica permessi admin
-    if (!isAdmin) {
-      return { 
-        success: false, 
-        message: 'Accesso negato: solo gli amministratori possono eliminare registrazioni' 
-      };
-    }
-    
     if (!targetUserName) {
-      return { 
-        success: false, 
-        message: 'Utente target non trovato' 
+      return {
+        success: false,
+        message: 'Utente target non trovato'
       };
     }
-    
-    // VALIDAZIONE PARAMETRI
+
     if (!dateStr || entryIndex === undefined || entryIndex === null) {
       return {
         success: false,
         message: 'Parametri mancanti (dateStr e entryIndex richiesti)'
       };
     }
-    
+
     var datePattern = /^\d{4}-\d{2}-\d{2}$/;
     if (!datePattern.test(dateStr)) {
       return {
@@ -1258,34 +1183,31 @@ function deleteWorkEntry(sessionToken, targetUserId, dateStr, entryIndex) {
         message: 'Formato data non valido (richiesto YYYY-MM-DD)'
       };
     }
-    
-    var indexNum = parseInt(entryIndex);
+
+    var indexNum = parseInt(entryIndex, 10);
     if (isNaN(indexNum) || indexNum < 0) {
       return {
         success: false,
         message: 'Indice registrazione non valido'
       };
     }
-    
-    // CARICA FOGLIO DIPENDENTE
+
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var targetSheet = ss.getSheetByName(targetUserName);
-    
     if (!targetSheet) {
       return {
         success: false,
         message: 'Foglio dipendente non trovato'
       };
     }
-    
-    // CERCA TUTTE LE RIGHE CON QUELLA DATA
+
     var allData = targetSheet.getDataRange().getValues();
     var matchingRows = [];
-    
-    for (var i = 4; i < allData.length; i++) { // Salta 4 righe header (righe 1-4 del foglio, indici 0-3)
-      var rowDate = allData[i][0]; // Colonna A = Data
+
+    for (var rowIndex = 4; rowIndex < allData.length; rowIndex++) {
+      var rowDate = allData[rowIndex][0];
       var rowDateStr = '';
-      
+
       if (rowDate instanceof Date) {
         rowDateStr = Utilities.formatDate(rowDate, Session.getScriptTimeZone(), 'yyyy-MM-dd');
       } else if (typeof rowDate === 'string' && rowDate) {
@@ -1294,47 +1216,40 @@ function deleteWorkEntry(sessionToken, targetUserId, dateStr, entryIndex) {
           rowDateStr = Utilities.formatDate(parsed, Session.getScriptTimeZone(), 'yyyy-MM-dd');
         }
       }
-      
+
       if (rowDateStr === dateStr) {
         matchingRows.push({
-          rowIndex: i + 1, // +1 perché sheet è 1-based
-          data: allData[i]
+          rowIndex: rowIndex + 1,
+          data: allData[rowIndex]
         });
       }
     }
-    
-    // VALIDAZIONE ESISTENZA
+
     if (matchingRows.length === 0) {
       return {
         success: false,
         message: 'Nessuna registrazione trovata per questa data'
       };
     }
-    
+
     if (indexNum >= matchingRows.length) {
       return {
         success: false,
         message: 'Indice registrazione non valido (trovate ' + matchingRows.length + ' registrazioni)'
       };
     }
-    
-    // RIGA DA ELIMINARE
+
     var targetRow = matchingRows[indexNum];
-    var rowToDelete = targetRow.rowIndex;
-    var rowData = targetRow.data;
-    
-    // BACKUP DATI PER RISPOSTA
     var deletedEntry = {
       data: dateStr,
-      cantiereId: rowData[1] || '',
-      cantiereName: rowData[2] || '',
-      ore: rowData[3] || 0,
-      note: rowData[4] || ''
+      cantiereId: targetRow.data[1] || '',
+      cantiereName: targetRow.data[2] || '',
+      ore: targetRow.data[3] || 0,
+      note: targetRow.data[4] || ''
     };
-    
-    // ELIMINAZIONE FISICA
+
     try {
-      targetSheet.deleteRow(rowToDelete);
+      targetSheet.deleteRow(targetRow.rowIndex);
     } catch (deleteError) {
       return {
         success: false,
@@ -1342,24 +1257,20 @@ function deleteWorkEntry(sessionToken, targetUserId, dateStr, entryIndex) {
       };
     }
 
-    // Aggiorna ore cantiere (sottrai le ore eliminate)
     try {
       updateCantiereHours(deletedEntry.cantiereId, -deletedEntry.ore, targetUserName);
-      console.log('[DELETE] Ore cantiere aggiornate: ' + deletedEntry.cantiereId + ' -' + deletedEntry.ore + 'h');
+      console.log('[DELETE] Ore cantiere aggiornate:', deletedEntry.cantiereId, '-', deletedEntry.ore + 'h');
     } catch (cantiereError) {
       console.log('[DELETE] Warning: errore aggiornamento cantiere:', cantiereError.message);
-      // Non bloccare l'operazione - il delete è comunque riuscito
     }
-    
-    // INVALIDA CACHE
+
     try {
-      var monthKey = dateStr.substring(0, 7); // YYYY-MM
+      var monthKey = dateStr.substring(0, 7);
       CacheService.getScriptCache().remove('userMonthly_' + targetUserId + '_' + monthKey);
     } catch (cacheError) {
       // Cache non critica
     }
-    
-    // SUCCESSO
+
     return {
       success: true,
       message: 'Registrazione eliminata con successo',
@@ -1369,7 +1280,7 @@ function deleteWorkEntry(sessionToken, targetUserId, dateStr, entryIndex) {
         data: dateStr
       }
     };
-    
+
   } catch (error) {
     return {
       success: false,
@@ -1377,10 +1288,6 @@ function deleteWorkEntry(sessionToken, targetUserId, dateStr, entryIndex) {
     };
   }
 }
-
-
-
-// ─────────────────────────────────────────────────────────────────────────────
 // TEST — verifica manuale deleteWorkEntry da Script Editor
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1423,8 +1330,9 @@ function deleteWorkEntry(sessionToken, targetUserId, dateStr, entryIndex) {
  */
 function ricalcolaCantieriAPI(sessionToken) {
   try {
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
     }
 
     Logger.debug('ricalcolaCantieriAPI: avvio ricalcolo');
@@ -1497,8 +1405,9 @@ function ricalcolaCantieriAPI(sessionToken) {
  */
 function verificaAllineamentoAPI(sessionToken) {
   try {
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
     }
 
     Logger.debug('verificaAllineamentoAPI: avvio verifica');
@@ -1570,8 +1479,9 @@ function verificaAllineamentoAPI(sessionToken) {
  */
 function cambiaPasswordDipendente(sessionToken, targetUserId, nuovaPassword) {
   try {
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
     }
 
     // Verifica ruolo admin

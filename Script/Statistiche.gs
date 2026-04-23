@@ -885,35 +885,12 @@ function _primaRigaVuotaColonna(sheet, col1based) {
  */
 function getStatisticheAdmin(sessionToken, anno) {
   try {
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
     }
 
-    // Verifica ruolo admin: stesso pattern usato in AdminAPI.gs
-    const parts = String(sessionToken).split('_');
-    const requestingUserId = parts.slice(0, parts.length - 2).join('_');
     const ss = getMainSpreadsheet();
-    const sheetUtenti = getSheetSafely(ss, SHEET_NAMES.UTENTI);
-    if (sheetUtenti) {
-      const utentiData = sheetUtenti.getDataRange().getValues();
-      const headers = utentiData[0];
-      const colMap = buildColumnMap(headers);
-      const colId = colMap['Username'] !== undefined ? colMap['Username'] : COLUMNS.USER_ID;
-      const colRuolo = colMap['Ruolo'] !== undefined ? colMap['Ruolo'] : COLUMNS.RUOLO;
-
-      let isAdmin = false;
-      for (let i = 1; i < utentiData.length; i++) {
-        if (String(utentiData[i][colId]).trim() === requestingUserId) {
-          const ruolo = String(utentiData[i][colRuolo] || '').trim();
-          isAdmin = ADMIN_VALIDATION.isAdminRole(ruolo);
-          break;
-        }
-      }
-      if (!isAdmin) {
-        return { success: false, message: 'Accesso negato: ruolo admin richiesto' };
-      }
-    }
-
     const annoTarget = parseInt(anno) || new Date().getFullYear();
     const sheet = getSheetSafely(ss, SHEET_STATS.SHEET_NAME);
     if (!sheet) return { success: false, message: 'Foglio Amministrazione non trovato' };
@@ -1004,8 +981,9 @@ function getStatisticheAdmin(sessionToken, anno) {
  */
 function forzaAggregazioneAPI(sessionToken) {
   try {
-    if (!validateSessionToken(sessionToken)) {
-      return { success: false, message: 'Sessione non valida' };
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
     }
     forzaAggregazioneCompleta();
     return { success: true, message: 'Aggregazione completata' };

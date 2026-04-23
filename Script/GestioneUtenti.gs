@@ -433,6 +433,11 @@ function executeCreateUser() {
  */
 function creaUtenteAPI(sessionToken, datiJSON) {
   try {
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message };
+    }
+
     // Valida token sessione
     if (!validateSessionToken(sessionToken)) {
       return { success: false, message: 'Sessione non valida' };
@@ -541,6 +546,11 @@ function creaUtenteAPI(sessionToken, datiJSON) {
  */
 function aggiornaStatoUtenteAPI(sessionToken, targetUserId, nuovoStato) {
   try {
+    var adminCheck = getAdminSessionContext(sessionToken);
+    if (!adminCheck.success) {
+      return { success: false, message: adminCheck.message || 'Sessione non valida o scaduta.' };
+    }
+
     // 1. Valida sessione (validateSessionToken restituisce boolean)
     if (!validateSessionToken(sessionToken)) {
       return { success: false, message: 'Sessione non valida o scaduta.' };

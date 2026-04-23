@@ -5,6 +5,15 @@ Sistema per la gestione delle ore di lavoro dei dipendenti con autenticazione, d
 **Versione:** v2.2
 **Status:** Operativo
 
+## Aggiornamento 2026-04-23
+
+Correzioni e chiarimenti rispetto alle sezioni storiche qui sotto:
+- Il backend reale non e' `backend/code.gs`: il progetto Apps Script e' modulare in `Script/*.gs`.
+- Il modulo `Script/GestioneUtenti.gs` fa parte della produzione e gestisce `creaUtente` e `aggiornaStatoUtente`.
+- Gli endpoint admin esposti oggi includono anche `updateCantiereStato`, `ricalcolaCantieri`, `verificaAllineamento`, `cambiaPassword`, `creaUtente`, `aggiornaStatoUtente`, `generaReportMensile`, `generaReportAnnuale`, `downloadFilePdf`, `getStatistiche`, `forzaAggregazione`.
+- Le API admin non si fidano del solo `sessionToken`: gli endpoint privilegiati verificano anche il ruolo admin lato backend tramite helper centralizzato in `Script/Authentication.gs`.
+- Per l'import in Apps Script vanno creati 16 file di produzione sotto `Script/`, incluso `GestioneUtenti.gs`.
+
 ---
 
 ## Architettura Reale

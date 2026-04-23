@@ -4,6 +4,15 @@
 **Versione:** 1.0
 **Autore:** Docs Agent
 
+## Aggiornamento 2026-04-23
+
+Questa mappa e' parzialmente storica. I punti corretti oggi sono:
+- Il backend GAS reale e' modulare in `Script/*.gs`, non concentrato in un singolo file.
+- I moduli attivi mancanti in questa mappa includono `Script/GestioneUtenti.gs`, `Script/Statistiche.gs`, `Script/Tests.gs` e i file `test_*.gs`.
+- Il router espone piu' action admin di quelle elencate sotto: oltre a overview/edit/delete ci sono anche `updateCantiereStato`, `ricalcolaCantieri`, `verificaAllineamento`, `cambiaPassword`, `creaUtente`, `aggiornaStatoUtente`, `generaReportMensile`, `generaReportAnnuale`, `downloadFilePdf`, `getStatistiche`, `forzaAggregazione`.
+- `getDipendentiList` restituisce lista dipendenti e stato, non un riepilogo con totali ore.
+- Le API privilegiate richiedono sia `sessionToken` valido sia ruolo admin verificato lato backend.
+
 ---
 
 ## 1. Architettura Generale

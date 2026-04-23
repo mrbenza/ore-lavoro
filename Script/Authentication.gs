@@ -403,25 +403,21 @@ function getUserHoursFromSheet(userName) {
  * const res = validateAdmin('admin_1709123456_abc', 'admin');
  * // res → { success: true, data: { userId: 'admin', adminLevel: 'full', ... } }
  */
-function validateAdmin(sessionToken, userId) {
-  Logger.debug('validateAdmin chiamata con:', {sessionToken: sessionToken, userId: userId});
+function getAdminSessionContext(sessionToken, userId) {
+  Logger.debug('getAdminSessionContext chiamata con:', { sessionToken: sessionToken, userId: userId });
 
   try {
-    // 1. Verifica token sessione
     if (!validateSessionToken(sessionToken)) {
       Logger.warn('Token sessione non valido');
       return { success: false, message: 'Sessione non valida' };
     }
-    Logger.debug('Token sessione valido');
 
-    // 2. Ottieni userId dal token se non fornito
     if (!userId) {
       const tokenParts = String(sessionToken).split('_');
       userId = tokenParts.slice(0, tokenParts.length - 2).join('_');
       Logger.debug('UserId estratto dal token:', userId);
     }
 
-    // 3. Verifica se l'utente è admin nel foglio
     const spreadsheet = getMainSpreadsheet();
     const userSheet = spreadsheet.getSheetByName(SHEET_NAMES.UTENTI);
 
@@ -431,71 +427,69 @@ function validateAdmin(sessionToken, userId) {
     }
 
     const data = userSheet.getDataRange().getValues();
-    Logger.debug('Dati utenti letti, righe:', data.length);
+    if (!data || data.length < 2) {
+      return { success: false, message: 'Foglio Utenti vuoto o non valido' };
+    }
 
-    // 4. Costruisci mappa colonne dagli header (robusto a variazioni nell'ordine)
     const headers = data[0];
     const columnMap = buildColumnMap(headers);
+    const requiredColumns = ['Username', 'Ruolo', 'Attivo', 'Nome Completo'];
 
-    // Cerca l'utente nelle righe
+    for (let i = 0; i < requiredColumns.length; i++) {
+      if (columnMap[requiredColumns[i]] === undefined) {
+        return {
+          success: false,
+          message: 'Configurazione foglio non valida: colonna "' + requiredColumns[i] + '" mancante'
+        };
+      }
+    }
+
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      const currentUserId = row[columnMap['Username']]; // mapping dinamico
-      const userRole = row[columnMap['Ruolo']];         // mapping dinamico
-      const isActive = row[columnMap['Attivo']];        // mapping dinamico
-      const userName = row[columnMap['Nome Completo']]; // mapping dinamico
+      const currentUserId = (row[columnMap['Username']] || '').toString().trim();
 
-      Logger.debug('Controllo riga ' + i + ':', {
-        currentUserId: currentUserId,
-        userRole: userRole,
-        isActive: isActive,
-        userName: userName
-      });
+      if (currentUserId !== String(userId).trim()) continue;
 
-      if (currentUserId === userId) {
-        Logger.debug('Utente trovato:', userName);
+      const userRole = (row[columnMap['Ruolo']] || '').toString().trim();
+      const isActive = row[columnMap['Attivo']];
+      const userName = (row[columnMap['Nome Completo']] || '').toString().trim();
 
-        if (!(isActive === 'Si' || isActive === 'SI' || isActive === 'si' || isActive === true)) {
-          Logger.warn('Utente non attivo, valore colonna Attivo:', isActive);
-          return { success: false, message: 'Utente non attivo' };
-        }
-
-        // 5. Controlla se è admin usando ADMIN_VALIDATION per coerenza col resto del codebase
-        const isAdmin = ADMIN_VALIDATION.isAdminRole(userRole);
-
-        Logger.debug('Controllo admin:', {
-          userRole: userRole,
-          isAdmin: isAdmin
-        });
-
-        if (isAdmin) {
-          Logger.debug('Utente admin validato:', userId);
-          return {
-            success: true,
-            message: 'Admin validato con successo',
-            data: {
-              userId: userId,
-              userName: userName,
-              adminLevel: 'full',
-              permissions: ['view_all', 'edit_all', 'export', 'manage_users']
-            }
-          };
-        } else {
-          Logger.warn('Utente non ha privilegi admin, ruolo:', userRole);
-          return { success: false, message: 'Utente non ha privilegi admin' };
-        }
+      if (!(isActive === 'Si' || isActive === 'SI' || isActive === 'si' || isActive === true)) {
+        Logger.warn('Utente non attivo, valore colonna Attivo:', isActive);
+        return { success: false, message: 'Utente non attivo' };
       }
+
+      if (!ADMIN_VALIDATION.isAdminRole(userRole)) {
+        Logger.warn('Utente non ha privilegi admin, ruolo:', userRole);
+        return { success: false, message: 'Utente non ha privilegi admin' };
+      }
+
+      return {
+        success: true,
+        message: 'Admin validato con successo',
+        data: {
+          userId: currentUserId,
+          userName: userName,
+          role: userRole,
+          adminLevel: 'full',
+          permissions: ['view_all', 'edit_all', 'export', 'manage_users']
+        }
+      };
     }
 
     Logger.warn('Utente non trovato:', userId);
     return { success: false, message: 'Utente non trovato' };
 
   } catch (error) {
-    Logger.critical('Errore in validateAdmin:', error);
+    Logger.critical('Errore in getAdminSessionContext:', error);
     return {
       success: false,
       message: 'Errore validazione admin: ' + error.toString(),
       error: error.toString()
     };
   }
+}
+
+function validateAdmin(sessionToken, userId) {
+  return getAdminSessionContext(sessionToken, userId);
 }
