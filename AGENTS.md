@@ -37,6 +37,7 @@ ore-lavoro/
 ├── news.json                      ← dati modal novità: version, title, items (UI AGENT)
 ├── vercel.json                    ← configurazione deploy Vercel
 ├── AGENTS.md                      ← questo file (DOCS AGENT)
+├── GUIDA-AGGIORNAMENTO.md         ← mini guida rilascio versioni (DOCS AGENT)
 └── SHEET_SCHEMA.md                ← schema Google Sheets (DOCS AGENT + SHEET AGENT)
 ```
 
@@ -118,6 +119,7 @@ Gestisce qualsiasi richiesta in ingresso e coordina gli altri agenti.
 ### DOCS AGENT
 **File di competenza:**
 - `AGENTS.md`
+- `GUIDA-AGGIORNAMENTO.md`
 - `SHEET_SCHEMA.md`
 
 **Compiti:**

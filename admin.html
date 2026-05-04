@@ -2716,7 +2716,9 @@
                         cantiereId: cantiereId,
                         ore: ore,
                         note: note,
-                        isNewEntry: isNewEntry
+                        isNewEntry: isNewEntry,
+                        rowIndex: isNewEntry ? null : calendarData.workDays[currentEditDateStr].entries[selectedEntryIndex].rowIndex,
+                        entryIndex: isNewEntry ? null : selectedEntryIndex
                     })
                 });
 

@@ -57,11 +57,11 @@
  * updateCantiereHours('C001', -8, 'Mario Rossi'); // elimina
  * // → { success: true, nuovoTotale: 40, ... }
  */
-function updateCantiereHours(cantiereId, oreAggiunte, dipendente) {
+function updateCantiereHours(cantiereId, oreAggiunte, dipendente, counterDelta) {
   if (!dipendente) dipendente = null;
 
   try {
-    Logger.save('Aggiornando cantiere ' + cantiereId + ' con +' + oreAggiunte + ' ore');
+    Logger.save('Aggiornando cantiere ' + cantiereId + ' con ' + oreAggiunte + ' ore');
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var cantieriSheet = getSheetSafely(ss, SHEET_NAMES.CANTIERI);
@@ -93,7 +93,10 @@ function updateCantiereHours(cantiereId, oreAggiunte, dipendente) {
         var nuovoTotale = oreAttuali + oreAggiunte;
         var dataAggiornamento = new Date();
         var inserimentiAttuali = parseInt(row[COLUMNS_CANTIERI.NUM_INSERIMENTI]) || 0;
-        var nuovoContatore = inserimentiAttuali + 1;
+        var deltaContatore = typeof counterDelta === 'number'
+          ? counterDelta
+          : (oreAggiunte < 0 ? -1 : (oreAggiunte > 0 ? 1 : 0));
+        var nuovoContatore = Math.max(0, inserimentiAttuali + deltaContatore);
 
         // Aggiorna i campi nell'array in memoria, poi riscrivi l'intera riga
         // con un unico setValues() — 1 chiamata API invece di 4.

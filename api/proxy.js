@@ -49,7 +49,30 @@ export default async function handler(req, res) {
       return res.status(405).json({ success: false, message: 'Metodo non supportato' });
     }
 
-    console.log('Proxy request ricevuta:', requestData);
+    const sensitiveKeys = new Set([
+      'password',
+      'nuovapassword',
+      'vecchiapassword',
+      'sessiontoken',
+      'workdata',
+      'updatedata',
+      'datijson'
+    ]);
+    const redactValue = (key, value) => {
+      if (sensitiveKeys.has(String(key).toLowerCase())) return '[REDACTED]';
+      if (value && typeof value === 'object') {
+        return Object.fromEntries(Object.entries(value).map(([nestedKey, nestedValue]) => [
+          nestedKey,
+          redactValue(nestedKey, nestedValue)
+        ]));
+      }
+      return value;
+    };
+    const redactedRequest = Object.fromEntries(
+      Object.entries(requestData).map(([key, value]) => [key, redactValue(key, value)])
+    );
+
+    console.log('Proxy request ricevuta:', redactedRequest);
 
     // GAS non gestisce correttamente POST con redirect (body perso) — sempre GET
     const url = new URL(APPS_SCRIPT_URL);
@@ -58,7 +81,14 @@ export default async function handler(req, res) {
       url.searchParams.append(key, typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value));
     });
 
-    console.log('URL finale chiamata:', url.toString());
+    const redactedUrl = new URL(url.toString());
+    redactedUrl.searchParams.forEach((value, key) => {
+      if (sensitiveKeys.has(String(key).toLowerCase())) {
+        redactedUrl.searchParams.set(key, '[REDACTED]');
+      }
+    });
+
+    console.log('URL finale chiamata:', redactedUrl.toString());
 
     const response = await fetch(url.toString(), {
       method: 'GET',
@@ -85,7 +115,7 @@ export default async function handler(req, res) {
       throw new Error('Risposta non JSON valida da Google Apps Script');
     }
 
-    console.log('Proxy response:', jsonResult);
+    console.log('Proxy response:', redactValue('response', jsonResult));
 
     // Ritorna la risposta con headers CORS
     res.status(200).json(jsonResult);

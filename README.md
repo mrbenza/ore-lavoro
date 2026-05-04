@@ -29,7 +29,7 @@ Browser
                 │
                 │  HTTP GET con parametri query string
                 ▼
-        Google Apps Script   (backend/code.gs, container-bound)
+        Google Apps Script   (Script/*.gs, container-bound)
                 │
                 ▼
         Google Sheets        (database)
@@ -41,7 +41,7 @@ Browser
 
 Il frontend non chiama direttamente Google Apps Script. Tutte le richieste passano per il proxy Vercel (`api/proxy.js`) che aggiunge gli header CORS necessari.
 
-Lo script `backend/code.gs` è **container-bound**: va incollato nell'editor Script del Google Sheets, non creato come progetto standalone.
+Gli script in `Script/*.gs` sono **container-bound**: vanno copiati nell'editor Apps Script del Google Sheets, nello stesso progetto, non creati come progetto standalone.
 
 ---
 
@@ -57,6 +57,7 @@ ore-lavoro/
 ├── vercel.json             # Configurazione deploy Vercel
 ├── package.json            # Metadati progetto
 ├── GUIDA-LOGO.md           # Guida sostituzione logo aziendale (login)
+├── GUIDA-AGGIORNAMENTO.md  # Mini guida per pubblicare nuove versioni
 ├── api/
 │   └── proxy.js           # Proxy Vercel → Apps Script (CORS)
 └── Script/                 # Tutti gli script Google Apps Script
@@ -263,10 +264,10 @@ H2 =SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),1,1),A:A,"<"&DATE(YEAR(TODAY())+1,1,1
 ### 2. Google Apps Script
 
 1. Apri il Google Sheets → **Estensioni** → **Apps Script**
-2. Crea un file per ognuno dei 15 script nella cartella `Script/` e copia il relativo contenuto:
+2. Crea un file per ognuno dei 16 script di produzione nella cartella `Script/` e copia il relativo contenuto:
    - `Config.gs`, `Main.gs`, `Utils.gs`, `UtilsMenu.gs`
    - `ApiRouter.gs`, `Authentication.gs`, `UserAPI.gs`, `AdminAPI.gs`, `SheetsDAO.gs`
-   - `ArchivioOre.gs`, `GestionePassword.gs`, `CalcoloCantieri.gs`, `ReportCommercialista.gs`, `SystemDiagnostic.gs`, `Statistiche.gs`
+   - `ArchivioOre.gs`, `GestionePassword.gs`, `GestioneUtenti.gs`, `CalcoloCantieri.gs`, `ReportCommercialista.gs`, `SystemDiagnostic.gs`, `Statistiche.gs`
 3. **Deploy** → **Nuova distribuzione** → **App web**
    - Esegui come: **Me**
    - Accesso: **Chiunque**
@@ -313,7 +314,7 @@ Il proxy legge l'URL di Google Apps Script da una variabile d'ambiente. Va confi
    U003 | Giuseppe Bianchi | giuseppe@email.com | 345678901 | 15/06/2024 | Dipendente | giuseppe.bianchi | password123 | | Si
    ```
 2. Crea un foglio chiamato esattamente **Giuseppe Bianchi**
-3. Aggiungi intestazioni in riga 1 e le formule in F3, G3, H3
+3. Aggiungi intestazioni in riga 1 e le formule in F2, G2, H2
 
 ### Disattivare un dipendente
 
@@ -402,6 +403,8 @@ Per configurare i dati aziendali che appaiono nel report:
 ## Rilasciare una nuova versione
 
 Checklist da seguire ogni volta che si pubblica un aggiornamento.
+
+Per la procedura breve usare anche [`GUIDA-AGGIORNAMENTO.md`](GUIDA-AGGIORNAMENTO.md).
 
 ### 1. Aggiorna la versione
 

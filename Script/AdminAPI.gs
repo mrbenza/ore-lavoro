@@ -896,16 +896,41 @@ function updateWorkEntry(sessionToken, targetUserId, dateStr, updateData) {
       var rowToUpdate = -1;
       var oldCantiereId = null;
       var oldOre = 0;
-      
-      for (var i = 0; i < workData.length; i++) {
-        var rowDate = new Date(workData[i][0]);
-        var formattedDate = Utilities.formatDate(rowDate, Session.getScriptTimeZone(), 'yyyy-MM-dd');
-        
-        if (formattedDate === dateStr) {
-          rowToUpdate = i + 5;
-          oldCantiereId = workData[i][1];
-          oldOre = parseFloat(workData[i][3]) || 0;
-          break;
+      var requestedRowIndex = parseInt(updateData.rowIndex, 10);
+      var requestedEntryIndex = parseInt(updateData.entryIndex, 10);
+
+      if (!isNaN(requestedRowIndex) && requestedRowIndex >= 5 && requestedRowIndex <= lastRow) {
+        var rowValues = userWorkSheet.getRange(requestedRowIndex, 1, 1, 5).getValues()[0];
+        var selectedDate = new Date(rowValues[0]);
+        var selectedDateStr = Utilities.formatDate(selectedDate, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+
+        if (selectedDateStr !== dateStr) {
+          return { success: false, message: 'La riga selezionata non appartiene alla data richiesta' };
+        }
+
+        rowToUpdate = requestedRowIndex;
+        oldCantiereId = rowValues[1];
+        oldOre = parseFloat(rowValues[3]) || 0;
+      } else {
+        var matchingEntryIndex = 0;
+        if (!isNaN(requestedEntryIndex) && requestedEntryIndex >= 0) {
+          matchingEntryIndex = requestedEntryIndex;
+        }
+
+        var matchCount = 0;
+        for (var i = 0; i < workData.length; i++) {
+          var rowDate = new Date(workData[i][0]);
+          var formattedDate = Utilities.formatDate(rowDate, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+
+          if (formattedDate === dateStr) {
+            if (matchCount === matchingEntryIndex) {
+              rowToUpdate = i + 5;
+              oldCantiereId = workData[i][1];
+              oldOre = parseFloat(workData[i][3]) || 0;
+              break;
+            }
+            matchCount++;
+          }
         }
       }
       
@@ -923,7 +948,7 @@ function updateWorkEntry(sessionToken, targetUserId, dateStr, updateData) {
         updateCantiereHours(updateData.cantiereId, newOre, targetUserName);
       } else if (oldOre !== newOre) {
         var diff = newOre - oldOre;
-        updateCantiereHours(updateData.cantiereId, diff, targetUserName);
+        updateCantiereHours(updateData.cantiereId, diff, targetUserName, 0);
       }
       
       Logger.info('Admin ' + adminName + ' modificato per ' + targetUserName + ' ' + dateStr);
