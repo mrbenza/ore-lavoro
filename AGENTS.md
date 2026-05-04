@@ -38,6 +38,7 @@ ore-lavoro/
 ├── vercel.json                    ← configurazione deploy Vercel
 ├── AGENTS.md                      ← questo file (DOCS AGENT)
 ├── GUIDA-AGGIORNAMENTO.md         ← mini guida rilascio versioni (DOCS AGENT)
+├── MILESTONES.md                  ← milestone raggiunte e roadmap (DOCS AGENT)
 └── SHEET_SCHEMA.md                ← schema Google Sheets (DOCS AGENT + SHEET AGENT)
 ```
 
@@ -120,6 +121,7 @@ Gestisce qualsiasi richiesta in ingresso e coordina gli altri agenti.
 **File di competenza:**
 - `AGENTS.md`
 - `GUIDA-AGGIORNAMENTO.md`
+- `MILESTONES.md`
 - `SHEET_SCHEMA.md`
 
 **Compiti:**

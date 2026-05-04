@@ -1,5 +1,28 @@
 ## Changelog
 
+### 2026-05-04 — docs + hardening — Riorganizzazione documentazione e fix review
+
+- **DOC-03**: `README.md` riscritto come presentazione dell'app: descrizione, funzionalita, architettura, setup rapido, uso operativo, link alla documentazione. Rimosso lo storico modifiche dal README.
+- **DOC-04**: nuovo `MILESTONES.md` per milestone raggiunte, funzionalita attive e roadmap proposta.
+- **DOC-05**: `AGENTS.md` aggiornato per includere `GUIDA-AGGIORNAMENTO.md` e `MILESTONES.md` tra i file di competenza documentale.
+- **DOC-06**: separazione esplicita degli scopi documentali: `Changelog.log` per modifiche effettuate, `FIXES.md` per bug/fix, `SHEET_SCHEMA.md` e `AMMINISTRAZIONE_SCHEMA.md` per fogli, `README.md` per presentazione.
+- **FIX-24**: `admin.html` + `AdminAPI.gs` — modifica admin delle ore ora passa e usa `rowIndex`/`entryIndex`, evitando di aggiornare la prima registrazione del giorno quando ci sono piu inserimenti nella stessa data.
+- **FIX-25**: `api/proxy.js` — mantenuto inoltro GET verso Apps Script, ma mascherati nei log password, token e payload sensibili in request, URL finale e response.
+- **FIX-26**: `SheetsDAO.gs` — `updateCantiereHours()` aggiorna il contatore `N. Inserimenti` con delta coerente: +1 su inserimento, -1 su cancellazione, 0 su modifica ore stesso cantiere.
+- **FIX-27**: `news.json` — corretti refusi nel modal novita.
+- **FIX-28**: `GestioneUtenti.gs` — la creazione di utenti admin non crea piu automaticamente un foglio personale.
+
+---
+
+### 2026-03-15 — UI Agent — Modal novita e versioning
+
+- **FEAT-23**: `dashboard.html` — aggiunta `checkAndShowNews()`: al caricamento legge `news.json`, confronta `CONFIG.VERSION.frontend` con `localStorage('newsLastSeenVersion')` e mostra un modal bloccante con le novita della versione.
+- **FEAT-24**: `news.json` — introdotto file statico con struttura `{ version, title, items[] }`. Il campo `version` e' solo etichetta, il confronto logico resta su `CONFIG.VERSION.frontend`.
+- **FEAT-25**: `config.js` — `CONFIG.VERSION.frontend` diventa unica fonte di verita per la versione frontend.
+- **FEAT-26**: `index.html` — rimossa versione hardcoded dal footer; il testo viene costruito dinamicamente da `CONFIG.VERSION.frontend`.
+
+---
+
 ### 2026-03-09 — ui-frontend-developer — Warning ore duplicate + UX miglioramenti dashboard
 
 - **FEAT-21**: `dashboard.html` → warning ore duplicate al salvataggio. Nuova variabile `monthlyCache` (cache mesi già caricati). Nuova funzione `fetchMonthData(year, month)` (cache-first, chiama `getMonthlyWorkData`). Nuova funzione `showDayConfirm(entries, totalHours, dateLabel)` (modal Promise-based, sheet-style su mobile). `saveWorkEntry()` modificato: spinner parte immediatamente al click, poi controlla ore esistenti via `fetchMonthData`, se trovate mostra `showDayConfirm` → Annulla riabilita il bottone, Conferma procede con salvataggio. Cache invalidata dopo ogni salvataggio riuscito. Funziona su qualsiasi data passata o futura, non solo il mese corrente.
