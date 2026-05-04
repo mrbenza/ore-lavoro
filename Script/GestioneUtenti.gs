@@ -128,16 +128,22 @@ function creaUtenteCore(dati) {
     newRow[colMap['Email']]           = dati.email || '';
     newRow[colMap['Telefono']]        = dati.telefono || '';
     newRow[colMap['Data Assunzione']] = dati.dataAssunzione || new Date();
-    newRow[colMap['Ruolo']]           = dati.ruolo || 'Dipendente';
+    const ruolo = dati.ruolo || 'Dipendente';
+
+    newRow[colMap['Ruolo']]           = ruolo;
     newRow[colMap['Username']]        = dati.username;
     newRow[colMap['Password']]        = dati.password;
     newRow[colMap['Password Hash']]   = hash;
     newRow[colMap['Attivo']]          = dati.attivo || 'Si';
 
-    // 7. Crea foglio personale dipendente PRIMA di appendRow:
-    //    se la creazione lancia eccezione, la riga Utenti non viene scritta
-    //    e lo stato resta coerente (nessun utente registrato senza foglio).
-    _creaFoglioDipendente(ss, dati.nomeCompleto);
+    // 7. Crea il foglio personale solo per i dipendenti.
+    //    Gli admin non registrano ore dalla dashboard admin e non hanno bisogno
+    //    di un foglio dedicato. Per i dipendenti, la creazione resta prima di
+    //    appendRow: se fallisce, non viene scritta una riga Utenti incompleta.
+    const isAdminUser = ADMIN_VALIDATION.isAdminRole(ruolo);
+    if (!isAdminUser) {
+      _creaFoglioDipendente(ss, dati.nomeCompleto);
+    }
 
     // 8. Aggiungi riga al foglio Utenti
     usersSheet.appendRow(newRow);
@@ -156,7 +162,9 @@ function creaUtenteCore(dati) {
     return {
       success: true,
       userId: newId,
-      message: 'Utente creato con successo (ID: ' + newId + ')'
+      message: isAdminUser
+        ? 'Utente admin creato con successo (ID: ' + newId + ', nessun foglio personale creato)'
+        : 'Utente creato con successo (ID: ' + newId + ')'
     };
 
   } catch (error) {
