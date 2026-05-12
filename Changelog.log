@@ -1,5 +1,14 @@
 ## Changelog
 
+### 2026-05-12 - performance dashboard - Cache cantieri e redirect admin
+
+- **PERF-01**: `index.html` + `config.js` - dopo il login gli admin vengono indirizzati direttamente ad `admin.html` usando il ruolo gia' ricevuto da GAS; anche `PageGuard.redirectIfLoggedIn()` rispetta il ruolo salvato in sessione.
+- **PERF-02**: `dashboard.html` - rimossa la chiamata iniziale a `validateAdmin` per gli utenti dipendenti: la dashboard usa il ruolo presente nella sessione e lascia la validazione admin alla pagina admin.
+- **PERF-03**: `dashboard.html` - le ore mese/mese precedente ricevute dal login vengono mostrate subito e salvate in sessione dopo eventuali refresh, evitando una chiamata `getUserInfo` bloccante al primo render.
+- **PERF-04**: `dashboard.html` - `getCantieri` diventa cache-first: se esiste una cache recente dei cantieri attivi il form e' utilizzabile subito, mentre un refresh in background confronta GAS e aggiorna select/cache se i dati sono cambiati.
+
+---
+
 ### 2026-05-04 — docs + hardening — Riorganizzazione documentazione e fix review
 
 - **DOC-03**: `README.md` riscritto come presentazione dell'app: descrizione, funzionalita, architettura, setup rapido, uso operativo, link alla documentazione. Rimosso lo storico modifiche dal README.

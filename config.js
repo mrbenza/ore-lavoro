@@ -374,6 +374,17 @@ const Utils = {
     },
 
     /**
+     * Verifica se un ruolo salvato in sessione corrisponde a un amministratore.
+     *
+     * @param {string} role - Valore colonna Ruolo del foglio Utenti.
+     * @returns {boolean} true se il ruolo e' admin.
+     */
+    isAdminRole(role) {
+        const normalizedRole = (role || '').toString().trim().toLowerCase();
+        return normalizedRole === 'admin' || normalizedRole === 'amministratore';
+    },
+
+    /**
      * Mostra una notifica toast nell'angolo in alto a destra della pagina.
      *
      * DESCRIZIONE ESTESA: Cerca il div#notification nel DOM; se non esiste lo
@@ -1436,7 +1447,12 @@ const PageGuard = {
      */
     redirectIfLoggedIn() {
         if (Utils.isLoggedIn()) {
-            Utils.redirectToDashboard();
+            const session = Utils.getSession();
+            if (Utils.isAdminRole(session?.user?.ruolo)) {
+                window.location.href = CONFIG.PAGES.ADMIN || 'admin.html';
+            } else {
+                Utils.redirectToDashboard();
+            }
             return true;
         }
         return false;

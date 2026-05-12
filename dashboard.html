@@ -1574,7 +1574,8 @@
         const APP_CONFIG = {
             AUTO_REFRESH_INTERVAL: 300000, // 5 minuti in ms
             DEBOUNCE_SCROLL: 16,           // ms debounce scroll (circa 60fps)
-            API_TIMEOUT: 10000             // timeout API in ms (non usato direttamente)
+            API_TIMEOUT: 10000,            // timeout API in ms (non usato direttamente)
+            CANTIERI_CACHE_TTL: 30 * 60 * 1000
         };
 
         /* ═══════════════════════════════════════════
@@ -1587,6 +1588,7 @@
         let calendarData = {};        // Dati calendario mese corrente: { [day]: { totalHours, entries: [] } }
         let monthlyCache = {};        // Cache dati mensili: { 'YYYY-MM': { [day]: { totalHours, entries[] } } }
         let refreshInterval = null;   // ID interval per auto-refresh statistiche ogni 5 minuti
+        let lastUserStatsRefresh = 0; // Timestamp ultimo refresh statistiche utente
 
         /* ═══════════════════════════════════════════
            CACHE ELEMENTI DOM — Oggetto popolato da
@@ -1754,9 +1756,11 @@
                 currentUser = session.user;
                 sessionToken = session.token;
 
-                // Controlla se l'utente è admin → redirect a admin.html
-                const redirected = await Utils.checkAdminRedirect();
-                if (redirected) return;
+                // Il ruolo arriva gia' dal login: evita una chiamata validateAdmin prima del render.
+                if (Utils.isAdminRole(currentUser?.ruolo)) {
+                    window.location.href = CONFIG.PAGES.ADMIN || 'admin.html';
+                    return;
+                }
 
                 await initializeApp();
                 startAutoRefresh();
@@ -1800,10 +1804,11 @@
             setupCalendar();
             setupPasswordChange();
 
-            const results = await Promise.allSettled([
-                loadCantieri(),
-                refreshUserStats()
-            ]);
+            await loadCantieri();
+
+            if (lastUserStatsRefresh === 0) {
+                setTimeout(() => refreshUserStats(), 0);
+            }
 
             showNotification('Dashboard caricata!', 'success', 2000);
             checkAndShowNews();
@@ -2288,12 +2293,104 @@
         function loadUserData() {
             if (!currentUser) return;
 
+            const hasSessionStats =
+                currentUser.oreMese !== undefined ||
+                currentUser.oreMesePrecedente !== undefined;
+
             if (elements.userName) elements.userName.textContent = currentUser.name;
             if (elements.monthlyHours) {
-                elements.monthlyHours.textContent = '...';
+                elements.monthlyHours.textContent = Utils.formatHours
+                    ? Utils.formatHours(currentUser.oreMese || 0)
+                    : `${currentUser.oreMese || 0}h`;
             }
             if (elements.previousMonthHours) {
-                elements.previousMonthHours.textContent = '...';
+                elements.previousMonthHours.textContent = Utils.formatHours
+                    ? Utils.formatHours(currentUser.oreMesePrecedente || 0)
+                    : `${currentUser.oreMesePrecedente || 0}h`;
+            }
+            if (hasSessionStats) {
+                lastUserStatsRefresh = Date.now();
+            }
+        }
+
+        function getCantieriCacheKey() {
+            return 'oreLavoro:cantieriAttivi:v1';
+        }
+
+        function getCachedCantieri() {
+            try {
+                const cached = JSON.parse(localStorage.getItem(getCantieriCacheKey()) || 'null');
+                if (!cached || !Array.isArray(cached.data)) return null;
+                if (Date.now() - (cached.timestamp || 0) > APP_CONFIG.CANTIERI_CACHE_TTL) return null;
+                return cached.data;
+            } catch (error) {
+                console.warn('[getCachedCantieri] Cache non leggibile:', error);
+                return null;
+            }
+        }
+
+        function setCachedCantieri(data) {
+            try {
+                localStorage.setItem(getCantieriCacheKey(), JSON.stringify({
+                    timestamp: Date.now(),
+                    data: data || []
+                }));
+            } catch (error) {
+                console.warn('[setCachedCantieri] Cache non salvabile:', error);
+            }
+        }
+
+        function areCantieriEqual(firstList, secondList) {
+            return JSON.stringify(firstList || []) === JSON.stringify(secondList || []);
+        }
+
+        function populateCantieriSelect(cantieriList) {
+            cantieri = Array.isArray(cantieriList) ? cantieriList : [];
+            elements.cantiere.innerHTML = '<option value="">-- Seleziona Cantiere --</option>';
+
+            const fragment = document.createDocumentFragment();
+            cantieri.forEach(cantiere => {
+                const option = document.createElement('option');
+                option.value = cantiere.id;
+                option.textContent = `${cantiere.nome} - ${cantiere.indirizzo}`;
+                fragment.appendChild(option);
+            });
+            elements.cantiere.appendChild(fragment);
+            elements.cantiere.disabled = false;
+        }
+
+        async function refreshCantieriFromApi(silent = false) {
+            try {
+                const result = await Utils.callAPI({
+                    action: 'getCantieri',
+                    sessionToken: sessionToken
+                });
+
+                if (result.success && result.data) {
+                    if (!areCantieriEqual(cantieri, result.data)) {
+                        populateCantieriSelect(result.data);
+                    }
+                    setCachedCantieri(result.data);
+                    return true;
+                }
+
+                console.warn('[refreshCantieriFromApi] API non ha restituito dati validi:', result?.message);
+                if (!silent) {
+                    elements.cantiere.innerHTML = '<option value="">Nessun cantiere disponibile</option>';
+                    showNotification('Impossibile caricare i cantieri', 'error');
+                }
+                return false;
+            } catch (error) {
+                console.error('Errore cantieri:', error);
+                if (!silent) {
+                    elements.cantiere.innerHTML = '<option value="">Errore caricamento cantieri</option>';
+                    showNotification('Errore nel caricamento cantieri', 'error');
+                }
+                return false;
+            } finally {
+                if (!silent) {
+                    elements.cantiere.disabled = false;
+                }
             }
         }
 
@@ -2320,39 +2417,16 @@
         async function loadCantieri() {
             if (!elements.cantiere) return;
 
+            const cachedCantieri = getCachedCantieri();
+            if (cachedCantieri) {
+                populateCantieriSelect(cachedCantieri);
+                refreshCantieriFromApi(true);
+                return;
+            }
+
             elements.cantiere.innerHTML = '<option value="">Caricamento cantieri...</option>';
             elements.cantiere.disabled = true;
-
-            try {
-                const result = await Utils.callAPI({
-                    action: 'getCantieri',
-                    sessionToken: sessionToken
-                });
-
-                if (result.success && result.data) {
-                    cantieri = result.data;
-                    elements.cantiere.innerHTML = '<option value="">-- Seleziona Cantiere --</option>';
-
-                    const fragment = document.createDocumentFragment();
-                    cantieri.forEach(cantiere => {
-                        const option = document.createElement('option');
-                        option.value = cantiere.id;
-                        option.textContent = `${cantiere.nome} - ${cantiere.indirizzo}`;
-                        fragment.appendChild(option);
-                    });
-                    elements.cantiere.appendChild(fragment);
-                } else {
-                    console.warn('[loadCantieri] API non ha restituito dati validi:', result?.message);
-                    elements.cantiere.innerHTML = '<option value="">Nessun cantiere disponibile</option>';
-                    showNotification('Impossibile caricare i cantieri', 'error');
-                }
-            } catch (error) {
-                console.error('Errore cantieri:', error);
-                elements.cantiere.innerHTML = '<option value="">Errore caricamento cantieri</option>';
-                showNotification('Errore nel caricamento cantieri', 'error');
-            } finally {
-                elements.cantiere.disabled = false;
-            }
+            await refreshCantieriFromApi(false);
         }
 
         /**
@@ -2699,6 +2773,12 @@
 
                 if (result.success && result.data) {
                     currentUser = { ...currentUser, ...result.data };
+                    try {
+                        sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    } catch (storageError) {
+                        console.warn('[refreshUserStats] Sessione non aggiornabile:', storageError);
+                    }
+                    lastUserStatsRefresh = Date.now();
                     if (elements.monthlyHours && Utils.formatHours) {
                         elements.monthlyHours.textContent = Utils.formatHours(result.data.oreMese || 0);
                     }

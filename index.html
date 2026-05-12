@@ -1010,8 +1010,11 @@
 
                     // Redirect immediato
                     setTimeout(() => {
-                        console.log('⚡ Redirect alla dashboard...');
-                        window.location.href = CONFIG.PAGES.DASHBOARD;
+                        const targetPage = Utils.isAdminRole(user.data?.ruolo)
+                            ? (CONFIG.PAGES.ADMIN || 'admin.html')
+                            : CONFIG.PAGES.DASHBOARD;
+                        console.log('⚡ Redirect dopo login...');
+                        window.location.href = targetPage;
                     }, 2000);
 
                 } else {
