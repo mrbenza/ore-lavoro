@@ -1417,6 +1417,7 @@
                         <div class="form-group">
                             <label for="ore">Inserisci le ore</label>
                             <input type="text" id="ore" name="ore" class="hours-input"
+                                   inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*"
                                    placeholder="8.5" required autocomplete="off">
                             <div class="decimal-hint">Usa il punto per i decimali (es: 8.5)</div>
                             <div class="validation-message">Inserisci ore valide (0-24)</div>
@@ -2534,9 +2535,12 @@
             });
 
             elements.ore.addEventListener('input', function(e) {
-                if (e.target.value.includes(',')) {
-                    e.target.value = e.target.value.replace(',', '.');
+                let value = e.target.value.replace(',', '.').replace(/[^0-9.]/g, '');
+                const firstDecimal = value.indexOf('.');
+                if (firstDecimal !== -1) {
+                    value = value.slice(0, firstDecimal + 1) + value.slice(firstDecimal + 1).replace(/\./g, '');
                 }
+                if (e.target.value !== value) e.target.value = value;
                 clearValidation(e.target);
             });
 
