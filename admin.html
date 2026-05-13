@@ -520,7 +520,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
             flex-wrap: wrap;
             gap: 12px;
         }
@@ -592,6 +592,18 @@
         }
         .stats-btn-refresh.spinning i {
             animation: spin 0.8s linear infinite;
+        }
+        .stats-sync-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 20px;
+            margin-bottom: 18px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .stats-sync-info i {
+            color: #4f46e5;
         }
 
         /* Stato vuoto statistiche */
@@ -924,6 +936,8 @@
                                 </button>
                             </div>
                         </div>
+
+                        <div id="statsSyncInfo" class="stats-sync-info" aria-live="polite"></div>
 
                         <!-- Messaggio ricalcolo in corso -->
                         <div id="statsRecalcMsg" class="stats-recalc-msg" role="status" aria-live="polite">
@@ -1295,6 +1309,8 @@
         let cantieriCache = { totali: null, mese: null }; // Cache bipartita per i due modi cantieri
         let cantieriMap = {};                            // Mappa id → dati cantiere per il popup
         let calendarCache = {};              // Cache calendario: chiave "userId_year_month" → data
+        let dipendentiCache = null;          // Cache lista completa dipendenti, inclusi non attivi
+        let dipendentiPromise = null;        // Richiesta in corso condivisa tra i select admin
         let autoRefreshInterval = null;      // ID interval per auto-refresh ogni 30 minuti
         let currentEditDateStr = null;       // Data selezionata nel calendario per modifica: "YYYY-MM-DD"
 
@@ -1465,8 +1481,8 @@
                 loadCantieri(),
                 loadDipendenti()
             ]);
-            // Carica le statistiche per l'anno corrente al termine del caricamento iniziale
-            await loadStatistiche(new Date().getFullYear());
+            // Mostra solo le statistiche già sincronizzate in cache locale.
+            loadStatistiche(new Date().getFullYear());
         }
 
         /* ═══════════════════════════════════════════
@@ -1712,24 +1728,58 @@
            la lista dipendenti e gestire il refresh.
            ═══════════════════════════════════════════ */
 
+        async function getDipendentiCompleti(force = false) {
+            if (force) dipendentiCache = null;
+            if (!force && dipendentiCache) return dipendentiCache;
+            if (dipendentiPromise) return dipendentiPromise;
+
+            const session = Utils.getSession();
+            if (!session) { window.location.href = 'index.html'; return []; }
+
+            dipendentiPromise = Utils.callAPI({
+                action: 'getDipendentiList',
+                sessionToken: session.token,
+                includeInactive: 'true'
+            }).then(result => {
+                if (!result || !result.success) {
+                    throw new Error(result?.message || 'Errore caricamento dipendenti');
+                }
+                dipendentiCache = result.data || [];
+                return dipendentiCache;
+            }).finally(() => {
+                dipendentiPromise = null;
+            });
+
+            return dipendentiPromise;
+        }
+
+        function renderDipendenteOption(d, includeStatus = false) {
+            const inactive = d.attivo !== 'Si';
+            const status = inactive ? ' - Non attivo' : '';
+            const role = d.ruolo ? ` (${d.ruolo})` : '';
+            const label = includeStatus ? `${d.nome}${role}${status}` : d.nome;
+            return `<option value="${d.userId}" data-name="${d.nome}" data-attivo="${d.attivo}">${label}</option>`;
+        }
+
         /**
-         * Carica la lista dei dipendenti e popola il select #dipendentiSelect.
+         * Carica la lista completa dei dipendenti e popola il select #dipendentiSelect.
          *
          * CHIAMATA DA:  loadInitialData
-         * CHIAMA:       Utils.loadDipendentiList
+         * CHIAMA:       getDipendentiCompleti
          *
+         * @param {boolean} [force=false] - Se true forza il refresh della cache.
          * @returns {Promise<void>}
          */
-        async function loadDipendenti() {
-            document.getElementById('dipendentiSelect').innerHTML = '<option value="">Caricamento dipendenti...</option>';
+        async function loadDipendenti(force = false) {
+            const sel = document.getElementById('dipendentiSelect');
+            sel.innerHTML = '<option value="">Caricamento dipendenti...</option>';
             try {
-                const data = await Utils.loadDipendentiList();
-                const sel = document.getElementById('dipendentiSelect');
+                const data = await getDipendentiCompleti(force);
                 sel.innerHTML = '<option value="">Seleziona dipendente...</option>' +
-                    data.map(d => `<option value="${d.userId}" data-name="${d.nome}">${d.nome} (${d.ruolo})</option>`).join('');
+                    data.map(d => renderDipendenteOption(d, true)).join('');
             } catch (error) {
                 console.error('[ADMIN] Errore dipendenti:', error);
-                document.getElementById('dipendentiSelect').innerHTML = '<option>Errore caricamento</option>';
+                sel.innerHTML = '<option>Errore caricamento</option>';
             }
         }
 
@@ -2865,9 +2915,7 @@
                 }
 
                 // Refresh statistiche solo se già caricate almeno una volta
-                if (statsCache) {
-                    loadStatistiche(statsAnno);
-                }
+                // Le statistiche restano in cache locale: l'admin le sincronizza manualmente.
             }, 1800000); // 30 minuti
         }
 
@@ -2950,7 +2998,10 @@
             const selStato = document.getElementById('statoUtenteSelect');
             if (sel) sel.innerHTML = '<option value="">Caricamento dipendenti...</option>';
             if (selStato) selStato.innerHTML = '<option value="">Caricamento dipendenti...</option>';
-            await caricaDipendentiStrumenti(true);
+            await Promise.all([
+                loadDipendenti(true),
+                caricaDipendentiStrumenti(true)
+            ]);
             if (btn) btn.classList.remove('spinning');
         }
 
@@ -2966,45 +3017,27 @@
             if (selDaPopolare) sel.innerHTML = '<option value="">Caricamento dipendenti...</option>';
             if (statoDaPopolare) selStato.innerHTML = '<option value="">Caricamento dipendenti...</option>';
 
-            const session = Utils.getSession();
-            if (!session) { window.location.href = 'index.html'; return; }
+            try {
+                const data = await getDipendentiCompleti(force);
 
-            // Lista solo attivi per il select cambio password
-            if (selDaPopolare) {
-                try {
-                    const data = await Utils.loadDipendentiList();
+                // Lista solo attivi per il select cambio password
+                if (selDaPopolare) {
+                    const attivi = data.filter(d => d.attivo === 'Si');
                     sel.innerHTML = '<option value="">Seleziona dipendente...</option>' +
-                        data.map(d => `<option value="${d.userId}">${d.nome}</option>`).join('');
-                } catch (e) {
-                    ProductionLogger.error('[caricaDipendentiStrumenti] password list:', e.message);
-                    sel.innerHTML = `<option value="">Errore: ${e.message}</option>`;
+                        attivi.map(d => renderDipendenteOption(d)).join('');
                 }
-            }
 
-            // Lista completa (inclusi inattivi) per il select cambia stato
-            if (statoDaPopolare) {
-                try {
-                    const tuttiResult = await Utils.callAPI({
-                        action: 'getDipendentiList',
-                        sessionToken: session.token,
-                        includeInactive: 'true'
-                    });
-                    if (tuttiResult.success && tuttiResult.data) {
-                        window._dipendentiStatoMap = {};
-                        tuttiResult.data.forEach(d => { window._dipendentiStatoMap[d.userId] = d; });
-                        selStato.innerHTML = '<option value="">Seleziona dipendente...</option>' +
-                            tuttiResult.data.map(d => {
-                                const badge = d.attivo === 'Si' ? '🟢' : '🔴';
-                                return `<option value="${d.userId}" data-attivo="${d.attivo}">${badge} ${d.nome} (${d.attivo})</option>`;
-                            }).join('');
-                    } else {
-                        selStato.innerHTML = `<option value="">Errore: ${tuttiResult.message || 'risposta non valida'}</option>`;
-                        ProductionLogger.error('[caricaDipendentiStrumenti] stato list:', tuttiResult.message);
-                    }
-                } catch (e) {
-                    ProductionLogger.error('[caricaDipendentiStrumenti] stato list exception:', e.message);
-                    selStato.innerHTML = `<option value="">Errore: ${e.message}</option>`;
+                // Lista completa (inclusi inattivi) per il select cambia stato
+                if (statoDaPopolare) {
+                    window._dipendentiStatoMap = {};
+                    data.forEach(d => { window._dipendentiStatoMap[d.userId] = d; });
+                    selStato.innerHTML = '<option value="">Seleziona dipendente...</option>' +
+                        data.map(d => renderDipendenteOption(d, true)).join('');
                 }
+            } catch (e) {
+                ProductionLogger.error('[caricaDipendentiStrumenti] list:', e.message);
+                if (selDaPopolare) sel.innerHTML = `<option value="">Errore: ${e.message}</option>`;
+                if (statoDaPopolare) selStato.innerHTML = `<option value="">Errore: ${e.message}</option>`;
             }
         }
 
@@ -3186,6 +3219,10 @@
                     );
                     // Reset form dopo successo
                     document.getElementById('formCreaUtente').reset();
+                    await Promise.all([
+                        loadDipendenti(true),
+                        caricaDipendentiStrumenti(true)
+                    ]);
                 } else {
                     mostraRisultatoCreaUtente('error', result.message || 'Errore durante la creazione.');
                 }
@@ -3244,7 +3281,10 @@
 
                 if (result.success) {
                     mostraRisultatoStatoUtente('success', result.message || 'Stato aggiornato.');
-                    caricaDipendentiStrumenti();
+                    await Promise.all([
+                        loadDipendenti(true),
+                        caricaDipendentiStrumenti(true)
+                    ]);
                 } else {
                     mostraRisultatoStatoUtente('error', result.message || 'Errore durante l\'aggiornamento.');
                 }
@@ -3276,6 +3316,7 @@
 
         /** Cache dei dati statistiche più recenti (null se non ancora caricati). */
         let statsCache = null;
+        let statsLastSync = null;
 
         /** Anno correntemente visualizzato nelle statistiche. */
         let statsAnno = new Date().getFullYear();
@@ -3305,6 +3346,61 @@
             select.innerHTML = options;
         }
 
+        function getStatsCacheKey(anno) {
+            return `oreLavoroStats_${anno}`;
+        }
+
+        function getCachedStatistiche(anno) {
+            try {
+                const raw = localStorage.getItem(getStatsCacheKey(anno));
+                if (!raw) return null;
+                const cached = JSON.parse(raw);
+                if (!cached || !cached.data) return null;
+                return cached;
+            } catch (e) {
+                console.warn('[ADMIN] Cache statistiche non leggibile:', e);
+                return null;
+            }
+        }
+
+        function saveCachedStatistiche(anno, data) {
+            const payload = {
+                anno: anno,
+                data: data,
+                syncedAt: new Date().toISOString()
+            };
+            try {
+                localStorage.setItem(getStatsCacheKey(anno), JSON.stringify(payload));
+            } catch (e) {
+                console.warn('[ADMIN] Cache statistiche non salvata:', e);
+            }
+            return payload;
+        }
+
+        function formatStatsSyncDate(value) {
+            if (!value) return '';
+            const date = new Date(value);
+            if (isNaN(date.getTime())) return '';
+            return date.toLocaleString('it-IT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function updateStatsSyncInfo(syncedAt) {
+            const el = document.getElementById('statsSyncInfo');
+            if (!el) return;
+
+            if (syncedAt) {
+                el.innerHTML = `<i class="fas fa-clock"></i><span>Ultima sincronizzazione: ${formatStatsSyncDate(syncedAt)}</span>`;
+            } else {
+                el.innerHTML = '<i class="fas fa-clock"></i><span>Statistiche non ancora sincronizzate su questo dispositivo.</span>';
+            }
+        }
+
         /**
          * Carica i dati statistiche per l'anno indicato e li renderizza.
          *
@@ -3321,12 +3417,29 @@
          * @param {number} anno - Anno da analizzare (es. 2025)
          * @returns {Promise<void>}
          */
-        async function loadStatistiche(anno) {
+        async function loadStatistiche(anno, forceRemote = false) {
             statsAnno = anno;
 
             // Sincronizza il dropdown con l'anno passato
             const sel = document.getElementById('statsAnnoSelect');
             if (sel && sel.value !== String(anno)) sel.value = anno;
+
+            if (!forceRemote) {
+                const cached = getCachedStatistiche(anno);
+                if (cached) {
+                    statsCache = cached.data;
+                    statsLastSync = cached.syncedAt;
+                    renderStatistiche(cached.data, anno);
+                    updateStatsSyncInfo(statsLastSync);
+                    return true;
+                } else {
+                    statsCache = null;
+                    statsLastSync = null;
+                    updateStatsSyncInfo(null);
+                    showStatsCacheEmptyState(anno);
+                    return false;
+                }
+            }
 
             // Mostra loader
             document.getElementById('statsContent').innerHTML = `
@@ -3348,14 +3461,25 @@
 
                 if (result && result.success && result.data &&
                     (result.data.cantieri.length > 0 || result.data.dipendenti.length > 0)) {
-                    statsCache = result.data;
-                    renderStatistiche(result.data, anno);
+                    const cached = saveCachedStatistiche(anno, result.data);
+                    statsCache = cached.data;
+                    statsLastSync = cached.syncedAt;
+                    renderStatistiche(cached.data, anno);
+                    updateStatsSyncInfo(statsLastSync);
+                    return true;
                 } else {
+                    const emptyData = result && result.data ? result.data : { cantieri: [], dipendenti: [], riepilogo: [] };
+                    const cached = saveCachedStatistiche(anno, emptyData);
+                    statsCache = cached.data;
+                    statsLastSync = cached.syncedAt;
+                    updateStatsSyncInfo(statsLastSync);
                     showStatsEmptyState(anno);
+                    return true;
                 }
             } catch (e) {
                 console.error('[ADMIN] Errore caricamento statistiche:', e);
                 showStatsError(anno);
+                return false;
             }
         }
 
@@ -3372,9 +3496,9 @@
             const btn = document.getElementById('statsRefreshBtn');
             if (btn) btn.classList.add('spinning');
             statsCache = null;
-            await loadStatistiche(statsAnno);
+            const updated = await loadStatistiche(statsAnno, true);
             if (btn) btn.classList.remove('spinning');
-            Utils.showNotification('Statistiche aggiornate', 'success', 2000);
+            if (updated) Utils.showNotification('Statistiche aggiornate', 'success', 2000);
         }
 
         /**
@@ -3413,8 +3537,12 @@
 
                 if (result && result.success) {
                     statsCache = null;
-                    await loadStatistiche(statsAnno);
-                    Utils.showNotification('Ricalcolo completato', 'success', 3000);
+                    const updated = await loadStatistiche(statsAnno, true);
+                    Utils.showNotification(
+                        updated ? 'Ricalcolo completato' : 'Ricalcolo completato, ma statistiche non aggiornate',
+                        updated ? 'success' : 'warning',
+                        3000
+                    );
                 } else {
                     Utils.showNotification(
                         'Errore ricalcolo: ' + (result && result.message ? result.message : 'risposta non valida'),
@@ -4102,6 +4230,26 @@
                     <button class="stats-empty-action-btn" onclick="forzaRicalcoloStatistiche()" aria-label="Forza ricalcolo statistiche">
                         <i class="fas fa-bolt"></i>
                         Forza ricalcolo
+                    </button>
+                </div>
+            `;
+        }
+
+        function showStatsCacheEmptyState(anno) {
+            destroyAllCharts();
+            document.getElementById('statsContent').innerHTML = `
+                <div class="stats-empty-state" role="status" aria-live="polite">
+                    <div class="stats-empty-icon" aria-hidden="true">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <p class="stats-empty-title">Statistiche ${anno} non sincronizzate</p>
+                    <p class="stats-empty-desc">
+                        Per velocizzare l'apertura della pagina, le statistiche non vengono caricate automaticamente.
+                        Usa Aggiorna per sincronizzare i dati quando ti servono.
+                    </p>
+                    <button class="stats-empty-action-btn" onclick="refreshStatistiche()" aria-label="Aggiorna statistiche">
+                        <i class="fas fa-sync-alt"></i>
+                        Aggiorna statistiche
                     </button>
                 </div>
             `;
