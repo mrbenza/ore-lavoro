@@ -133,7 +133,7 @@
 
         /* ═══════════════════════════════════════════
            USER INFO E STATISTICHE HEADER — Nome utente
-           e contatori ore mese/mese precedente visualizzati
+           e contatori mese corrente/mese precedente visualizzati
            nell'header. Su mobile diventano bianchi.
            ═══════════════════════════════════════════ */
         .user-info h1 {
@@ -1365,7 +1365,7 @@
                 <div class="user-stats">
                     <div class="stat-item">
                         <span class="stat-number" id="monthlyHours">0</span>
-                        <span class="stat-label">Ore Mese</span>
+                        <span class="stat-label">Mese corrente</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-number" id="previousMonthHours">0</span>
@@ -2750,7 +2750,7 @@
          * Aggiorna le statistiche ore nell'header chiamando l'API getUserInfo.
          *
          * DESCRIZIONE ESTESA: Chiama API 'getUserInfo' e aggiorna i contatori
-         * ore mese e mese precedente nell'header. In caso di errore o risposta non
+         * mese corrente e mese precedente nell'header. In caso di errore o risposta non
          * valida usa i dati già presenti in currentUser come fallback silenzioso.
          *
          * FLUSSO INTERNO:
