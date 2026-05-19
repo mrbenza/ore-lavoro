@@ -351,28 +351,28 @@ function getDipendentiListAdmin(sessionToken, includeInactive) {
 /**
  * Restituisce il riepilogo ore di un dipendente per un timeframe specifico.
  *
- * Legge le ore dalle celle riepilogative F2/G2/H2 del foglio personale
- * (valori pre-calcolati da formule SUMIFS) e selezione in base al timeframe.
+ * Legge le ore tramite getUserHoursFromSheet(), che usa le celle riepilogative
+ * se numeriche e altrimenti ricalcola dalle righe dati del foglio personale.
  * In aggiunta, calcola il numero di giornate lavorate e i cantieri coinvolti
  * scansionando le righe dati del foglio (dalla riga 5).
  *
  * Timeframe supportati:
- *   - '30days': mese corrente (cella F2)
- *   - 'lastMonth': mese precedente (cella G2)
- *   - 'year': anno corrente (cella H2)
+ *   - '30days': mese corrente
+ *   - 'lastMonth': mese precedente
+ *   - 'year': anno corrente
  *
  * FLUSSO INTERNO:
  *   1. Valida sessionToken e userId
  *   2. Trova il nome del dipendente dal foglio Utenti (colonna G → colonna B)
  *   3. Apre il foglio personale del dipendente
- *   4. Legge F2, G2, H2 per le ore aggregate
+ *   4. Legge o calcola le ore aggregate con fallback
  *   5. Seleziona totaleOre in base al timeframe
  *   6. Scansiona righe 5+ per calcolare giornateLavorate e cantieriCoinvolti
  *   7. Restituisce struttura dati completa
  *
  * CHIAMATA DA: ApiRouter.gs → doGet() (action='getDipendenteTimeline')
  *              ApiRouter.gs → doPost() (action='getDipendenteTimeline')
- * CHIAMA:      validateSessionToken(), Logger.debug/warn/critical
+ * CHIAMA:      validateSessionToken(), getUserHoursFromSheet(), Logger.debug/warn/critical
  *
  * @param {string} sessionToken - Token sessione.
  * @param {string} userId       - Username del dipendente target.
@@ -442,10 +442,11 @@ function getDipendenteTimelineAdmin(sessionToken, userId, timeframe) {
       };
     }
     
-    // Leggi ore dalle celle F/G/H
-    const oreMeseCorrente = parseFloat(dipendenteSheet.getRange('F2').getValue()) || 0;
-    const oreMesePrecedente = parseFloat(dipendenteSheet.getRange('G2').getValue()) || 0;
-    const oreAnnoCorrente = parseFloat(dipendenteSheet.getRange('H2').getValue()) || 0;
+    // Legge le ore aggregate con fallback sulle righe dati se le celle riepilogative non sono numeriche.
+    const oreData = getUserHoursFromSheet(nomeCompleto);
+    const oreMeseCorrente = oreData.oreMeseCorrente || 0;
+    const oreMesePrecedente = oreData.oreMesePrecedente || 0;
+    const oreAnnoCorrente = oreData.oreAnnoCorrente || 0;
     
     // Seleziona ore in base al timeframe
     let totaleOre, timelineLabel;

@@ -54,6 +54,8 @@ Per bug, anomalie e fix tecnici usare `FIXES.md`.
 - Modifica admin delle ore usa `rowIndex` per aggiornare la registrazione corretta quando ci sono piu entry nello stesso giorno.
 - Contatore `N. Inserimenti` dei cantieri aggiornato in modo coerente su inserimento, modifica e cancellazione.
 - Creazione utenti admin senza foglio personale automatico.
+- Calendario admin dipendente ottimizzato: lista dipendenti condivisa, account non attivi visibili, totali azzerati visivamente con `--` durante il cambio selezione e risposte obsolete ignorate.
+- Celle riepilogative fogli dipendente allineate al layout operativo: etichette in `F2:H2`, formule in `F3:H3`, fallback su righe dati da riga 5.
 - Documentazione separata per presentazione, changelog, fix, schema fogli e milestone.
 
 ---

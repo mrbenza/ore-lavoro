@@ -64,11 +64,14 @@ Un foglio per ogni dipendente attivo. Il nome del foglio corrisponde al valore n
 
 | Cella | Contenuto | Formula di esempio |
 |-------|-----------|-------------------|
-| F2 | Ore mese corrente | `=SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY()),1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY())+1,1))` |
-| G2 | Ore mese precedente | `=SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY())-1,1),A:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY()),1))` |
-| H2 | Ore anno corrente | `=SUMIFS(D:D,A:A,">="&DATE(YEAR(TODAY()),1,1),A:A,"<"&DATE(YEAR(TODAY())+1,1,1))` |
+| F2 | Etichetta mese corrente | `Mese Corrente` |
+| G2 | Etichetta mese precedente | `Mese Precedente` |
+| H2 | Etichetta anno corrente | `Anno Corrente` |
+| F3 | Ore mese corrente | `=SUMIFS(D5:D,A5:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY()),1),A5:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY())+1,1))` |
+| G3 | Ore mese precedente | `=SUMIFS(D5:D,A5:A,">="&DATE(YEAR(TODAY()),MONTH(TODAY())-1,1),A5:A,"<"&DATE(YEAR(TODAY()),MONTH(TODAY()),1))` |
+| H3 | Ore anno corrente | `=SUMIFS(D5:D,A5:A,">="&DATE(YEAR(TODAY()),1,1),A5:A,"<"&DATE(YEAR(TODAY())+1,1,1))` |
 
-**Attenzione:** Le righe dati iniziano dalla riga 2. La riga 1 contiene gli header. Le celle F2, G2, H2 devono restare libere da inserimenti manuali (non inserire mai dati nella riga 2 delle colonne F-H).
+**Attenzione:** Le righe dati iniziano dalla riga 5. La riga 1 contiene gli header dati, la riga 2 contiene le etichette riepilogative e la riga 3 contiene le formule. Le celle F3, G3, H3 devono restare libere da inserimenti manuali.
 
 ---
 

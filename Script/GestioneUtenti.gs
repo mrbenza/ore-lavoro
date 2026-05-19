@@ -189,9 +189,8 @@ function creaUtenteCore(dati) {
  * con il nome del dipendente e rimuove le protezioni ereditate dal template
  * (protezioni di tipo RANGE e SHEET) per garantire che GAS possa scrivere
  * senza restrizioni. Se non trovato, crea un foglio vuoto con headers in riga 1
- * (Data, Cantiere ID, Nome Cantiere, Ore, Note), congela la riga 1 e imposta
- * le tre formule SUMIFS (ore mese corrente in F2, mese precedente in G2,
- * anno corrente in H2).
+ * (Data, Cantiere ID, Nome Cantiere, Ore, Note), congela la riga 1, imposta
+ * le etichette riepilogo in F2:H2 e le tre formule SUMIFS in F3:H3.
  *
  * CHIAMATA DA: creaUtenteCore() — invocata PRIMA di appendRow() sul foglio Utenti
  * CHIAMA:      Spreadsheet.getSheetByName(), Sheet.copyTo(), Sheet.setName(),
@@ -211,6 +210,25 @@ function _creaFoglioDipendente(ss, nomeDipendente) {
     return;
   }
 
+  function impostaRiepilogoOre(sheet) {
+    sheet.getRange('F2:H2').setValues([[
+      'Mese Corrente',
+      'Mese Precedente',
+      'Anno Corrente'
+    ]]);
+
+    // Formule SUMIFS in F3, G3, H3 (locale italiana: punto e virgola come separatore)
+    sheet.getRange(USER_SHEET_CELLS.ORE_MESE_CORRENTE).setFormula(
+      '=SUMIFS(D:D;A:A;">="&DATE(YEAR(TODAY());MONTH(TODAY());1);A:A;"<"&DATE(YEAR(TODAY());MONTH(TODAY())+1;1))'
+    );
+    sheet.getRange(USER_SHEET_CELLS.ORE_MESE_PRECEDENTE).setFormula(
+      '=SUMIFS(D:D;A:A;">="&DATE(YEAR(TODAY());MONTH(TODAY())-1;1);A:A;"<"&DATE(YEAR(TODAY());MONTH(TODAY());1))'
+    );
+    sheet.getRange(USER_SHEET_CELLS.ANNO_CORRENTE).setFormula(
+      '=SUMIFS(D:D;A:A;">="&DATE(YEAR(TODAY());1;1);A:A;"<"&DATE(YEAR(TODAY())+1;1;1))'
+    );
+  }
+
   // Cerca template (supporta entrambe le varianti di nome)
   const template = ss.getSheetByName('Foglio utente Base') || ss.getSheetByName('Foglio Utenti Base');
 
@@ -226,6 +244,8 @@ function _creaFoglioDipendente(ss, nomeDipendente) {
       .forEach(function(p) { p.remove(); });
     nuovoFoglio.getProtections(SpreadsheetApp.ProtectionType.SHEET)
       .forEach(function(p) { p.remove(); });
+
+    impostaRiepilogoOre(nuovoFoglio);
 
     // Posiziona il nuovo foglio prima del template/foglio base
     var sheetNames = ['Foglio utente Base', 'Foglio Utenti Base', 'Foglio Cantieri Base'];
@@ -257,16 +277,7 @@ function _creaFoglioDipendente(ss, nomeDipendente) {
     // deve impostarlo esplicitamente per coerenza visiva e usabilità.
     nuovoFoglio.setFrozenRows(1);
 
-    // Formule SUMIFS in F2, G2, H2 (locale italiana: punto e virgola come separatore)
-    nuovoFoglio.getRange('F2').setFormula(
-      '=SUMIFS(D:D;A:A;">="&DATE(YEAR(TODAY());MONTH(TODAY());1);A:A;"<"&DATE(YEAR(TODAY());MONTH(TODAY())+1;1))'
-    );
-    nuovoFoglio.getRange('G2').setFormula(
-      '=SUMIFS(D:D;A:A;">="&DATE(YEAR(TODAY());MONTH(TODAY())-1;1);A:A;"<"&DATE(YEAR(TODAY());MONTH(TODAY());1))'
-    );
-    nuovoFoglio.getRange('H2').setFormula(
-      '=SUMIFS(D:D;A:A;">="&DATE(YEAR(TODAY());1;1);A:A;"<"&DATE(YEAR(TODAY())+1;1;1))'
-    );
+    impostaRiepilogoOre(nuovoFoglio);
 
     // Posiziona il foglio prima di Foglio Cantieri Base (gli unici template che
     // possono esistere nel path fallback — i fogli utente base non esistono per definizione)

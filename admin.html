@@ -1450,6 +1450,7 @@
                 const selectedOption = this.options[this.selectedIndex];
                 currentUserId = this.value;
                 currentUserName = selectedOption.dataset.name || null;
+                resetTotaliOre('--');
 
                 if (currentUserId) {
                     document.getElementById('noUserSelected').style.display = 'none';
@@ -1464,6 +1465,7 @@
                 } else {
                     document.getElementById('noUserSelected').style.display = 'block';
                     document.getElementById('calendarSection').style.display = 'none';
+                    resetTotaliOre('-');
                 }
             });
         }
@@ -1849,14 +1851,18 @@
         async function loadCalendarData() {
             if (!currentUserId) return;
 
-            const cacheKey = `${currentUserId}_${currentYear}_${currentMonth}`;
+            const targetUserId = currentUserId;
+            const targetYear = currentYear;
+            const targetMonth = currentMonth;
+            const cacheKey = `${targetUserId}_${targetYear}_${targetMonth}`;
+            const totaliPromise = loadTotaliOre(targetUserId);
 
             // Controlla cache
             if (calendarCache[cacheKey]) {
                 console.log('[ADMIN] Calendario da cache:', cacheKey);
                 calendarData = calendarCache[cacheKey];
                 renderCalendar();
-                await loadTotaliOre();
+                await totaliPromise;
                 return;
             }
 
@@ -1866,19 +1872,27 @@
                 console.log(`[ADMIN] Caricamento calendario: ${currentUserName} - ${currentYear}/${currentMonth}`);
 
                 const data = await Utils.loadOtherUserMonthlyData(
-                    currentUserId,
-                    currentYear,
-                    currentMonth
+                    targetUserId,
+                    targetYear,
+                    targetMonth
                 );
+                if (targetUserId !== currentUserId || targetYear !== currentYear || targetMonth !== currentMonth) return;
 
                 calendarData = data;
                 calendarCache[cacheKey] = data; // Salva in cache
                 renderCalendar();
-                await loadTotaliOre();
+                await totaliPromise;
             } catch (error) {
                 console.error('[ADMIN] Errore calendario:', error);
                 showCalendarError();
+                await totaliPromise;
             }
+        }
+
+        function resetTotaliOre(value = '-') {
+            document.getElementById('oreMeseCorrente').textContent = value;
+            document.getElementById('oreMesePrecedente').textContent = value;
+            document.getElementById('oreAnnoCorrente').textContent = value;
         }
 
         /**
@@ -1894,18 +1908,22 @@
          *
          * @returns {Promise<void>}
          */
-        async function loadTotaliOre() {
+        async function loadTotaliOre(targetUserId = currentUserId) {
             try {
-                const data = await Utils.loadOtherUserInfo(currentUserId);
+                if (!targetUserId) {
+                    resetTotaliOre('-');
+                    return;
+                }
+
+                const data = await Utils.loadOtherUserInfo(targetUserId);
+                if (targetUserId !== currentUserId) return;
 
                 document.getElementById('oreMeseCorrente').textContent = Utils.formatOre(data.oreMese || 0);
                 document.getElementById('oreMesePrecedente').textContent = Utils.formatOre(data.oreMesePrecedente || 0);
                 document.getElementById('oreAnnoCorrente').textContent = Utils.formatOre(data.oreAnno || 0);
             } catch (error) {
                 console.error('[ADMIN] Errore caricamento totali:', error);
-                document.getElementById('oreMeseCorrente').textContent = '-';
-                document.getElementById('oreMesePrecedente').textContent = '-';
-                document.getElementById('oreAnnoCorrente').textContent = '-';
+                if (targetUserId === currentUserId) resetTotaliOre('-');
             }
         }
 

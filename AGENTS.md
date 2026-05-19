@@ -229,3 +229,9 @@ Queste anomalie sono state identificate durante la code review del 2026-03-04 e 
 - `checkAndShowNews()` (in `dashboard.html`): al caricamento della dashboard, esegue `fetch('news.json')`, confronta `CONFIG.VERSION.frontend` con il valore in `localStorage` alla chiave `newsLastSeenVersion`. Se diversi (o assenti), mostra un modal bloccante centrato con le novità. Il modal si chiude solo al click su "Ho capito!", che aggiorna `localStorage`.
 - `news.json` (root del progetto): file JSON statico con struttura `{ "version": "...", "title": "...", "items": [...] }`. Il campo `version` in questo file e' usato solo per il titolo del modal, non per il confronto logico. Non richiede configurazione aggiuntiva in `vercel.json`: Vercel serve i file statici dalla root automaticamente.
 - Il footer di `index.html` non contiene piu' la versione hardcoded: il valore viene iniettato via JS da `CONFIG.VERSION.frontend`.
+
+## Note tecniche — Calendario admin e riepiloghi dipendente (2026-05-19)
+
+- Nei fogli dipendente, `F2:H2` contiene solo le etichette riepilogative (`Mese Corrente`, `Mese Precedente`, `Anno Corrente`); le formule operative sono in `F3:H3`.
+- `USER_SHEET_CELLS` in `Config.gs` punta a `F3`, `G3`, `H3`. `getUserHoursFromSheet()` legge queste celle e, se non trova valori numerici, ricalcola dalle righe dati a partire dalla riga 5.
+- In `admin.html`, sezione Utenti → Calendario Dipendente: al cambio dipendente i totali mostrano `--` finché arriva il dato corretto, per non confondere un caricamento con un vero totale `0h`. Calendario e totali vengono richiesti in parallelo e le risposte obsolete vengono ignorate se l'admin cambia selezione nel frattempo.

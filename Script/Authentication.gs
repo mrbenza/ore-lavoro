@@ -268,14 +268,14 @@ function verifyUserPassword(userRow, password, columnMap) {
 /**
  * Legge le ore riepilogative dal foglio personale di un dipendente.
  *
- * Prima tenta di leggere dalle celle SUMIFS predefinite (F2, G2, H2). Se tutte
+ * Prima tenta di leggere dalle celle SUMIFS predefinite (F3, G3, H3). Se tutte
  * e tre risultano 0 (cioè le formule non sono presenti o non hanno dati), fa un
  * fallback calcolando manualmente le ore iterando le righe dati dalla riga 5
  * in poi, suddividendo per mese corrente, mese precedente e anno corrente.
  *
  * FLUSSO INTERNO:
  *   1. Cerca il foglio con nome userName tramite getSheetSafely()
- *   2. Legge celle F2, G2, H2 (SUMIFS) in un'unica chiamata getValues() batch
+ *   2. Legge celle F3, G3, H3 (SUMIFS) in un'unica chiamata getValues() batch
  *   3. Se tutti 0 → scansiona righe dati (riga 5+) e calcola manualmente
  *   4. Restituisce { oreMeseCorrente, oreMesePrecedente, oreAnnoCorrente }
  *
@@ -297,9 +297,10 @@ function getUserHoursFromSheet(userName) {
       return { oreMeseCorrente: 0, oreMesePrecedente: 0, oreAnnoCorrente: 0 };
     }
 
-    // Prima prova: leggi dalle celle SUMIFS (F2, G2, H2).
-    // F2, G2, H2 sono contigue — una sola chiamata getValues() invece di 3 getValue().
-    var oreRange = userSheet.getRange('F2:H2').getValues()[0];
+    // Prima prova: leggi dalle celle SUMIFS riepilogative.
+    var oreRange = userSheet.getRange(
+      USER_SHEET_CELLS.ORE_MESE_CORRENTE + ':' + USER_SHEET_CELLS.ANNO_CORRENTE
+    ).getValues()[0];
     var oreMeseCorrente   = parseFloat(oreRange[0]) || 0;
     var oreMesePrecedente = parseFloat(oreRange[1]) || 0;
     var oreAnnoCorrente   = parseFloat(oreRange[2]) || 0;

@@ -168,9 +168,9 @@ const COLUMNS_CANTIERI = {
 // cade in fallback calcolando le ore dalle righe dati.
 // ─────────────────────────────────────────────────────────────────────────────
 const USER_SHEET_CELLS = {
-  ORE_MESE_CORRENTE: 'F2',
-  ORE_MESE_PRECEDENTE: 'G2',
-  ANNO_CORRENTE: 'H2'
+  ORE_MESE_CORRENTE: 'F3',
+  ORE_MESE_PRECEDENTE: 'G3',
+  ANNO_CORRENTE: 'H3'
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -25,7 +25,7 @@ Il sistema usa un frontend statico su Vercel, un backend Google Apps Script e Go
 
 - Dashboard dedicata dopo il login admin.
 - Panoramica cantieri con ore del mese o totali assoluti.
-- Calendario mensile per ogni dipendente.
+- Calendario mensile per ogni dipendente, inclusi account non attivi; i totali ore vengono letti dalle celle riepilogative del foglio dipendente e mostrano `--` durante il cambio selezione.
 - Creazione utenti dipendenti e admin.
 - Attivazione/disattivazione account.
 - Cambio password dipendente.
@@ -42,6 +42,8 @@ Il sistema usa un frontend statico su Vercel, un backend Google Apps Script e Go
 - `Amministrazione`: aggregazioni statistiche e riepiloghi.
 
 Gli admin non hanno bisogno di un foglio personale, a meno che debbano anche registrare ore come dipendenti.
+
+Nei fogli dipendente le righe dati iniziano dalla riga 5. Le celle `F2:H2` contengono le etichette riepilogative, mentre `F3:H3` contengono le formule per mese corrente, mese precedente e anno corrente.
 
 ---
 
