@@ -1365,11 +1365,11 @@
                 <div class="user-stats">
                     <div class="stat-item">
                         <span class="stat-number" id="monthlyHours">0</span>
-                        <span class="stat-label">Mese corrente</span>
+                        <span class="stat-label" id="monthlyHoursLabel">Mese corrente</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-number" id="previousMonthHours">0</span>
-                        <span class="stat-label">Mese Prec.</span>
+                        <span class="stat-label" id="previousMonthHoursLabel">Mese Prec.</span>
                     </div>
                 </div>
 
@@ -1640,7 +1640,8 @@
          */
         function cacheElements() {
             const elementIds = [
-                'userName', 'monthlyHours', 'previousMonthHours', 'workDate',
+                'userName', 'monthlyHours', 'monthlyHoursLabel',
+                'previousMonthHours', 'previousMonthHoursLabel', 'workDate',
                 'cantiere', 'ore', 'note', 'saveBtn', 'calendarTitle',
                 'calendarGrid', 'calendarLoading', 'dayDetailsPopup',
                 'popupTitle', 'popupContent', 'notification'
@@ -1884,6 +1885,7 @@
             switch(pageName) {
                 case 'Inserisci':
                     document.getElementById('insertPage').classList.add('active');
+                    updateCurrentUserHeaderStats();
                     break;
                 case 'Calendario':
                     document.getElementById('calendarPage').classList.add('active');
@@ -1891,12 +1893,71 @@
                     break;
                 case 'Report':
                     document.getElementById('reportPage').classList.add('active');
+                    updateCurrentUserHeaderStats();
                     showNotification('Report in sviluppo', 'warning');
                     break;
                 case 'Profilo':
                     document.getElementById('profilePage').classList.add('active');
+                    updateCurrentUserHeaderStats();
                     break;
             }
+        }
+
+        function getMonthCacheKey(year, month) {
+            return `${year}-${String(month).padStart(2, '0')}`;
+        }
+
+        function formatHoursValue(value) {
+            const hours = Number(value) || 0;
+            return Utils.formatHours ? Utils.formatHours(hours) : `${hours}h`;
+        }
+
+        function sumWorkDaysHours(workDays) {
+            return Object.values(workDays || {}).reduce((total, dayData) => {
+                return total + (parseFloat(dayData?.totalHours) || 0);
+            }, 0);
+        }
+
+        function isCalendarPageActive() {
+            return document.getElementById('calendarPage')?.classList.contains('active');
+        }
+
+        function updateCurrentUserHeaderStats(stats = currentUser) {
+            if (elements.monthlyHoursLabel) {
+                elements.monthlyHoursLabel.textContent = 'Mese corrente';
+            }
+            if (elements.previousMonthHoursLabel) {
+                elements.previousMonthHoursLabel.textContent = 'Mese Prec.';
+            }
+            if (elements.monthlyHours) {
+                elements.monthlyHours.textContent = formatHoursValue(stats?.oreMese || 0);
+            }
+            if (elements.previousMonthHours) {
+                elements.previousMonthHours.textContent = formatHoursValue(stats?.oreMesePrecedente || 0);
+            }
+        }
+
+        function updateDisplayedMonthHeaderStats(year, month) {
+            if (elements.monthlyHoursLabel) {
+                elements.monthlyHoursLabel.textContent = 'Mese visualizzato';
+            }
+            if (elements.previousMonthHoursLabel) {
+                elements.previousMonthHoursLabel.textContent = 'Mese Prec.';
+            }
+            if (elements.monthlyHours) {
+                elements.monthlyHours.textContent = formatHoursValue(sumWorkDaysHours(calendarData));
+            }
+
+            if (!elements.previousMonthHours) return;
+            const previousMonthDate = new Date(year, month - 2, 1);
+            const previousKey = getMonthCacheKey(
+                previousMonthDate.getFullYear(),
+                previousMonthDate.getMonth() + 1
+            );
+            const previousData = monthlyCache[previousKey];
+            elements.previousMonthHours.textContent = previousData
+                ? formatHoursValue(sumWorkDaysHours(previousData))
+                : '--';
         }
 
         /**
@@ -1983,10 +2044,11 @@
             }
 
             // Usa cache se disponibile per evitare chiamata API
-            const cacheKey = `${year}-${String(month).padStart(2, '0')}`;
+            const cacheKey = getMonthCacheKey(year, month);
             if (monthlyCache[cacheKey]) {
                 calendarData = monthlyCache[cacheKey];
                 renderCalendar(year, month);
+                updateDisplayedMonthHeaderStats(year, month);
                 return;
             }
 
@@ -2008,6 +2070,7 @@
                     calendarData = result.data.workDays || {};
                     monthlyCache[cacheKey] = calendarData; // popola cache
                     renderCalendar(year, month);
+                    updateDisplayedMonthHeaderStats(year, month);
                 } else {
                     throw new Error(result.message || 'Errore caricamento calendario');
                 }
@@ -2015,7 +2078,9 @@
             } catch (error) {
                 console.error('Errore calendario:', error);
                 showNotification('Errore nel caricamento calendario', 'error');
+                calendarData = {};
                 renderCalendar(year, month);
+                updateDisplayedMonthHeaderStats(year, month);
             } finally {
                 showCalendarLoading(false);
             }
@@ -2299,16 +2364,7 @@
                 currentUser.oreMesePrecedente !== undefined;
 
             if (elements.userName) elements.userName.textContent = currentUser.name;
-            if (elements.monthlyHours) {
-                elements.monthlyHours.textContent = Utils.formatHours
-                    ? Utils.formatHours(currentUser.oreMese || 0)
-                    : `${currentUser.oreMese || 0}h`;
-            }
-            if (elements.previousMonthHours) {
-                elements.previousMonthHours.textContent = Utils.formatHours
-                    ? Utils.formatHours(currentUser.oreMesePrecedente || 0)
-                    : `${currentUser.oreMesePrecedente || 0}h`;
-            }
+            updateCurrentUserHeaderStats();
             if (hasSessionStats) {
                 lastUserStatsRefresh = Date.now();
             }
@@ -2783,30 +2839,36 @@
                         console.warn('[refreshUserStats] Sessione non aggiornabile:', storageError);
                     }
                     lastUserStatsRefresh = Date.now();
-                    if (elements.monthlyHours && Utils.formatHours) {
-                        elements.monthlyHours.textContent = Utils.formatHours(result.data.oreMese || 0);
-                    }
-                    if (elements.previousMonthHours && Utils.formatHours) {
-                        elements.previousMonthHours.textContent = Utils.formatHours(result.data.oreMesePrecedente || 0);
+                    if (isCalendarPageActive()) {
+                        updateDisplayedMonthHeaderStats(
+                            currentDate.getFullYear(),
+                            currentDate.getMonth() + 1
+                        );
+                    } else {
+                        updateCurrentUserHeaderStats(result.data);
                     }
                 } else {
                     // Fallback ai dati sessione se l'API non restituisce dati validi
                     console.warn('[refreshUserStats] API non ha restituito dati validi:', result?.message);
-                    if (elements.monthlyHours && Utils.formatHours) {
-                        elements.monthlyHours.textContent = Utils.formatHours(currentUser?.oreMese || 0);
-                    }
-                    if (elements.previousMonthHours && Utils.formatHours) {
-                        elements.previousMonthHours.textContent = Utils.formatHours(currentUser?.oreMesePrecedente || 0);
+                    if (isCalendarPageActive()) {
+                        updateDisplayedMonthHeaderStats(
+                            currentDate.getFullYear(),
+                            currentDate.getMonth() + 1
+                        );
+                    } else {
+                        updateCurrentUserHeaderStats();
                     }
                 }
             } catch (error) {
                 console.error('[refreshUserStats] Errore caricamento dati:', error);
                 // Fallback ai dati sessione in caso di errore di rete
-                if (elements.monthlyHours && Utils.formatHours) {
-                    elements.monthlyHours.textContent = Utils.formatHours(currentUser?.oreMese || 0);
-                }
-                if (elements.previousMonthHours && Utils.formatHours) {
-                    elements.previousMonthHours.textContent = Utils.formatHours(currentUser?.oreMesePrecedente || 0);
+                if (isCalendarPageActive()) {
+                    updateDisplayedMonthHeaderStats(
+                        currentDate.getFullYear(),
+                        currentDate.getMonth() + 1
+                    );
+                } else {
+                    updateCurrentUserHeaderStats();
                 }
             }
         }

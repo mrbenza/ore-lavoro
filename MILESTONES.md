@@ -56,6 +56,7 @@ Per bug, anomalie e fix tecnici usare `FIXES.md`.
 - Creazione utenti admin senza foglio personale automatico.
 - Calendario admin dipendente ottimizzato: lista dipendenti condivisa, account non attivi visibili, totali azzerati visivamente con `--` durante il cambio selezione e risposte obsolete ignorate.
 - Celle riepilogative fogli dipendente allineate al layout operativo: etichette in `F2:H2`, formule in `F3:H3`, fallback su righe dati da riga 5.
+- Calendario dashboard dipendente: il riepilogo ore in alto segue il mese visualizzato, così i mesi storici non richiedono calcoli manuali.
 - Documentazione separata per presentazione, changelog, fix, schema fogli e milestone.
 
 ---

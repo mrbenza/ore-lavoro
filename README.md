@@ -15,7 +15,7 @@ Il sistema usa un frontend statico su Vercel, un backend Google Apps Script e Go
 
 - Login con username e password.
 - Inserimento ore per data, cantiere e note.
-- Calendario mensile con le registrazioni gia inserite.
+- Calendario mensile con le registrazioni gia inserite e totale ore del mese visualizzato.
 - Avviso se si stanno inserendo ore in una giornata gia compilata.
 - Cambio password self-service dalla pagina Profilo.
 - Auto-logout dopo inattivita.

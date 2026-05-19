@@ -222,6 +222,7 @@ Queste anomalie sono state identificate durante la code review del 2026-03-04 e 
 ## Note tecniche — Cache e ottimizzazioni frontend (2026-03-09)
 
 - `dashboard.html` usa `monthlyCache` (oggetto JS in memoria, chiave `'YYYY-MM'`) per evitare chiamate ripetute a `getMonthlyWorkData`. La cache viene invalidata dopo ogni `saveWorkEntry` riuscito, garantendo dati freschi al salvataggio successivo.
+- Nella sezione Calendario di `dashboard.html`, il riepilogo ore in alto viene calcolato dai dati del mese visualizzato (`calendarData`) invece che dai riepiloghi profilo di mese corrente/mese precedente. Fuori dal Calendario resta il riepilogo rapido dell'utente corrente.
 
 ## Note tecniche — Modal novità e versioning (2026-03-15)
 
